@@ -1,0 +1,72 @@
+-------------------------------------------
+ Run on  22-Dec-2018 00:18:51 
+ 43.1784 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     ReflectanceEstimationSimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     KCor same malignancy     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 ReflectanceEstimationSimple ReflectanceEstimationSimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  22-Dec-2018 01:57:55 
+ 149.5733 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     ReflectanceEstimationSystemComparison     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     KCor all same malignancy     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 ReflectanceEstimationSystemComparison ComparisonNmseSystemAvgMinMax     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  22-Dec-2018 02:16:24 
+ 932.6742 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     ReflectanceEstimationMatrixSystemComparison     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 ReflectanceEstimationMatrixSystemComparison ComparisonNmseMatrixSystemAvg     
+ -------------------------------------------
+
+
+
+
+
+
