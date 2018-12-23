@@ -1,3 +1,3 @@
-# macroMSI-processing
+# macroMSI processing
 
-Medical image processing research at Tokyo Institute of Technology
+Macropathology image processing at Tokyo Institute of Technology
