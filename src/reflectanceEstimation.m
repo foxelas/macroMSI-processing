@@ -219,9 +219,15 @@ else
     estimatedReflectance = mean(estimatedReflectance, 2);
     
     if ~isempty(spectrum)
-        e = spectralError(spectrum, estimatedReflectance);
-        rmse = e(1);
-        nmse = e(2);
+        r = spectrum;
+        rhat = estimatedReflectance;
+        N = length(r);
+        
+        % Root Mean Square Error
+        rmse = sqrt((r - rhat)'*(r - rhat)/N);
+
+        % Normalized Mean Square Error
+        nmse = (r - rhat)' * (r - rhat) / (r' * r);
     end
 end
 

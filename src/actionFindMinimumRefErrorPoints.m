@@ -1,4 +1,3 @@
-
 %% Reflectance estimation iterratively until miniminum estimation error point is reached
 
 searchStep = 10;

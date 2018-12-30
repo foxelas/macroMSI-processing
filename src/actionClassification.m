@@ -1,3 +1,4 @@
+% Classify malignancy
 method = 'knn';
 
 version = 'estimated';

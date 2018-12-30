@@ -1,4 +1,4 @@
-        %% CREATE SRGB
+        %% Reconstruct sRGB from MSI
         
         for k = [250, 270]
             [~, sampleName] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));

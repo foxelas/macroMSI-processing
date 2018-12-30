@@ -84,6 +84,7 @@ else
 end
 
 for i = 1:numel(actions)
+    
     action = lower(actions{i});
     
     %% Set-up of options for running

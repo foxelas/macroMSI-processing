@@ -1,3 +1,4 @@
+%Data projection for dimension reduction (pca, lda, etc)
 additionalMethod = ''; 
 
 if contains(action, 'pca')
