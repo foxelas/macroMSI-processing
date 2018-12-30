@@ -70,3 +70,193 @@
 
 
 
+-------------------------------------------
+ Run on  23-Dec-2018 18:42:16 
+ 204.6527 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     ReflectanceEstimationMatrixComparison     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 ReflectanceEstimationMatrixComparison ComparisonNmseMatrixAvgMinMax     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  23-Dec-2018 21:14:12 
+ 1302.4649 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     ReflectanceEstimationMatrixSystemComparison     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 ReflectanceEstimationMatrixSystemComparison ComparisonNmseMatrixSystemAvg     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  23-Dec-2018 21:34:49 
+ 0.00097357 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  23-Dec-2018 21:34:55 
+ 0.00056313 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  24-Dec-2018 02:12:34 
+ 86.1396 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_right_12-17-58-827_64     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  24-Dec-2018 02:15:22 
+ 73.9944 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_left_11-25-23-336_50     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  24-Dec-2018 02:23:54 
+ 148.6514 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_left_10-27-20-285_53     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  24-Dec-2018 02:29:49 
+ 127.5068 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_right_12-17-58-827_64     
+ -------------------------------------------
+
+
+
+
+
+
