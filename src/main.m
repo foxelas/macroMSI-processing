@@ -2,6 +2,9 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages)
 
 %% Execute actions at bulk
 %
+% Usage: 
+% main('ReflectanceEstimationSimple', 'saitama_v2', false, true, false)
+% 
 % Input
 %
 % actions: string or cell array of strings

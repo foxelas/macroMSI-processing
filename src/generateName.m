@@ -66,10 +66,8 @@ switch filename
         
     case 'plot+save'
         sampleName = generateName(options, 'image', datax, idx);
-        if (options.saveOptions.saveImages)
-            fn = fullfile(options.saveOptions.savedir, options.action);
-            savefilename = fullfile(fn, [options.action, '_', sampleName]);
-        end
+        fn = fullfile(options.saveOptions.savedir, options.action);
+        savefilename = fullfile(fn, [options.action, '_', sampleName]);
         
     otherwise
         savefilename = fullfile(options.saveOptions.savedir, options.action, filename);     

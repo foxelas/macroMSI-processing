@@ -161,14 +161,14 @@ H = diag(coeff) * H;
 %% Covariance matrix of the additive noise
 if contains(noiseType, 'independent')
     attr = strsplit(noiseType, {' ', '^{', '}'});
-    if numel(attr > 1)
+    if (numel(attr) > 1)
         options.noiseOrder = str2double(attr{2})^str2double(attr{3});
     end
     Kn = diag(options.noiseOrder*ones(size(variance)));
 
 elseif contains(noiseType, 'givenSNR')
     attr = strsplit(noiseType, {' ', 'dB'});
-    if numel(attr > 1)
+    if (numel(attr) > 1)
         snr = str2double(attr{2});
     elseif isfield(options, 'snr')
         snr = options.snr;
@@ -179,8 +179,8 @@ elseif contains(noiseType, 'givenSNR')
     Kn = diag(variance); %different at every channel
     
 elseif contains(noiseType, 'white gaussian')
-    attr = strsplit(optionsSelection(n).noiseType, {' ', '^{', '}'});
-    if numel(attr > 1)
+    attr = strsplit(options.noiseType, {' ', '^{', '}'});
+    if (numel(attr) > 1)
         options.noiseOrder = str2double(attr{3})^str2double(attr{4});
     end
     Kn = diag(randn(1, length(coeff)).*options.noiseOrder); %different at every channel

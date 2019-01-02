@@ -4,22 +4,13 @@ function [W, score, latent, explained] = dimensionReduction(method, input, varar
 % 'pca' Principal Component Analysis
 % 'lda' Linear Dimension Analysis
 % 'pcalda' Combination or PCA and LDA 
-% 
-% Use:
-% [W, score, latent, explained] = dimensionReduction(method, input, varargin)
-% 
-% W         = discovered projections
-% score     = projection scores
-% latent    = (only for PCA)
-% explained = (only for PCA)
-% 
-% Example: 
-% 
-% [W, score, latent, explained] = dimensionReduction('pca', X);
-% [W, score] = dimensionReduction('pca', X, 'TargetDimension', 2);
-% [W, score] = dimensionReduction('lda', X, labels);
-% [W, score] = dimensionReduction('lda', X, labels, 'TargetDimension', 2, 'Priors', [0.3, 0.7]);
-    
+
+Use:
+[W, score, latent, explained] = dimensionReduction(method, input, varargin)
+
+W = discovered projections
+score = projection scores
+laten = 
 p = inputParser;
 p.addRequired(p, 'method', @ischar);
 p.addRequired(p, 'input', @isnumeric);

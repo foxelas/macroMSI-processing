@@ -5,23 +5,22 @@ pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
 nmsFull = {'none', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 15dB', 'givenSNR 25dB', 'givenSNR 30dB', 'givenSNR 40dB', 'fromOlympus'};
 
 %% Comparison settings
-if contains(action, 'matrixsystem')
-        smms = smmsFull;
-        pvsms = pvsmsFull;
-        plotType = 'MatrixSystemAvg';        
-        nms = {'givenSNR'}; 
-        
-elseif contains(action, 'smoothing matrix') || contains(action, 'matrix')
+if contains(action, 'smoothing matrix') || contains(action, 'matrix')
         smms = smmsFull;
         pvsms = {'extended'};
         plotType = 'MatrixAvgMinMax';
-        nms = {'givenSNR'};
         
 elseif contains(action, 'color system') || contains(action, 'system')   
         smms = {'corr same malignancy all spectra'};
         pvsms = pvsmsFull;
         plotType = 'SystemAvgMinMax';
-        nms = {'givenSNR'};
+        nms = {''};
+
+elseif contains(action, 'matrixsystem')
+        smms = smmsFull;
+        pvsms = pvsmsFull;
+        plotType = 'MatrixSystemAvg';        
+        nms = {''};
 
 elseif contains(action, 'noise model') || contains(action, 'noise')   
         pvsms = {'extended'};
@@ -31,7 +30,7 @@ elseif contains(action, 'noise model') || contains(action, 'noise')
 
 elseif contains(action, 'simple') 
         pvsms = {'extended'};
-        smms = {'corr same malignancy sample spectra'};
+        smms = {'corr same malignancy all spectra'};
         nms = {'givenSNR'};
         estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);
      
@@ -48,9 +47,9 @@ optionsSelection = repmat(options, methodsN, 1);
 for l = 1:pvsmsN
     for n = 1:smmsN
         for m = 1:nmsN
-            optionsSelection((m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l).pixelValueSelectionMethod = pvsms{l};
-            optionsSelection((m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l).smoothingMatrixMethod = smms{n};
-            optionsSelection((m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l).noiseType = nms{m};
+            optionsSelection((l - 1)*smmsN+(n - 1)*pvsmsN + m).pixelValueSelectionMethod = pvsms{l};
+            optionsSelection((l - 1)*smmsN+(n - 1)*pvsmsN + m).smoothingMatrixMethod = smms{n};
+            optionsSelection((l - 1)*smmsN+(n - 1)*pvsmsN + m).noiseType = nms{m};
         end
     end
 end
@@ -81,7 +80,7 @@ for k = 1:msiN
                     g = reshape(g, [3, size(g, 1), size(g, 2)]);
                 end
 
-                j = (m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l ;
+                j =   l + smmsN * ( n + nmsN *m)%(l - 1) * smmsN * smmsN + (n - 1) * nmsN   ( n * nmsN) + m;
 
                 % optionsSelection(j).coeff = squeeze(coeff(k, min(find(strcmp(pvsms , optionsSelection(j).pixelValueSelectionMethod)),3), :))';
                 [est(:, j), rmse(j, k), nmse(j, k)] = reflectanceEstimation(g, measured, ID(k), optionsSelection(j));
