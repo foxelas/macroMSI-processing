@@ -3,11 +3,17 @@ function [G] = valueSelect(A, method)
 % valueSelect chooses the appropriate values from the image to be used in
 % the processing, depending on the 'method'
 % method : {'green', 'rms', 'adjusted', 'extended', 'unchanged'}
+%
+
+bands = size(A, 1);
+if strcmp(method, 'extended')
+    bands = 9;
+end
 
 height = size(A, 2);
 width = size(A, 3);
 
-G = zeros(7, height, width);
+G = zeros(bands, height, width);
 for row = 1:height
     for col = 1:width
         switch method

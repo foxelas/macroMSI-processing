@@ -25,6 +25,7 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages)
 %          'ReflectanceEstimationSystemComparison',
 %          'ReflectanceEstimationMatrixComparison',
 %          'ReflectanceEstimationMatrixSystemComparison',
+%          'ReflectanceEstimationMatrixNoiseComparison',
 %          'ReflectanceEstimationNoiseComparison',
 %          'ReflectanceEstimationSimple', 
 %          'CreateSRGB',
@@ -115,6 +116,7 @@ for i = 1:numel(actions)
               lower('ReflectanceEstimationMatrixComparison'), ...
               lower('ReflectanceEstimationMatrixSystemComparison'), ...
               lower('ReflectanceEstimationNoiseComparison'), ...
+              lower('ReflectanceEstimationMatrixNoiseComparison'), ...
               lower('ReflectanceEstimationSimple')}
             actionReflectanceEstimationComparison;
 

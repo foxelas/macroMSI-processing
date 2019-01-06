@@ -404,3 +404,27 @@
 
 
 
+-------------------------------------------
+ Run on  03-Jan-2019 14:31:52 
+ 36.6028 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_left_11-00-42-883_72     
+ -------------------------------------------
+
+
+
+
+
+

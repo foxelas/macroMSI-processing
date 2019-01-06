@@ -4,8 +4,15 @@ function [MSI, whiteReference, darkReference] = readMSI(files, x, y, width, heig
 % x: origin x to read image box
 % y: origin y to read image box
 % width: width of image box to be read (x axis)
-%height: height of image box to be read (y axis)
-%modeAll: if true, reads the whole image
+% height: height of image box to be read (y axis)
+
+if isempty(x) || isempty(y)
+        modeAll = true;      
+elseif (x < 0) || (y < 0)
+    error('Negative origin points.')
+else
+        modeAll = false;
+end
 
 if (nargin < 4)
     width = 5;
@@ -15,10 +22,9 @@ if (nargin < 5)
     height = 5;
 end
 
-if (x == 0) || (y == 0)
-    modeAll = true;
-else 
-    modeAll = false;
+% modeAll: if true, reads the whole image
+if (width == 0) || (height == 0)
+    error('No region to be read.')
 end
 
 if (nargin < 6) || isempty(bands)

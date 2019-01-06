@@ -11,6 +11,12 @@ if contains(action, 'matrixsystem')
         plotType = 'MatrixSystemAvg';        
         nms = {'givenSNR'}; 
         
+elseif contains(action, 'matrixnoise')
+        smms = smmsFull;
+        pvsms = {'extended'};
+        plotType = 'MatrixNoiseAvg';        
+        nms = nmsFull; 
+        
 elseif contains(action, 'smoothing matrix') || contains(action, 'matrix')
         smms = smmsFull;
         pvsms = {'extended'};
