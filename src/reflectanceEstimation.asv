@@ -253,7 +253,7 @@ elseif strcmp(noiseType, 'spatial')
         sigma2 = 0.002; %0.002 to 0.01
     end
     
-    variance = ones(msibands,1) * (sqrt(0.5) * sigma1 + sigma2)^2;
+    variance = (
     Kn = diag(variance);
     
 elseif strcmp(noiseType, 'none')
