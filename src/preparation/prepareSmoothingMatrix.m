@@ -1,181 +1,161 @@
 
 %% make correlation smoothing matrices
-dirname = '..\MATLAB\Data\saitamav2\';
-load(strcat(dirname, 'ID.mat'));
-load(strcat(dirname, 'data.mat'));
-in = matfile(strcat(dirname, 'in.mat'));
-param = matfile(strcat(dirname, 'param.mat'), 'Writable', true);
 
-samples = unique([data.Sample]);
-[spectra, spectrumsIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}));
+in = matfile( fullfile(options.systemdir, 'in.mat')); 
+param = matfile(fullfile(options.systemdir, 'precomputedParams.mat'), 'Writable', true);
 
-wavelengthN = 81;
-if (wavelengthN == 81)
-    wavelength = 380:5:780;
-    ver = '';
-elseif (wavelengthN == 401)
-    wavelength = 380:780;
-    ver = '_401';
-else
-    warning('Not supported length')
-    return;
-end
+samples = unique([ID.Sample]);
+[spectra, spectraIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}));
+dataNum = numel(spectraIdx);
 
-%% case 'known correlation fixed cancer sample' % average xcorr of all fixed cancer measured data for fixed cancer sample
+wavelengthN = size(sensitivity, 1);
+wavelength = linspace(380, 780, wavelengthN);
+
+%% Smoothing matrix from recorded spectra
+rAll = zeros(81, dataNum);
+rBenign = zeros(81, dataNum);
+rMalignant = zeros(81, dataNum);
+rFixed = zeros(81, dataNum);
+rCut = zeros(81, dataNum);
+rUnfixed = zeros(81, dataNum);
+rBenignCut = zeros(81, dataNum);
+rBenignFixed = zeros(81, dataNum);
+rBenignUnfixed = zeros(81, dataNum);
+rMalignantCut = zeros(81, dataNum);
+rMalignantFixed = zeros(81, dataNum);
+rMalignantUnfixed = zeros(81, dataNum);
 
 for i = 1:length(samples)
     %find the relative samples
     name = samples{i};
-    spectrum = spectra(contains(spectra, name));
-    spectrumIdx = spectrumsIdx(contains(spectra, name));
+    sampleSpectra = spectra(contains(spectra, name));
+    sampleSpectraIdx = spectraIdx(contains(spectra, name));
     
-    r = zeros(81, length(spectrum));
-    rnc = [];
-    rnf = [];
-    rnu = [];
-    rcc = [];
-    rcf = [];
-    rcu = [];
+    sampleNum = numel(sampleSpectraIdx);
+    rSample = zeros(81, sampleNum);
+    rSampleBenign = zeros(81, sampleNum);
+    rSampleMalignant = zeros(81, sampleNum);
+    rSampleBenignCut = zeros(81, sampleNum);
+    rSampleBenignFixed = zeros(81, sampleNum);
+    rSampleBenignUnfixed = zeros(81, sampleNum);
+    rSampleMalignantCut = zeros(81, sampleNum);
+    rSampleMalignantFixed = zeros(81, sampleNum);
+    rSampleMalignantUnfixed = zeros(81, sampleNum);
     
-    for j = 1:length(spectrum)
-        id = ID(spectrumIdx(j));
-        r(:, j) = interp1(380:780, measuredSpectrumStruct(j).Spectrum, wavelength, 'nearest');
+    for j = 1:length(sampleSpectra)
+      
+        id = ID(sampleSpectraIdx(j));
+        
+        ref = interp1(380:780, measuredSpectrumStruct(j).Spectrum, wavelength, 'nearest')';
+        rAll = [rAll, ref];
+        rSample = [rSample, ref];
+       
         if (id.IsNormal)
+            %% Benign case
+            rBenign = [rBenign, ref];
+            rSampleBenign = [rSampleBenign, ref];
+            
             if (id.IsCut)
-                rnc = [rnc, r(:, j)];
+                rCut = [rCut, ref];
+                rBenignCut = [rBenignCut, ref];
+                rSampleBenignCut = [rSampleBenignCut, ref];
             elseif (id.IsFixed)
-                rnf = [rnf, r(:, j)];
+                rFixed = [rFixed, ref];
+                rBenignFixed = [rBenignFixed, ref];
+                rSampleBenignFixed = [rSampleBenignFixed, ref];
             else
-                rnu = [rnu, r(:, j)];
+                rUnfixed = [rUnfixed, ref];
+                rBenignUnfixed = [rBenignUnfixed, ref];
+                rSampleBenignUnfixed = [rSampleBenignUnfixed, ref];
             end
         else
+            %% Malignant case 
+            rMalignant = [rMalignant, ref];
+            rSampleMalignant = [rSampleMalignant, ref];
+            
             if (id.IsCut)
-                rcc = [rcc, r(:, j)];
+                rCut = [rCut, ref];
+                rMalignantCut = [rMalignantCut, ref];
+                rSampleMalignantCut = [rSampleMalignantCut, ref];
             elseif (id.IsFixed)
-                rcf = [rcf, r(:, j)];
+                rFixed = [rFixed, ref];
+                rMalignantFixed = [rMalignantFixed, ref];
+                rSampleMalignantFixed = [rSampleMalignantFixed, ref];
             else
-                rcu = [rcu, r(:, j)];
+                rUnfixed = [rUnfixed, ref];
+                rMalignantUnfixed = [rMalignantUnfixed, ref];
+                rSampleMalignantUnfixed = [rSampleMalignantUnfixed, ref];
             end
         end
-    end
+    end  
     
+    param.(matlab.lang.makeValidName(['Cor_SampleBenignCut_', name])) = smoothingMatrix(rSampleBenignCut); 
+    param.(matlab.lang.makeValidName(['Cor_SampleBenignFixed_', name])) = smoothingMatrix(rSampleBenignFixed); 
+    param.(matlab.lang.makeValidName(['Cor_SampleBenignUnfixed_', name])) = smoothingMatrix(rSampleBenignUnfixed);  
     
-    param.(matlab.lang.makeValidName(['Mnc_', name])) = 1 / size(rnc, 2) * (rnc * rnc');
-    param.(matlab.lang.makeValidName(['Mnf_', name])) = 1 / size(rnf, 2) * (rnf * rnf');
-    param.(matlab.lang.makeValidName(['Mnu_', name])) = 1 / size(rnu, 2) * (rnu * rnu');
-    
-    param.(matlab.lang.makeValidName(['Mcc_', name])) = 1 / size(rcc, 2) * (rcc * rcc');
-    param.(matlab.lang.makeValidName(['Mcf_', name])) = 1 / size(rcf, 2) * (rcf * rcf');
-    param.(matlab.lang.makeValidName(['Mcu_', name])) = 1 / size(rcu, 2) * (rcu * rcu');
-    
-end
-
-%% case 'known correlation cancer sample'
-for i = 1:length(samples)
-    % find the relative samples
-    name = samples{i};
-    spectrum = spectra(contains(spectra, name));
-    spectrumIdx = spectrumsIdx(contains(spectra, name));
-    
-    r = zeros(81, length(spectrum));
-    rn = [];
-    rc = [];
-    for j = 1:length(spectrum)
-        id = ID(spectrumIdx(j));
-        r(:, j) = interp1(380:780, measuredSpectrumStruct(j).Spectrum, wavelength, 'nearest');
-        if (id.IsNormal)
-            rn = [rn, r(:, j)];
-        else
-            rc = [rc, r(:, j)];
-        end
-    end
+    param.(matlab.lang.makeValidName(['Cor_SampleMalignantCut_', name])) = smoothingMatrix(rSampleMalignantCut);
+    param.(matlab.lang.makeValidName(['Cor_SampleMalignantFixed_', name])) = smoothingMatrix(rSampleMalignantFixed);
+    param.(matlab.lang.makeValidName(['Cor_SampleMalignantUnfixed_', name])) = smoothingMatrix(rSampleMalignantUnfixed);
     
     % correlation of all the measured spectra for this sample
-    param.(matlab.lang.makeValidName(['M_', name])) = 1 / length(spectrum) * (r * r');
+    param.(matlab.lang.makeValidName(['Cor_', name])) = smoothingMatrix(rSample); 
     
     % correlation of all cancerous spectra for this sample
-    param.(matlab.lang.makeValidName(['Mc_', name])) = 1 / size(rc, 2) * (rc * rc');
+    param.(matlab.lang.makeValidName(['Cor_SampleMalignant_', name])) = smoothingMatrix(rSampleMalignant);
     
     % correlation of all normal spectra for this sample
-    param.(matlab.lang.makeValidName(['Mn_', name])) = 1 / size(rn, 2) * (rn * rn');
-    
+    param.(matlab.lang.makeValidName(['Cor_SampleBenign_', name])) = smoothingMatrix(rSampleBenign);
+
 end
 
+param.(matlab.lang.makeValidName('Cor_All')) = smoothingMatrix(rAll);
+param.(matlab.lang.makeValidName('Cor_Benign')) = smoothingMatrix(rBenign);
+param.(matlab.lang.makeValidName('Cor_Malignant')) = smoothingMatrix(rMalignant);
+param.(matlab.lang.makeValidName('Cor_Unfixed')) = smoothingMatrix(rUnfixed);
+param.(matlab.lang.makeValidName('Cor_Fixed')) = smoothingMatrix(rFixed);
+param.(matlab.lang.makeValidName('Cor_Cut')) = smoothingMatrix(rCut);
+param.(matlab.lang.makeValidName('Cor_BenignCut')) = smoothingMatrix(rBenignCut);
+param.(matlab.lang.makeValidName('Cor_BenignUnfixed')) = smoothingMatrix(rBenignUnfixed);
+param.(matlab.lang.makeValidName('Cor_BenignFixed')) = smoothingMatrix(rBenignFixed);
+param.(matlab.lang.makeValidName('Cor_MalignantCut')) = smoothingMatrix(rMalignantCut);
+param.(matlab.lang.makeValidName('Cor_MalignantUnfixed')) = smoothingMatrix(rMalignantUnfixed);
+param.(matlab.lang.makeValidName('Cor_MalignantFixed')) = smoothingMatrix(rMalignantFixed);
 
-% %% case 'markovian'
-%     rho = 0.98;
-%     M_row = ones(1,wavelengthN);
-%     for i=2:wavelengthN
-%         M_row(i) = M_row(i-1) * rho;
-%     end
-%
-%     M = zeros(wavelengthN); %first order Markov process covariance matrix
-%     select = eye(1, wavelengthN);
-%     D = zeros(wavelengthN,wavelengthN); % Q x lambdaN
-%     for i=1:wavelengthN
-%         M(i,:) = [ fliplr(M_row(1: i)) , M_row(2:wavelengthN-i+1)];
-%         D(i,:) = circshift( select', (i-1)*wavelengthN); %diagonal with 1 in the position of components
-%     end
-%     param.(matlab.lang.makeValidName(['M_markov_98', ver])) = toeplitz(r);
+%% Smoothing matrix based on markovian process 
+if isfield(options, 'rho')
+    rho = options.rho;
+else 
+    rho = 0.98;
+end
 
-%% case 'known correlation all data'
-% m = matfile('refestparam.mat');
-[meas, ~, idx, ~] = subset('measured', name, 'unique');
-avgMeasured = interp1(380:780, mean(meas), wavelength, 'nearest');
-z = xcorr(avgMeasured, avgMeasured, 'coeff');
-%z=xcorr(m.avgMeasured, m.avgMeasured, 'coeff');
+M_row = ones(1,wavelengthN);
+for i=2:wavelengthN
+    M_row(i) = M_row(i-1) * rho;
+end
+
+M = zeros(wavelengthN); %first order Markov process covariance matrix
+select = eye(1, wavelengthN);
+D = zeros(wavelengthN,wavelengthN); % Q x lambdaN
+for i=1:wavelengthN
+    M(i,:) = [ fliplr(M_row(1: i)) , M_row(2:wavelengthN-i+1)];
+    D(i,:) = circshift( select', (i-1)*wavelengthN); %diagonal with 1 in the position of components
+end
+param.(matlab.lang.makeValidName('Cor_Markovian')) = M;
+
+%% Smoothing matrix based on macbeth chart spectra
+macbeths = interp1(380:780, param.avgMeasuredMacbeth, wavelength, 'nearest')';
+
+z=xcorr(macbeths, macbeths, 'coeff');
 r = z(wavelengthN:end);
-param.(matlab.lang.makeValidName('M_measured_xcorr')) = toeplitz(r);
+param.(matlab.lang.makeValidName('Cor_Macbeth')) = toeplitz(r);
 
-% %% case 'known correlation macbeth'
-%     m = matfile('refestparam.mat');
-%     z=xcorr(m.avgMeasuredMacbeth, m.avgMeasuredMacbeth, 'coeff');
+%% Support function for computing the smoothing matrix from counts
+function K = smoothingMatrix(s)
+    means = mean(s,2);
+    K = 1 / (size(s, 2) - 1) * (s - means) * (s - means)';
+% %     alternatively 
+%     z = xcorr(s, s, 'coeff');
 %     r = z(wavelengthN:end);
-%     param.(matlab.lang.makeValidName(['M_measured_xcorr_macbeth',ver])) = toeplitz(r);
-
-%% case 'known correlation single'
-%     %old implementation
-%     %     [~, Ks] = corrmtx(measuredReflectance, wavelengthN-1);
-%     z=xcorr(spectrum, spectrum, 'coeff');
-%     r = z(wavelengthN:end);
-%     M =toeplitz(r);
-
-%%     case 'KCor all same malignancy'
-rn = [];
-rc = [];
-for i = 1:length(ID)
-    ref = interp1(380:780, measuredSpectrumStruct(i).Spectrum, wavelength, 'nearest')';
-    if (ID(i).IsNormal)
-        rn = [rn, ref];
-    else
-        rc = [rc, ref];
-    end
+%     K = toeplitz(r);
 end
-% correlation of all cancerous spectra
-param.(matlab.lang.makeValidName('Mc')) = 1 / size(rc, 2) * (rc * rc');
-
-% correlation of all normal spectra
-param.(matlab.lang.makeValidName('Mn')) = 1 / size(rn, 2) * (rn * rn');
-
-%%     case 'KCor all same fixation'
-rf = [];
-ru = [];
-rc = [];
-for i = 1:length(ID)
-    ref = interp1(380:780, measuredSpectrumStruct(i).Spectrum, wavelength, 'nearest')';
-    if (ID(i).IsCut)
-        rc = [rc, ref];
-    elseif (ID(i).IsFixed)
-        rf = [rf, ref];
-    else
-        ru = [ru, ref];
-    end
-end
-% correlation of all fixed spectra
-param.(matlab.lang.makeValidName('M_f')) = 1 / size(rf, 2) * (rf * rf');
-
-% correlation of all unfixed spectra
-param.(matlab.lang.makeValidName('M_u')) = 1 / size(ru, 2) * (ru * ru');
-
-% correlation of all cut spectra
-param.(matlab.lang.makeValidName('M_c')) = 1 / size(rc, 2) * (rc * rc');
+    

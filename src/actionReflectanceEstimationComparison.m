@@ -1,6 +1,6 @@
 %Start of reflectance estimation comparison
-smmsFull = {'markovian', 'corr all spectra', 'corr macbeth spectra', 'corr sample spectra', ...
-    'corr same malignancy all spectra', 'corr same fixing all spectra'};
+smmsFull = {'markovian', 'Cor_Macbeth', 'Cor_All', 'Cor_Malignancy',...
+    'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample'}; %, 'Cor_SampleMalignancyFixing'};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
 nmsFull = {'none', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 15dB', 'givenSNR 25dB', 'givenSNR 30dB', 'givenSNR 40dB', 'fromOlympus'};
 

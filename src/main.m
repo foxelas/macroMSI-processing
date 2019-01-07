@@ -44,11 +44,9 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages)
 %     classification = { 'knn' };
 % 'smoothingMatrixMethod' string, name of the smoothing matrix of wiener
 % estimation (default: 'corr same fixing all spectra')
-%      smoothingMatrixMethods = {'markovian', 'corr all spectra', 'corr
-%      macbeth spectra', 'corr sample spectra', ...
-%         'corr same malignancy all spectra', 'corr same malignancy sample
-%         spectra', 'corr same fixing all spectra', 'corr same fixing
-%         sample spectra'};
+%      smoothingMatrixMethods = {'markovian', 'Cor_All', 'Cor_Macbeth', 'Cor_Malignancy',...
+%                                 'Cor_Fixing', 'Cor_MalignancyFixing', 
+%                                 'Cor_Sample', 'Cor_SampleMalignancyFixing'};
 % 'pixelValueSelectionMethods' string, name of the pixel value selection
 % method to reduce the 4D raw input to 3D MSI (default: 'extended')
 %      pixelValueSelectionMethods = {'green', 'rms', 'adjusted',
@@ -108,6 +106,9 @@ for i = 1:numel(actions)
 
         case 'countdata'
             actionCountData;
+            
+        case lower('prepareSmoothingMatrix')  % needs to be performed before doing reflectance estimation 
+            prepareSmoothingMatrix;
 
         case lower('FixMinimumErrorPoints')
             actionFindMinimumRefErrorPoints;

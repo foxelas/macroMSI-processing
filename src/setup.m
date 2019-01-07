@@ -12,8 +12,8 @@
 % 'classification' string, name of the classification method to be applied (default: 'knn')
 %     classification = { 'knn' };
 % 'smoothingMatrixMethod' string, name of the smoothing matrix of wiener estimation (default: 'corr same fixing all spectra')
-%      smoothingMatrixMethods = {'markovian', 'corr all spectra', 'corr macbeth spectra', 'corr sample spectra', ...
-%         'corr same type all spectra', 'corr same type sample spectra', 'corr same fixing all spectra', 'corr same fixing sample spectra'};
+%      smoothingMatrixMethods = {'markovian', 'Cor_All', 'Cor_Macbeth', 'Cor_Malignancy',...
+%                     'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample', 'Cor_SampleMalignancyFixing'};
 % 'pixelValueSelectionMethods' string, name of the pixel value selection method to reduce the 4D raw input to 3D MSI (default: 'extended')
 %      pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended'};
 % 'noiseModel' string, name of the node model to be used (default: 'givenSNR')
@@ -80,8 +80,8 @@ fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
 
 pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
 
-smoothingMatrixMethods = {'markovian', 'corr all spectra', 'corr macbeth spectra', 'corr sample spectra', ...
-    'corr same malignancy all spectra', 'corr same malignancy sample spectra', 'corr same fixing all spectra', 'corr same fixing sample spectra'};
+smoothingMatrixMethods = {'markovian', 'Cor_All', 'Cor_Macbeth', 'Cor_Malignancy',...
+    'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample', 'Cor_SampleMalignancyFixing'};
 nms = {'none', 'white gaussian 10^{-3}', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 10dB', 'givenSNR 15dB', 'fromOlympus'};
 
 fn = fullfile(options.saveOptions.savedir, options.action);

@@ -428,3 +428,119 @@
 
 
 
+-------------------------------------------
+ Run on  08-Jan-2019 02:34:42 
+ 30.5639 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     preparesmoothingmatrix     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  08-Jan-2019 02:56:58 
+ 5.3665 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     preparesmoothingmatrix     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  08-Jan-2019 02:59:40 
+ 20.97 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     preparesmoothingmatrix     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  08-Jan-2019 03:11:10 
+ 24.144 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     preparesmoothingmatrix     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  08-Jan-2019 03:15:51 
+ 267.7121 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     reflectanceestimationmatrixcomparison     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 reflectanceestimationmatrixcomparison ComparisonNmseMatrixAvgMinMax     
+ -------------------------------------------
+
+
+
+
+
+

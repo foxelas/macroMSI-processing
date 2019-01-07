@@ -347,7 +347,7 @@ switch plotType
         xlabel(labelx);
         xlim([0, numel(smms) + 1]);
         xticks(1:numel(smms));
-        xticklabels(smms);
+        xticklabels(strrep(smms, '_', ' '));
         xtickangle(45);
         ylabel(labely);
         legend(h, 'Location', 'best');
