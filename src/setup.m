@@ -1,3 +1,4 @@
+
 %% SET action OPTIONS
 % Options structure:
 %
@@ -11,13 +12,13 @@
 % 'classification' string, name of the classification method to be applied (default: 'knn')
 %     classification = { 'knn' };
 % 'smoothingMatrixMethod' string, name of the smoothing matrix of wiener estimation (default: 'corr same fixing all spectra')
-%      smoothingMatrixMethods = {'markovian', 'corr all spectra', 'corr macbeth spectra', 'corr sample spectra', ...
-%         'corr same type all spectra', 'corr same type sample spectra', 'corr same fixing all spectra', 'corr same fixing sample spectra'};
+%      smoothingMatrixMethods = {'markovian', 'Cor_All', 'Cor_Macbeth', 'Cor_Malignancy',...
+%                     'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample', 'Cor_SampleMalignancyFixing'};
 % 'pixelValueSelectionMethods' string, name of the pixel value selection method to reduce the 4D raw input to 3D MSI (default: 'extended')
-%      pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended'}; 
+%      pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended'};
 % 'noiseModel' string, name of the node model to be used (default: 'givenSNR')
 %      noiseModels = {'independent', 'fromOlympus', 'dependent', 'givenSNR', 'none'};
-% 'snr' double, noise Signal-To-Noise Ratio (default: 25) 
+% 'snr' double, noise Signal-To-Noise Ratio (default: 25)
 % 'skipLoading' boolean, disables re-loading of workspace input data to save time (default: true)
 % 'showImages' boolean, enables figure preview while running (default: false)
 % 'saveOptions' struct, manages output saving options
@@ -30,11 +31,11 @@
 
 if ~isfield(options, 'tryReadData')
     options.tryReadData = false;
-end 
+end
 
 if ~isfield(options, 'dataset')
     error('No data selected');
-end 
+end
 
 if ~isfield(options, 'datadir')
     options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', dataset);
@@ -63,7 +64,7 @@ if ~isfield(options, 'saveOptions')
 end
 
 if ~isfield(options.saveOptions, 'savedir')
-    options.saveOptions.savedir = fullfile('..', '..', 'output', options.dataset);  
+    options.saveOptions.savedir = fullfile('..', '..', 'output', options.dataset);
 end
 
 if ~isfield(options, 'skipLoading')
@@ -79,9 +80,9 @@ fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
 
 pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
 
-smoothingMatrixMethods = {'markovian', 'corr all spectra', 'corr macbeth spectra', 'corr sample spectra', ...
-    'corr same type all spectra', 'corr same type sample spectra', 'corr same fixing all spectra', 'corr same fixing sample spectra'};
-nms = {'none', 'white gaussian 10^{-3}', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 10dB', 'givenSNR 15dB', 'fromOlympus'}; 
+smoothingMatrixMethods = {'markovian', 'Cor_All', 'Cor_Macbeth', 'Cor_Malignancy',...
+    'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample', 'Cor_SampleMalignancyFixing'};
+nms = {'none', 'white gaussian 10^{-3}', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 10dB', 'givenSNR 15dB', 'fromOlympus'};
 
 fn = fullfile(options.saveOptions.savedir, options.action);
 if ~exist(fn, 'dir')
@@ -90,31 +91,31 @@ if ~exist(fn, 'dir')
 end
 
 outName = generateName(options, 'matfileout');
-out = matfile(outName,'Writable',true);
+out = matfile(outName, 'Writable', true);
 
 % SET action OPTIONS ends
 
 %% LOAD DATA & INITIALIZE
 if ~options.skipLoading
-    disp('Initialization.')  
-    load(fullfile(options.systemdir, 'system.mat')); % camera system parameters 
+    disp('Initialization.')
+    load(fullfile(options.systemdir, 'system.mat')); % camera system parameters
     load(fullfile(options.systemdir, 'data.mat')); % image data
-    load(fullfile(options.systemdir,'ID.mat'));    % image data id and info struct
+    load(fullfile(options.systemdir, 'ID.mat')); % image data id and info struct
     
     msiN = length(ID);
-    if (options.tryReadData) 
+    if (options.tryReadData)
         fprintf('Reading dataset...\n\n');
         %readAndSaveSpectrum(options, ID, data);
-        readAndSaveMSI(options, ID, data, 3, 3, bands); 
+        readAndSaveMSI(options, ID, data, 3, 3, bands);
     end
-%     load(strcat(options.systemdir,'coeff.mat'));
+    %     load(strcat(options.systemdir,'coeff.mat'));
     in = matfile(generateName(options, 'matfilein')');
     MSIStruct = in.MSIStruct;
     whiteStruct = in.WhiteMSIStruct;
     darkStruct = in.DarkMSIStruct;
     measuredSpectrumStruct = in.MeasuredSpectrumStruct;
     name = options.dataset;
-    fprintf('Finished initialization.\n\n')  
+    fprintf('Finished initialization.\n\n')
     fprintf('Let''s get down to business :muscle:\n\n');
 end
 % LOAD DATA & INITIALIZE ends
