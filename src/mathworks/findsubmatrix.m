@@ -1,9 +1,9 @@
-    
+%%From stack exchange   
      
-         load('N.mat')
+ load('N.mat')
 
-     %LargestInscribedImage()
-     findRect(N, 8)
+ %LargestInscribedImage()
+ findRect(N, 8)
 % ----------------------------------------------------------
 function LargestInscribedImage()
 % ----------------------------------------------------------
