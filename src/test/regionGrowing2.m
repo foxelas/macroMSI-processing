@@ -181,7 +181,7 @@ end
 
 
 % loop through each slice, fill holes and extract the polygon vertices
-P = [];
+% P = [];
 for cSli = 1:nSli
     if ~any(J(:,:,cSli))
         continue
@@ -191,9 +191,9 @@ for cSli = 1:nSli
     if tfFillHoles
         % fill the holes inside the mask
         J(:,:,cSli) = imfill(J(:,:,cSli), 'holes');    
-        B = bwboundaries(J(:,:,cSli), 8, 'noholes');
+%         B = bwboundaries(J(:,:,cSli), 8, 'noholes');
     else
-        B = bwboundaries(J(:,:,cSli));
+%         B = bwboundaries(J(:,:,cSli));
     end
     
 % 	newVertices = [B{1}(:,2), B{1}(:,1)];

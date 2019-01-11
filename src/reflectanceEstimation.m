@@ -14,8 +14,7 @@ function [estimatedReflectance, rmse, nmse] = reflectanceEstimation(g, spectrum,
 %'variance' =  parameter for noise covariance matrix , default: 1
 %'noiseType' = to include noise component,{'none', 'independent', 'spatial', 'givenSNR', 'white gaussian', 'fromOlympus'}
 %'reference' = the reference white image values
-%'windowDim' = the dimension of square pixel neighborhood (odd number), priority: high, default: 3
-%'windowDiam' = the diameter of round pixel neighborhood (odd number), priority: medium
+%'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
 %'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false 
 %
 %Output arguments
@@ -32,6 +31,13 @@ sensitivity = c.sensitivity; %sensitivity = spectral sensitivity of RGB camera (
 illumination = c.illumination; %illumination = spectral illumination for all channels
 clear('c');
 
+if isstruct(g)
+    mask = g.Mask;
+    g = g.Patch; 
+else 
+    mask = ones(size(g, 2), size(g, 3));
+end
+
 m = matfile(fullfile(options.systemdir, 'precomputedParams.mat')); %pre-set parameters
 
 wavelengthN = size(sensitivity, 1);
@@ -44,10 +50,11 @@ else
 end
 
 if strcmp(smoothingMatrixMethod, 'markovian')
+    defaultRho = 0.99;
     if isfield(options, 'rho')
         rho = options.rho;
     else 
-        rho = 0.99;
+        rho = defaultRho;
     end
 end
 
@@ -61,36 +68,6 @@ if isfield(options, 'noiseType')
     noiseType = options.noiseType;
 else 
     noiseType = 'independent';
-end
-
-if isfield(options, 'isSpatial')
-    isSpatial = options.isSpatial;
-    if isSpatial 
-        if isfield(options, 'windowDim')
-            windowDim = options.windowDim;
-            windowType = 'square';
-            windowKernel = ones(windowDim);
-            windowElements = (2 * windowDim + 1)^2;
-
-        elseif isfield(options, 'windowDiam')
-            windowDiam = options.windowDiam;
-            windowType = 'round';
-            radius = ceil(windowDiam / 2);
-            centerY = radius;
-            centerX = radius;
-            [cols, rows] = meshgrid(1:windowDiam, 1:windowDiam);
-            windowKernel = (rows - centerY).^2 + (cols - centerX).^2 <= radius.^2;
-            windowElements = sum(windowKernel(:));
-            clear('centerX', 'centerY', 'radius', 'cols', 'rows');
-        else 
-            windowDim = 3;
-            windowType = 'square';
-            windowKernel = ones(windowDim);
-            windowElements = (2 * windowDim + 1)^2;
-        end
-    end
-else 
-    isSpatial = false;
 end
 
 if strcmp(pixelValueSelectionMethod, 'rgb')
@@ -129,22 +106,15 @@ else
     tol = 1;
 end
 
-if ~isempty(id)
-    sample = generateName([], 'sample', [], id);
-    
-    if (id.IsNormal)
-        cancerType = 'Benign';
-    else
-        cancerType = 'Malignant';
-    end
-    
-    if (id.IsCut)
-        fixType = 'Cut';
-    elseif (id.IsFixed)
-        fixType = 'Fixed';
-    else
-        fixType = 'Unfixed';
-    end
+% sample = generateName([], 'sample', [], id);
+
+isBenign = id.IsNormal;
+if (id.IsCut)
+    fixing = 'Cut';
+elseif (id.IsFixed)
+    fixing = 'Fixed';
+else
+    fixing = 'Unfixed';
 end
 
 % Argument parsing ends
@@ -159,6 +129,9 @@ coeff = coeff * 5; % to adapt coefficients from bandwidth 1nm to bandwidth 5nm (
 % computed beforehand with prepareSmoothingMatrix
 switch smoothingMatrixMethod
     case {'Markovian 0.99', 'markovian'}
+        if rho ~= defaultRho
+            error('Invalid correlation parameter for the markovian process');
+        end
         M = m.Cor_Markovian;
         M = mean(m.signalCov) * M;
         
@@ -169,47 +142,71 @@ switch smoothingMatrixMethod
         M = m.Cor_Macbeth;
         
     case 'Cor_Sample' % average xcorr of all measured data for each sample
-        M = eval(strcat('m.Cor_', sample));
+        M = m.Cor_Sample(id.SampleId);
         
     case 'Cor_Malignancy'
-        M = eval(strcat('m.Cor_', cancerType));
+        if isBenign
+            M = m.Cor_Benign;
+        else
+            M = m.Cor_Malignant;
+        end
         
     case 'Cor_Fixing'
-        M = eval(strcat('m.Cor_', fixType));
+        if strcmp(fixing, 'Cut')
+            M = m.Cor_Cut;
+        elseif strcmp(fixing, 'Fixed')
+            M = m.Cor_Fixed;
+        else
+            M = m.Cor_Unfixed;
+        end
         
     case 'Cor_SampleMalignancy' % average xcorr of all measured cancerous data for cancerous sample
-        M = eval(strcat('m.Cor_Sample', cancerType, '_', sample));
+        if isBenign
+            M = m.Cor_SampleBenign(id.SampleId);
+        else
+            M = m.Cor_SampleMalignant(id.SampleId);
+        end
         
     case 'Cor_SampleMalignancyFixing' % average xcorr of all fixed cancer measured data for fixed cancer sample
-        M = eval(strcat('m.Cor_Sample', cancerType, fixType, '_', sample));
+        if isBenign && strcmp(fixing, 'Cut')
+            M = m.Cor_SampleBenignCut(id.SampleId);
+        elseif isBenign && strcmp(fixing, 'Fixed')
+            M = m.Cor_SampleBenignFixed(id.SampleId);
+        elseif isBenign && strcmp(fixing, 'Unfixed')
+            M = m.Cor_SampleBenignUnfixed(id.SampleId);
+        elseif ~isBenign && strcmp(fixing, 'Cut')
+            M = m.Cor_SampleMalignantCut(id.SampleId);
+        elseif ~isBenign && strcmp(fixing, 'Fixed')
+            M = m.Cor_SampleMalignantFixed(id.SampleId);
+        elseif ~isBenign && strcmp(fixing, 'Unfixed')
+            M = m.Cor_SampleMalignantUnfixed(id.SampleId);
+        else 
+            error('Unsupported type')
+        end
         
     case 'Cor_MalignancyFixing'
-        M = eval(strcat('m.Cor_', cancerType, fixType));
-        
+        if isBenign && strcmp(fixing, 'Cut')
+            M = m.Cor_BenignCut;
+        elseif isBenign && strcmp(fixing, 'Fixed')
+            M = m.Cor_BenignFixed;
+        elseif isBenign && strcmp(fixing, 'Unfixed')
+            M = m.Cor_BenignUnfixed;
+        elseif ~isBenign && strcmp(fixing, 'Cut')
+            M = m.Cor_MalignantCut;
+        elseif ~isBenign && strcmp(fixing, 'Fixed')
+            M = m.Cor_MalignantFixed;
+        elseif ~isBenign && strcmp(fixing, 'Unfixed')
+            M = m.Cor_MalignantUnfixed;
+        else 
+            error('Unsupported type')
+        end
+            
     case 'spatiospectral'
-        %unfinished
-        spectralcor = eval(strcat('m.M', cancerType, '_', sample));
+%         %unfinished      
         
-        rho = 0.985;
-        rho1 = rho;
-        rho2 = rho;
-        R1 = markovianMatrix(rho1);
-        R2 = markovianMatrix(rho2);
-        spatialcor = sigma * sigma * kron(R1, R2);
-        
-        
-    case 'obi2001' %%unfinished
-        S = valueSelect(sensitivity, pixelValueSelectionMethod, wavelength);
-        D = S * illumination * repmat(spectrum', 7, 1);
-        A = spectrum' * spectrum;
-        Aplus = (A' * A) \ (A'); % A+ = (A'*A)^-1*A'   401x401
-        B = spectrum * spectrum'; % should be changed to principal component  401xR
-        P = Aplus * B; % Ks = D * P
-        P0 = eye(wavelengthN);
-        %rms =@(x) (norm(P - x)^ 2); %function similar to yours
-        P = fminsearch(rms, P0); %find the x
-        M = D * P;
-        
+    case 'obi2001'
+%         %unfinished      
+
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
 end
@@ -241,7 +238,7 @@ elseif contains(noiseType, 'givenSNR')
         snr = m.snr; %dB
     end
     variance = (trace(H*M*H') / (msibands * 10^(snr / 10))) * ones(msibands, 1);
-    Kn = diag(variance); %different at every channel
+    Kn = diag(variance); %different at every channel def. 0.0379
     
 elseif contains(noiseType, 'white gaussian')
     attr = strsplit(options.noiseType, {' ', '^{', '}'});
@@ -253,13 +250,32 @@ elseif contains(noiseType, 'white gaussian')
 elseif strcmp(noiseType, 'fromOlympus')
     Kn = diag(variance); %different at every channel
     
+elseif strcmp(noiseType, 'none')
+    Kn = 0;
+    
+elseif strcmp(noiseType, 'dependent')
+    error('not implemented.')
+    
 elseif strcmp(noiseType, 'spatial')
-    if isfield(noiseType, 'sigma1')
+    if isfield(options, 'windowDim')
+        windowDim = options.windowDim;
+    else 
+        windowDim = 3;
+    end
+    windowKernel = ones(windowDim);
+    windowElements = windowDim^2;
+    
+    if size(windowKernel, 1) > height || size(windowKernel,2) > width
+        windowKernel = ones(min(height, width));
+        windowElements = min(height, width);
+    end
+    
+    if isfield(options, 'sigma1')
         sigma1 = options.sigma1;
     else
         sigma1 = 0.002; %0.002 to 0.01
     end
-    if isfield(noiseType, 'sigma2')
+    if isfield(options, 'sigma2')
         sigma2 = options.sigma2;
     else
         sigma2 = 0.002; %0.002 to 0.01
@@ -268,65 +284,98 @@ elseif strcmp(noiseType, 'spatial')
     variance = ones(msibands,1) * (sqrt(0.5) * sigma1 + sigma2)^2;
     Kn = diag(variance);
     
-elseif strcmp(noiseType, 'none')
-    Kn = 0;
-    
-elseif strcmp(noiseType, 'dependent')
-    error('not implemented.')
-    
 else 
     error('Not implemented');
 end
     
 % Covariance matrix of the additive noise ends
+MH = M * H';
+HMH = H * M * H';
 
-%% Subfunction for handling matrix inversion and multiplication
-    function C = multiplyToInverse(A, B, hasSVDTol, tol)
-        
-        if (nargin < 3)
-            hasSVDTol = false;
-        end
-        
-        if hasSVDTol 
-            C = A * pinv(B, tol); %SVD using "tol" as singular value threshold
-        else
-            C = A / B; %same as A*inv(B)
-        end
-    end
-
-if isSpatial
+Gres = reshape(G, msibands, height*width); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
+mask = reshape(mask, 1, height*width);
+    
+if strcmp(noiseType, 'spatial')
 %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
-    meansInWindow = conv2(G, windowKernel ./ windowElements,'same');
-    kInWindow = conv2((G - meansInWindow)*(G - meansInWindow)', windowKernel ./ (windowElements - 1), 'same');
-    W = multiplyToInverse(kInWindow, kInWindow + Kn); % same as kInWindow * inv(kInWindow + Kn)
-    What = multiplyToInverse(M * H', H * M * H' + kInWindow - W * kInWindow, hasSVDTol, tol);
-    estimatedReflectance = What * W * (G - meansInWindow) + What * meansInWindow;
-else
-    G = reshape(G, msibands, height*width); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
-    div = multiplyToInverse(M * H' , H * M * H' + Kn, hasSVDTol, tol); % M 401x401, H' 401x7, inv() 7x7
-    estimatedReflectance = div * G; % 401 x 100 
+
+    meanG = zeros(msibands, width * height);
+    centeredG = zeros(msibands, width * height);
+    Kcov = zeros(msibands, width * height);
+    for i = 1:msibands
+        Gi = squeeze(G(i,:,:));
+        means = conv2(Gi, windowKernel ./ windowElements,'same');        
+        meanG(i, :) = reshape(means, 1, width * height);
+        centeredG(i, :) =  reshape(Gi - means, 1, width * height);
+        sdGi = stdfilt(Gi);
+        varGi = sdGi.^2;
+        Kcov(i, :) =  reshape(conv2(varGi, windowKernel ./ (windowElements - 1), 'same'), 1, width * height); 
+    end
+    
+    activeRegion = find(mask);
+    estimatedReflectance = zeros(wavelengthN, length(activeRegion));
+    for i = 1:activeRegion
+        meanGij = squeeze(meanG(:,i));
+        centeredGij = squeeze(centeredG(:,i));
+        Kij = diag(squeeze(Kcov(:,i)));
+        W = multiplyToInverse(Kij, Kij + Kn); % same as kInWindow * inv(kInWindow + Kn)
+        What = multiplyToInverse(MH, HMH + Kij - W * Kij, hasSVDTol, tol);
+        estimatedReflectance(:, i) = What * W * centeredGij + What * meanGij;  
+    end
+    
+else    
+    activeRegion = Gres(:,mask);
+    div = multiplyToInverse(MH , HMH + Kn, hasSVDTol, tol); % M 401x401, H' 401x7, inv() 7x7
+    estimatedReflectance = div * activeRegion; % 401 x 100 
 end  
 
 %% Perform Wiener estimation for all pixels in an image area
 
-if (size(g, 2) > 30)
+if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = reshape(estimatedReflectance, numel(wavelength), height, width);
-else
-    estimatedReflectance = mean(estimatedReflectance, 2);
+else   
     
-    if ~isempty(spectrum)
-        r = spectrum;
-        rhat = estimatedReflectance;
-        N = length(r);
-        
-        % Root Mean Square Error
-        rmse = sqrt((r - rhat)'*(r - rhat)/N);
-
-        % Normalized Mean Square Error
-        nmse = (r - rhat)' * (r - rhat) / (r' * r);
+    if ~isempty(spectrum)    
+        [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
+        [nmse, nmseIdx] = min(Nmse(spectrum, estimatedReflectance));
+        if (rmseIdx ~= nmseIdx)
+            disp('Different minimum location.')
+        end
+        estimatedReflectance = estimatedReflectance(:,rmseIdx);
     end
 end
 
 % Perform the estimation for all pixels in an image area ends
 
+end
+
+function rmse = Rmse(r_measured, r_estimated)
+        % Root Mean Square Error
+        [N, M] = size(r_estimated);
+        rmse = zeros(1, M);
+        for i = 1:M
+            rmse(i) = sqrt((r_measured - r_estimated(:,i))'*(r_measured - r_estimated(:,i))/ N);
+        end
+end
+
+function nmse = Nmse(r_measured, r_estimated)
+        % Normalized Mean Square Error
+        [~, M] = size(r_estimated);
+        nmse = zeros(1, M);
+        for i = 1:M
+            nmse(i) = (r_measured - r_estimated(:,i))' * (r_measured - r_estimated(:,i)) / (r_measured' * r_measured);
+        end
+end
+
+%% Subfunction for handling matrix inversion and multiplication
+function C = multiplyToInverse(A, B, hasSVDTol, tol)
+
+    if (nargin < 3)
+        hasSVDTol = false;
+    end
+
+    if hasSVDTol 
+        C = A * pinv(B, tol); %SVD using "tol" as singular value threshold
+    else
+        C = A / B; %same as A*inv(B)
+    end
 end

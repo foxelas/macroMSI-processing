@@ -125,9 +125,9 @@ end
 regVal = double(cIM(initPos(1), initPos(2), initPos(3)));
 
 % text output with initial parameters
-disp(['RegionGrowing Opening: Initial position (' num2str(initPos(1))...
-      '|' num2str(initPos(2)) '|' num2str(initPos(3)) ') with '...
-      num2str(regVal) ' as initial pixel value!'])
+% disp(['RegionGrowing Opening: Initial position (' num2str(initPos(1))...
+%       '|' num2str(initPos(2)) '|' num2str(initPos(3)) ') with '...
+%       num2str(regVal) ' as initial pixel value!'])
 
 % preallocate array
 J = false(nRow, nCol, nSli);
@@ -191,30 +191,30 @@ for cSli = 1:nSli
     if tfFillHoles
         % fill the holes inside the mask
         J(:,:,cSli) = imfill(J(:,:,cSli), 'holes');    
-        B = bwboundaries(J(:,:,cSli), 8, 'noholes');
-    else
-        B = bwboundaries(J(:,:,cSli));
+%         B = bwboundaries(J(:,:,cSli), 8, 'noholes');
+%     else
+%         B = bwboundaries(J(:,:,cSli));
     end
     
-	newVertices = [B{1}(:,2), B{1}(:,1)];
-	
-    % simplify the polygon via Line Simplification
-    if tfSimplify
-        newVertices = dpsimplify(newVertices, simplifyTolerance);        
-    end
-    
-    % number of new vertices to be added
-    nNew = size(newVertices, 1);
-    
-    % append the new vertices to the existing polygon matrix
-    if isequal(nSli, 1) % 2D
-        P(end+1:end+nNew, :) = newVertices;
-    else                % 3D
-        P(end+1:end+nNew, :) = [newVertices, repmat(cSli, nNew, 1)];
-    end
+% 	newVertices = [B{1}(:,2), B{1}(:,1)];
+% 	
+%     % simplify the polygon via Line Simplification
+%     if tfSimplify
+%         newVertices = dpsimplify(newVertices, simplifyTolerance);        
+%     end
+%     
+%     % number of new vertices to be added
+%     nNew = size(newVertices, 1);
+%     
+%     % append the new vertices to the existing polygon matrix
+%     if isequal(nSli, 1) % 2D
+%         P(end+1:end+nNew, :) = newVertices;
+%     else                % 3D
+%         P(end+1:end+nNew, :) = [newVertices, repmat(cSli, nNew, 1)];
+%     end
 end
-
-% text output with final number of vertices
-disp(['RegionGrowing Ending: Found ' num2str(length(find(J)))...
-      ' pixels within the threshold range (' num2str(size(P, 1))...
-      ' polygon vertices)!'])
+% 
+% % text output with final number of vertices
+% disp(['RegionGrowing Ending: Found ' num2str(length(find(J)))...
+%       ' pixels within the threshold range (' num2str(size(P, 1))...
+%       ' polygon vertices)!'])

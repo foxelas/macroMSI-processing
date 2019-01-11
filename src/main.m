@@ -93,7 +93,7 @@ for i = 1:numel(actions)
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
         'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-        'showImages', showImages, 'saveOptions', saveOptions);
+        'showImages', showImages, 'saveOptions', saveOptions, 'isSpatial', false);
     setup;
 
     %% main

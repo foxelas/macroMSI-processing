@@ -2,7 +2,7 @@
 smmsFull = {'markovian', 'Cor_Macbeth', 'Cor_All', 'Cor_Malignancy',...
     'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample'}; %, 'Cor_SampleMalignancyFixing'};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
-nmsFull = {'none', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 15dB', 'givenSNR 25dB', 'givenSNR 30dB', 'givenSNR 40dB', 'fromOlympus'};
+nmsFull = {'none', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 15dB', 'givenSNR 25dB', 'givenSNR 30dB', 'givenSNR 40dB', 'fromOlympus', 'spatial'};
 
 %% Comparison settings
 if contains(action, 'matrixsystem')
@@ -24,21 +24,21 @@ elseif contains(action, 'smoothing matrix') || contains(action, 'matrix')
         nms = {'givenSNR'};
         
 elseif contains(action, 'color system') || contains(action, 'system')   
-        smms = {'corr same malignancy all spectra'};
+        smms = {'Cor_Malignancy'};
         pvsms = pvsmsFull;
         plotType = 'SystemAvgMinMax';
         nms = {'givenSNR'};
 
 elseif contains(action, 'noise model') || contains(action, 'noise')   
         pvsms = {'extended'};
-        smms = {'corr same malignancy all spectra'};
+        smms = {'Cor_Malignancy'};
         plotType = 'NoiseAvgMinMax'; %Or 'NoiseAvgMinMaxWithNone'
         nms = nmsFull;
 
 elseif contains(action, 'simple') 
         pvsms = {'extended'};
-        smms = {'corr same malignancy sample spectra'};
-        nms = {'givenSNR'};
+        smms = {'Cor_Malignancy'};
+        nms = {options.noiseType}; %{'givenSNR'};
         estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);
      
 else 
@@ -62,15 +62,17 @@ for l = 1:pvsmsN
 end
 rmse = zeros(methodsN, msiN);
 nmse = zeros(methodsN, msiN);
-
+load(fullfile(options.systemdir, 'patches.mat'));
 %% Comparison
 % range = 146:187; %; %1:msiN; [66, 165, 175, 236, 297]
-for k = 1:msiN
+for k = 1:5 %1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
     
     % Retrieve MSI data
-    g = MSIStruct(k).MSI;
+%     g = MSIStruct(k).MSI;
+    g = patches(k);
+
     
     % Retrieve measured spectrum
     measured = interp1(380:780, measuredSpectrumStruct(k).Spectrum, wavelength, 'nearest');
@@ -113,6 +115,7 @@ for k = 1:msiN
     if (options.showImages)
         plots('estimationComparison', 2, [measured, est], sampleName, 'wavelength', wavelength, 'method', options.pixelValueSelectionMethod, ...
             'saveOptions', options.saveOptions, 'lineNames', lineNames);
+        pause(0.1)
     end
     
 end
@@ -122,6 +125,9 @@ rmse = rmse(:, rmse(1, :) ~= 0);
 nmse = nmse(:, nmse(1, :) ~= 0);
 errorData = [mean(rmse, 2), max(rmse, [], 2), min(rmse, [], 2), mean(nmse, 2), max(nmse, [], 2), min(nmse, [], 2)];
 errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse', max(rmse, [], 2), 'stdrmse', std(rmse, [], 2), 'avgnmse', mean(nmse, 2), 'minnmse', min(nmse, [], 2), 'maxnmse', max(nmse, [], 2), 'stdnmse', std(nmse, [], 2), 'options', optionsSelection);
+
+minError = min(mean(rmse, 2));
+% fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(action, 'simple') 
     out.EstimatedSpectrumStruct = estimatedSpectrumStruct;
