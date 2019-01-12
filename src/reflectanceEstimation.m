@@ -218,6 +218,9 @@ end
 H = illumXsensitivity(illumination, sensitivity, pixelValueSelectionMethod); % illumination * sensitivity
 H = diag(coeff) * H;
 
+MH = M * H';
+HMH = H * M * H';
+
 % Illumination X sensitivity ends
 
 %% Covariance matrix of the additive noise
@@ -229,15 +232,16 @@ if contains(noiseType, 'independent')
     Kn = diag(options.noiseOrder*ones(size(variance)));
 
 elseif contains(noiseType, 'givenSNR')
+    defaultSNR = 36; %dB
     attr = strsplit(noiseType, {' ', 'dB'});
     if (numel(attr) > 1)
         snr = str2double(attr{2});
     elseif isfield(options, 'snr')
         snr = options.snr;
     else
-        snr = m.snr; %dB
+        snr = defaultSNR; %dB
     end
-    variance = (trace(H*M*H') / (msibands * 10^(snr / 10))) * ones(msibands, 1);
+    variance = (trace(HMH) / (msibands * 10^(snr / 10))) * ones(msibands, 1);
     Kn = diag(variance); %different at every channel def. 0.0379
     
 elseif contains(noiseType, 'white gaussian')
@@ -253,10 +257,7 @@ elseif strcmp(noiseType, 'fromOlympus')
 elseif strcmp(noiseType, 'none')
     Kn = 0;
     
-elseif strcmp(noiseType, 'dependent')
-    error('not implemented.')
-    
-elseif strcmp(noiseType, 'spatial')
+elseif strcmp(noiseType, 'spatial') || contains(noiseType, 'spatial')
     if isfield(options, 'windowDim')
         windowDim = options.windowDim;
     else 
@@ -270,18 +271,24 @@ elseif strcmp(noiseType, 'spatial')
         windowElements = min(height, width);
     end
     
+    attr = strsplit(options.noiseType, {' '});
+    
     if isfield(options, 'sigma1')
         sigma1 = options.sigma1;
-    else
-        sigma1 = 0.002; %0.002 to 0.01
-    end
-    if isfield(options, 'sigma2')
-        sigma2 = options.sigma2;
-    else
-        sigma2 = 0.002; %0.002 to 0.01
+    elseif (numel(attr) > 1)
+        sigma1 = str2double(attr{2});
     end
     
-    variance = ones(msibands,1) * (sqrt(0.5) * sigma1 + sigma2)^2;
+    if isfield(options, 'sigma2')
+        sigma2 = options.sigma2;
+    elseif (numel(attr) > 2)
+        sigma2 = str2double(attr{3});
+    end
+    
+    if exist('sigma1', 'var') && ~exist('sigma2', 'var')
+        variance = ones(msibands,1) * (sqrt(0.5) * sigma1 + sigma2)^2; %else use noise variance from Olympus 
+    end
+    
     Kn = diag(variance);
     
 else 
@@ -289,8 +296,6 @@ else
 end
     
 % Covariance matrix of the additive noise ends
-MH = M * H';
-HMH = H * M * H';
 
 Gres = reshape(G, msibands, height*width); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
 mask = reshape(mask, 1, height*width);

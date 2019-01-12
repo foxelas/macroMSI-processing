@@ -10,10 +10,12 @@ options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
 'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
 'showImages', showImages, 'saveOptions', saveOptions);
 setup;
+tic;
+
 fileID = fopen('..\logs\log.txt', 'a');
 minVal = 2;
 options.noiseType = 'givenSNR';
-for snr = 5:40
+for snr = 35:0.1:37
     options.snr = snr;
     actionReflectanceEstimationComparison;
     minCur = mean(rmse, 2);
@@ -27,7 +29,7 @@ fprintf(fileID, outputLog);
 clear('rmse');
 
 minVal = 2;
-for noiseOrder = 1:6
+for noiseOrder = 2:6
     options.noiseType = strcat(['white gaussian 10^{-', num2str(noiseOrder),'}']);
     actionReflectanceEstimationComparison;
     minCur = mean(rmse, 2);
@@ -41,7 +43,7 @@ fprintf(fileID, outputLog);
 clear('rmse');
 
 minVal = 2;
-for noiseOrder = 1:6
+for noiseOrder = 3:8
     options.noiseType = strcat(['independent 10^{-', num2str(noiseOrder),'}']);
     actionReflectanceEstimationComparison;
     minCur = mean(rmse, 2);
@@ -56,14 +58,20 @@ clear('rmse');
 
 options.noiseType = 'fromOlympus';
 actionReflectanceEstimationComparison;
+outputLog = sprintf('Simple Wiener:: MinRMSE=%.5f, Noise from Olympus\n', mean(rmse, 2))
+fprintf(fileID, outputLog);
+clear('rmse');
+
+options.noiseType = 'spatial';
+actionReflectanceEstimationComparison;
 outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Noise from Olympus\n', mean(rmse, 2))
 fprintf(fileID, outputLog);
 clear('rmse');
 
 minVal = 2;
 options.noiseType = 'spatial';
-for sigma1 = 0.0001:0002:0.03
-    for sigma2 = 0.0001:0002:0.3
+for sigma1 = 10^(-4):(5*10^(-4)):0.03
+    for sigma2 = 10^(-4):(5*10^(-4)):0.3
         options.sigma1 = sigma1;
         options.sigma2 = sigma2;
         actionReflectanceEstimationComparison;
@@ -80,4 +88,7 @@ fprintf(fileID, outputLog);
 
 fclose(fileID);
 
+t = toc;
+fprintf('Action elapsed %.2f mins.\n', t / 60);
 clear variables; 
+

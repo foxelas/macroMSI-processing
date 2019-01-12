@@ -2,7 +2,7 @@
 smmsFull = {'markovian', 'Cor_Macbeth', 'Cor_All', 'Cor_Malignancy',...
     'Cor_Fixing', 'Cor_MalignancyFixing', 'Cor_Sample'}; %, 'Cor_SampleMalignancyFixing'};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
-nmsFull = {'none', 'white gaussian 10^{-5}', 'independent 10^{-3}', 'independent 10^{-5}', 'givenSNR 15dB', 'givenSNR 25dB', 'givenSNR 30dB', 'givenSNR 40dB', 'fromOlympus', 'spatial'};
+nmsFull = {'none', 'white gaussian 10^{-4}', 'independent 10^{-6}', 'givenSNR 36dB', 'fromOlympus', 'spatial', 'spatial 0.0001 0.0001'};
 
 %% Comparison settings
 if contains(action, 'matrixsystem')
@@ -65,7 +65,7 @@ nmse = zeros(methodsN, msiN);
 load(fullfile(options.systemdir, 'patches.mat'));
 %% Comparison
 % range = 146:187; %; %1:msiN; [66, 165, 175, 236, 297]
-for k = 1:5 %1:msiN
+for k = 1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
     

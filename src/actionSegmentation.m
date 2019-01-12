@@ -1,6 +1,6 @@
 patches = struct('Patch', [], 'Mask', [], 'ID', []);
 tic;
-for k = 1:5%msiN
+for k = 1:msiN
     % Give a name
     [options.saveOptions.plotName, ~] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
     
@@ -15,7 +15,7 @@ for k = 1:5%msiN
       
 end
 t = toc;
-fprintf('Action elapsed %.2f mins.\n', t / 60);
+fprintf('Action elapsed %.2f hours.\n', t / (60 * 60));
 patches = orderfields(patches);
 save(fullfile(options.systemdir, 'patches.mat'), 'patches');
 

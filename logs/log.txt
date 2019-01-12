@@ -28,3 +28,63 @@ White gaussian:: MinRMSE=0.00810, NoiseOrder=10^(-5)
 Independent noise:: MinRMSE=0.00685, NoiseOrder=10^(-4)
 Spatially adaptive Wiener:: MinRMSE=0.00547, Noise from Olympus
 Spatially adaptive Wiener:: MinRMSE=0.03238, Sigma1=0.0300, Sigma2=0.0200
+-------------------------------------------
+ Run on  12-Jan-2019 03:06:53 
+ 53.7448 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     isSpatial     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  12-Jan-2019 06:22:51 
+ 11321.7339 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2     
+     action     segmentation     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     false     
+     isSpatial     false     
+     datadir          mspi saitama_v2     
+     systemdir       input saitama_v2     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2     
+     plotName       output saitama_v2 segmentation segmentation_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+Given SNR:: MinRMSE=0.02276, SNR=36
+White gaussian:: MinRMSE=0.06013, NoiseOrder=10^(-4)
+Independent noise:: MinRMSE=0.02355, NoiseOrder=10^(-6)
+Simple Wiener:: MinRMSE=0.02406, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.04276, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.06627, Sigma1=0.0001, Sigma2=0.0001
+Given SNR:: MinRMSE=0.02276, SNR=36
+White gaussian:: MinRMSE=0.05011, NoiseOrder=10^(-3)
+Independent noise:: MinRMSE=0.02355, NoiseOrder=10^(-6)
+Simple Wiener:: MinRMSE=0.02406, Noise from Olympus
