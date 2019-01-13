@@ -37,7 +37,7 @@ elseif contains(action, 'noise model') || contains(action, 'noise')
 
 elseif contains(action, 'simple') 
         pvsms = {'extended'};
-        smms = {'Cor_Malignancy'};
+        smms = {'Cor_Malignancy'}; 
         nms = {options.noiseType}; %{'givenSNR'};
         estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);
      
@@ -62,17 +62,15 @@ for l = 1:pvsmsN
 end
 rmse = zeros(methodsN, msiN);
 nmse = zeros(methodsN, msiN);
-load(fullfile(options.systemdir, 'patches.mat'));
+
 %% Comparison
 % range = 146:187; %; %1:msiN; [66, 165, 175, 236, 297]
-for k = 1:msiN
+for k = 1:5 %msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
     
     % Retrieve MSI data
-%     g = MSIStruct(k).MSI;
-    g = patches(k);
-
+    g = MSIStruct(k);
     
     % Retrieve measured spectrum
     measured = interp1(380:780, measuredSpectrumStruct(k).Spectrum, wavelength, 'nearest');
@@ -85,8 +83,8 @@ for k = 1:msiN
             for m = 1:nmsN
             
                 if strcmp(optionsSelection(l).pixelValueSelectionMethod, 'rgb')
-                    g = whiteStruct(k).MSI;
-                    g = reshape(g, [3, size(g, 1), size(g, 2)]);
+                    tempRGB = whiteStruct(k).MSI;
+                    g.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
                 end
 
                 j = (m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l ;
@@ -127,7 +125,7 @@ errorData = [mean(rmse, 2), max(rmse, [], 2), min(rmse, [], 2), mean(nmse, 2), m
 errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse', max(rmse, [], 2), 'stdrmse', std(rmse, [], 2), 'avgnmse', mean(nmse, 2), 'minnmse', min(nmse, [], 2), 'maxnmse', max(nmse, [], 2), 'stdnmse', std(nmse, [], 2), 'options', optionsSelection);
 
 minError = min(mean(rmse, 2));
-% fprintf('Minimum rmse = %.5f\n', minError);
+fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(action, 'simple') 
     out.EstimatedSpectrumStruct = estimatedSpectrumStruct;

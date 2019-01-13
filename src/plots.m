@@ -197,7 +197,7 @@ switch plotType
         hold on
         h(1) = plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}); % plot measured reflectance
         for i = 1:curveN
-            h(i+1) = plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', lineWidth(i), 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
+            h(i+1) = plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', lineWidth(i), 'DisplayName', strrep(lineNames{i + 1}, '_', ' ')); % plot estimated reflectances
         end
         hold off
         
@@ -246,7 +246,7 @@ switch plotType
         
         %% plot single measurement %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hold on
-        plot(wavelength, curves, 'DisplayName', lineNames, 'Color', 'm')
+        plot(wavelength, curves, 'DisplayName', strrep(lineNames, '_', ' '), 'Color', 'm')
         xlabel('wavelength (nm)');
         ylabel('Reflectance ratio');
         title('Reflectance spectrum of a point object');

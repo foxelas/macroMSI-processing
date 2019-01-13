@@ -147,10 +147,9 @@ switch smoothingMatrixMethod
         
     case 'Cor_Malignancy'
         if isBenign
-            M = m.Mn; %Cor_Benign;
-            
+            M = m.Cor_Benign;
         else
-            M = m.Mc;%Cor_Malignant;
+            M = m.Cor_Malignant;
         end
         
     case 'Cor_Fixing'
@@ -207,7 +206,7 @@ switch smoothingMatrixMethod
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
         options.smoothingMatrixMethod = 'Cor_Sample';
         rhat = reflectanceEstimation(MSI, spectrum, id, options);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir);
+        M = adaptiveSmoothingMatrix(rhat);
         
     case 'spatiospectral'
 %         %unfinished      
@@ -342,10 +341,6 @@ else
     estimatedReflectance = div * activeRegion; % 401 x 100 
 end  
 
-if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
-    error('Estimated reflectance spectrum is out of bounds!');
-end
-
 %% Perform Wiener estimation for all pixels in an image area
 
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
@@ -398,10 +393,10 @@ function C = multiplyToInverse(A, B, hasSVDTol, tol)
     end
 end
 
-function di = reflectanceDistance(ri, rhat)
+function d = reflectanceDistance(ri, rhat)
     a = 0.5;
     
-    di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
+    d = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
         + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
 end
 
@@ -415,23 +410,20 @@ end
 function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir)
     ff = matfile(fullfile(systemdir, 'in.mat'));
     measuredSpectra = ff.MeasuredSpectrumStruct;
-    idxs = unique([measuredSpectra.Name]);
-    measuredSpectra = measuredSpectra(idxs);
-    wavelength = linspace(380, 780, 81)';
+    wavelength = linspace(380, 780, 81);
     n = length(measuredSpectra);
     r = zeros(81,n);
     d = zeros(1,n);
     for i = 1:n
-        ri =  interp1(380:780, measuredSpectra(i).Spectrum, wavelength, 'nearest');
+        r(i) = interp1(380:780, measuredSpectra(i).Spectrum, wavelength, 'nearest');
         d(i) = reflectanceDistance(ri, rhat);
-        r(:,i) = ri;
     end
     dmax = max(d);
     
     spectra = [];
     for i = 1:n 
         k = replicationTimes(d(i), dmax);
-        spectra = [ spectra, repmat(r(:,i),1,k)];
+        spectra = [ spectra; repmat(r,1,k)];
     end
     
     means = mean(spectra,2);

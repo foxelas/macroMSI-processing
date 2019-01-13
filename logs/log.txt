@@ -88,3 +88,243 @@ Given SNR:: MinRMSE=0.02276, SNR=36
 White gaussian:: MinRMSE=0.05011, NoiseOrder=10^(-3)
 Independent noise:: MinRMSE=0.02355, NoiseOrder=10^(-6)
 Simple Wiener:: MinRMSE=0.02406, Noise from Olympus
+-------------------------------------------
+ Run on  12-Jan-2019 21:13:40 
+ 128.1807 s elapsed. 
+     tryReadData     true     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:01:42 
+ 3.542 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:02:24 
+ 3.0318 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:03:42 
+ 2.8975 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:04:31 
+ 2.9881 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:15:41 
+ 13.8444 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:52:49 
+ 1.4215 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:54:11 
+ 1.4512 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:55:26 
+ 1.5942 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  13-Jan-2019 02:55:47 
+ 1.5632 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     givenSNR     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_left_10-08-59_1     
+ -------------------------------------------
+
+
+
+
+
+

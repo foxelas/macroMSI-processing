@@ -7,7 +7,7 @@ darkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
 MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', []);
 appendingIdx = 1;
 
-for k = 1:msiN
+for k = 1:length(ID)
     % Give a name
     [options.saveOptions.plotName, ~] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
     name = generateName([], 'image', data(ID(k).Representative), ID(k));
@@ -94,7 +94,7 @@ function [patch, patchMask, whiteI, darkI] = SegmentAndSave( files, x, y, option
     patch = MSI(:, patchY, patchX, :);
     patchMask = mask(patchY, patchX);
     
-    if (options.showImages)
+    if false %(options.showImages)
         fig1 = figure(1);
         imshow(whiteI + mask); %imshow(squeeze(MSI(4,:,:,:)));
         hold on

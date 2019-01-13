@@ -25,7 +25,7 @@ end
 
 whiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
 darkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
-MSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
+MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', []);
 appendingIdx = 1;
 
 for i = 1:length(ID)
@@ -44,16 +44,16 @@ for i = 1:length(ID)
     end
     
     if ~(isempty(MSI))
-        MSIStruct(appendingIdx) = struct('Name', name, 'Index', appendingIdx, 'MSI', MSI);
+        MSIStruct(appendingIdx) = struct('Name', name, 'Index', appendingIdx, 'MSI', MSI, 'Mask', ones(height, width));
         appendingIdx = length(MSIStruct) + 1;
     end
 end
 
 m = matfile(generateName(options, 'matfilein'), 'Writable', true);
-m.MSIStruct = MSIStruct;
-m.WhiteMSIStruct = whiteMSIStruct;
-m.DarkMSIStruct = darkMSIStruct;
+m.MSIStruct = orderfields(MSIStruct);
+m.WhiteMSIStruct = orderfields(whiteMSIStruct);
+m.DarkMSIStruct = orderfields(darkMSIStruct);
 
-fprintf('Finished reading all MSI data according to ID file. Saving in %s.\n', options.systemdir);
+fprintf('Finished reading all MSI data according to ID file (Square Neighborhood case). Saving in %s.\n', options.systemdir);
 
 end

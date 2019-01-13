@@ -1,9 +1,9 @@
-function [] = main(actions, dataset, skipLoading, showImages, saveImages)
+function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryReadData)
 
 %% Execute actions at bulk
 %
 % Usage: 
-% main('ReflectanceEstimationSimple', 'saitama_v2', false, true, false)
+% main('ReflectanceEstimationSimple', 'saitama_v2', false, true, false, false)
 % 
 % Input
 %
@@ -78,6 +78,9 @@ end
 if (nargin < 5)
     saveImages = true;
 end
+if (nargin < 6)
+    tryReadData = false;
+end
 
 if ~iscell(actions) 
     actions = { actions };
@@ -91,9 +94,9 @@ for i = 1:numel(actions)
     
     %% Set-up of options for running
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
-    options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
+    options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', action, ...
         'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-        'showImages', showImages, 'saveOptions', saveOptions, 'isSpatial', false);
+        'showImages', showImages, 'saveOptions', saveOptions);
     setup;
 
     %% main

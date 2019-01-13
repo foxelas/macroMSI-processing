@@ -105,10 +105,15 @@ if ~options.skipLoading
     msiN = length(ID);
     if (options.tryReadData)
         fprintf('Reading dataset...\n\n');
-        %readAndSaveSpectrum(options, ID, data);
-        readAndSaveMSI(options, ID, data, 3, 3, bands);
+        
+%         readAndSaveSpectrum(options, ID, data);
+        
+        if contains(options.dataset, 'region')
+            segmentAndSaveMSI(options, ID, data);
+        else
+            readAndSaveMSI(options, ID, data, 5, 5, bands);
+        end   
     end
-    %     load(strcat(options.systemdir,'coeff.mat'));
     in = matfile(generateName(options, 'matfilein')');
     MSIStruct = in.MSIStruct;
     whiteStruct = in.WhiteMSIStruct;
