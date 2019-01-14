@@ -1,5 +1,5 @@
 close all; clc;
-dataset = 'saitama_v2';
+dataset = 'saitama_v2_min_region';
 action = lower('ReflectanceEstimationSimple');
 skipLoading = false;
 showImages = false;
@@ -18,15 +18,21 @@ tic;
 [minSNR,minVal] = fminsearch(@estimationGivenSNR, 10, fminsearchOptions);
 outputLog = sprintf('Given SNR:: MinRMSE=%.5f, SNR=%d\n', minVal, minSNR)
 fprintf(fileID, outputLog);
+% 
+% %% Optimize noise model "White Gaussian"
+% [minNoiseOrder,minVal] = fminsearch(@estimationWhiteGaussian, 2, fminsearchOptions);
+% outputLog = sprintf('White gaussian:: MinRMSE=%.5f, NoiseOrder=10^(-%d)\n', minVal, minNoiseOrder)
+% fprintf(fileID, outputLog);
 
-%% Optimize noise model "White Gaussian"
-[minNoiseOrder,minVal] = fminsearch(@estimationWhiteGaussian, 2, fminsearchOptions);
-outputLog = sprintf('White gaussian:: MinRMSE=%.5f, NoiseOrder=10^(-%d)\n', minVal, minNoiseOrder)
+%% Optimize noise model "SameForChannel noise"
+[minSNR,minVal] = fminsearch(@estimationSameForChannelNoise, 10, fminsearchOptions);
+outputLog = sprintf('Given SNR:: MinRMSE=%.5f, SNR=%d\n', minVal, minSNR)
 fprintf(fileID, outputLog);
 
-%% Optimize noise model "Independent noise"
-[minNoiseOrder,minVal] = fminsearch(@estimationIndependentNoise, 2, fminsearchOptions);
-outputLog = sprintf('Independent noise:: MinRMSE=%.5f, NoiseOrder=10^(-%d)\n', minVal, minNoiseOrder)
+
+%% Optimize noise model "DiffForChannel noise"
+[sigma,minVal] = fminsearch(@estimationDiffForChannelNoise, 0.003 * ones(7,1), fminsearchOptions);
+outputLog = sprintf('Independent noise:: MinRMSE=%.5f, Sigma=[%.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', minVal, sigma(1), sigma(2), sigma(3), sigma(4), sigma(5), sigma(6), sigma(7))
 fprintf(fileID, outputLog);
 clear('rmse');
 
@@ -44,11 +50,19 @@ outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Noise from Olympu
 fprintf(fileID, outputLog);
 clear('rmse');
 
-%% Optimize noise model "Spatial Indipendent"
-estimationSpatiallyAdaptive
-[sigma,minVal] = fminsearch(@estimationSpatiallyAdaptive, [10^(-4), 10^(-4)], fminsearchOptions);
+%% Optimize noise model "Spatial DiffForChannel"
+[sigma,minVal] = fminsearch(@estimationSpatiallyAdaptive,  0.003 * ones(7,1), fminsearchOptions);
+outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Sigma=[%.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', minVal, sigma(1), sigma(2), sigma(3), sigma(4), sigma(5), sigma(6), sigma(7))
+fprintf(fileID, outputLog);
+
+[sigma,minVal] = fminsearch(@estimationSpatiallyAdaptive, [0.0034; 0.0058], fminsearchOptions);
 outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Sigma1=%.4f, Sigma2=%.4f\n', minVal, sigma(1), sigma(2))
 fprintf(fileID, outputLog);
+
+[alpha,minVal] = fminsearch(@estimationSpatiallyAdaptive, 0.5, fminsearchOptions);
+outputLog = sprintf('Adaptive Wiener:: MinRMSE=%.5f, Alpha=%.4f\n', minVal, alpha)
+fprintf(fileID, outputLog);
+
 
 fclose(fileID);
 t = toc;
@@ -56,7 +70,7 @@ fprintf('Action elapsed %.2f mins.\n', t / 60);
 clear variables; 
 
 function rmseCur = estimationGivenSNR(x)
-    dataset = 'saitama_v2';
+    dataset = 'saitama_v2_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -73,8 +87,26 @@ function rmseCur = estimationGivenSNR(x)
     rmseCur = mean(rmse, 2);
 end
 
+function rmseCur = estimationAdaptive(x)
+    dataset = 'saitama_v2_min_region';
+    action = lower('ReflectanceEstimationSimple');
+    skipLoading = false;
+    showImages = false;
+    saveImages = false;
+
+    saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
+    options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
+    'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
+    'showImages', showImages, 'saveOptions', saveOptions);
+    setup;
+    options.noiseType = 'adaptive';
+    options.alpha = x;
+    actionReflectanceEstimationComparison;
+    rmseCur = mean(rmse, 2);
+end
+
 function rmseCur = estimationWhiteGaussian(x)
-    dataset = 'saitama_v2';
+    dataset = 'saitama_v2_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -91,8 +123,8 @@ function rmseCur = estimationWhiteGaussian(x)
 end
 
 
-function rmseCur = estimationIndependentNoise(x)
-    dataset = 'saitama_v2';
+function rmseCur = estimationDiffForChannel(x)
+    dataset = 'saitama_v2_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -103,13 +135,33 @@ function rmseCur = estimationIndependentNoise(x)
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
     setup;
-    options.noiseType = strcat(['independent 10^{-', num2str(x),'}']);
+    options.noiseType = 'diffForChannel';
+    options.sigma = x';
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
 end
 
-function rmseCur = estimationSpatiallyAdaptive(x,y)
-    dataset = 'saitama_v2';
+function rmseCur = estimationSameForChannel(x)
+    dataset = 'saitama_v2_min_region';
+    action = lower('ReflectanceEstimationSimple');
+    skipLoading = false;
+    showImages = false;
+    saveImages = false;
+
+    saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
+    options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
+    'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
+    'showImages', showImages, 'saveOptions', saveOptions);
+    setup;
+    options.noiseType = 'sameForChannel';
+    options.sigma = x;
+    actionReflectanceEstimationComparison;
+    rmseCur = mean(rmse, 2);
+end
+
+function rmseCur = estimationSpatiallyAdaptive(X)
+
+    dataset = 'saitama_v2_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -121,8 +173,13 @@ function rmseCur = estimationSpatiallyAdaptive(x,y)
     'showImages', showImages, 'saveOptions', saveOptions);
     setup;
     options.noiseType = 'spatial';
-    options.sigma1 = x;
-    options.sigma2 = y;
+    if numel(X) == 2
+        options.sigma1 = X(1);
+        options.sigma2 = X(2);
+    else
+        options.variance = X';
+    end
+    
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
 end

@@ -124,9 +124,6 @@ for i = 1:numel(actions)
               lower('ReflectanceEstimationSimple')}
             actionReflectanceEstimationComparison;
 
-        case 'segmentation'
-            actionSegmentation;
-
         case {'createsrgb', 'reconstructsrgb'} % from the MSI reflectances       
             actionReconstructSRGB;
 

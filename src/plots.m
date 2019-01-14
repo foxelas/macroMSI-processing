@@ -205,6 +205,7 @@ switch plotType
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance Spectrum');
         xlim([400, 700]);
+        ylim([0, 1]);
         title(figTitle);
         legend(h, 'Location', 'eastoutside'); % 'Orientation','horizontal');
         

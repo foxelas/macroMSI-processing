@@ -1,0 +1,17 @@
+Given SNR:: MinRMSE=0.06851, SNR=1.003320e+01
+White gaussian:: MinRMSE=0.09728, NoiseOrder=10^(-2.300000e+00)
+Independent noise:: MinRMSE=0.06800, NoiseOrder=10^(-2.906250e+00)
+Simple Wiener:: MinRMSE=0.07939, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.09002, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.14918, Sigma1=0.0001, Sigma2=0.0001
+Given SNR:: MinRMSE=0.05618, SNR=1.540625e+01
+White gaussian:: MinRMSE=0.06591, NoiseOrder=10^(-2.400000e+00)
+Independent noise:: MinRMSE=0.05519, NoiseOrder=10^(-3.387500e+00)
+Simple Wiener:: MinRMSE=0.07939, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.09002, Noise from Olympus
+Spatially adaptive Wiener:: MinRMSE=0.09002, Sigma1=0.0001, Sigma2=0.0001
+Spatially adaptive Wiener:: MinRMSE=0.12104, Sigma1=0.0003, Sigma2=0.0009
+Spatially adaptive Wiener:: MinRMSE=0.08066, Sigma1=0.0034, Sigma2=0.0058
+Spatially adaptive Wiener:: MinRMSE=0.08053, Sigma1=0.0119, Sigma2=-0.0011
+Spatially adaptive Wiener:: MinRMSE=0.08052, Sigma1=0.0035, Sigma2=0.0055
+Spatially adaptive Wiener:: MinRMSE=0.09285, Sigma1=0.0031, Sigma2=0.0033

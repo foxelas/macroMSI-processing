@@ -31,10 +31,10 @@ for i = 1:max(G)
             measured = interp1(380:780, measuredSpectrumStruct(k).Spectrum, wavelength, 'nearest');
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
-            [~, rmse] = reflectanceEstimation(g, measured, idk, options);
+            [est, rmse] = reflectanceEstimation(g, measured, idk, options);
             avgRmse = avgRmse + rmse;
         end
-        if (avgRmse / length(idxs)) < rmseMin
+        if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0 ) || any(est(:) > 1 ))
             rmseMin = avgRmse / length(idxs);
             coeffIndexMin = coeffIndex;
         end
@@ -43,7 +43,7 @@ for i = 1:max(G)
 end
 
 ID = orderfields(ID);
-save(fullfile(options.systemdir, 'ID.mat'), 'ID');
+save(fullfile(options.systemdir, 'ID.mat'), 'ID', '-v7.3');
 disp('Finished updating CoeffIndex values in the ID file.')
 
 end
