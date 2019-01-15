@@ -1,3 +1,4 @@
+
 function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryReadData)
 
 %% Execute actions at bulk
@@ -65,10 +66,30 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryRea
 
 close all; clc;
 if (nargin < 1)
-    actions = 'segmentation';
+    promt = strcat('Chooce an action:\n',...
+        '1. Show System Specifications ', '2. Reflectance Estimation ', '3. Create sRGB', '4. Dimension Reduction ', ...
+        '5. Classification ', '6. Extract LBP', '\n');
+    selection = input(promt);
+
+    if (selection == 1)
+        action = 'SystemPlots';
+    elseif (selection == 2)
+        action = 'ReflectanceEstimationPreset';
+    elseif (selection == 3)
+        action = 'CreatesRGB';
+    elseif (selection == 4)
+        action = 'pca';
+    elseif (selection == 5)
+        action = 'knn';
+    elseif (selection == 6)
+        action = 'lbp';
+    else
+        error('Unsupported action.');
+    end
+       
 end
 if (nargin < 2)
-    dataset = 'saitama_v2';
+    dataset = 'saitama_v2_min_region';
 end
 if (nargin < 3)
     skipLoading = false;
@@ -89,63 +110,64 @@ else
     disp('Running batch execution');
 end
 
+%% Set-up of options for running
+saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
+options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', action, ...
+    'pixelValueSelectionMethod', 'extended', 'noiseType', 'sameForChannel', 'skipLoading', skipLoading, ...
+    'showImages', showImages, 'saveOptions', saveOptions);
+readData;
+    
 for i = 1:numel(actions)
-    
-    action = lower(actions{i});
-    
-    %% Set-up of options for running
-    saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
-    options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', action, ...
-        'pixelValueSelectionMethod', 'extended', 'noiseType', 'sameForChannel', 'skipLoading', skipLoading, ...
-        'showImages', showImages, 'saveOptions', saveOptions);
-    setup;
+        
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
 
     %% main
     tic;
     fprintf('Running action %s...\n', options.action);
 
-    switch (options.action)
-        case {'confplots', 'configureplots'}
-            actionCreateConfPlots;
-
-        case 'countdata'
-            actionCountData;
+    switch (lower(options.action))
+        case {'systemplots', 'systemspecs'}
+            options.action = 'SystemSpecs';
+            actionCreateSystemPlots;
             
-        case lower('prepareSmoothingMatrix')  % needs to be performed before doing reflectance estimation 
+        case lower('PrepareSmoothingMatrix') % needs to be performed before doing reflectance estimation 
             prepareSmoothingMatrix;
 
-        case lower('FixMinimumErrorPoints')
-            actionFindMinimumRefErrorPoints;
-
-        case {lower('ReflectanceEstimationSystemComparison'), ...
-              lower('ReflectanceEstimationMatrixComparison'), ...
-              lower('ReflectanceEstimationMatrixSystemComparison'), ...
-              lower('ReflectanceEstimationNoiseComparison'), ...
-              lower('ReflectanceEstimationMatrixNoiseComparison'), ...
-              lower('ReflectanceEstimationPreset'), ...
-              lower('ReflectanceEstimationSimple')}
+        case {'ReflectanceEstimationSystemComparison', ...
+              'ReflectanceEstimationMatrixComparison', ...
+              'ReflectanceEstimationMatrixSystemComparison', ...
+              'ReflectanceEstimationNoiseComparison',  ...
+              'ReflectanceEstimationMatrixNoiseComparison', ...
+              'ReflectanceEstimationPreset', ...
+              'ReflectanceEstimationSimple'
+              }
             actionReflectanceEstimationComparison;
 
-        case {'createsrgb', 'reconstructsrgb'} % from the MSI reflectances       
+        case {'createsrgb', 'reconstructsrgb'} % from the MSI reflectances   
+            options.action = 'CreatesRGB';
             actionReconstructSRGB;
 
         case {'pca', 'lda', 'pcalda', 'dimred', 'pca b', 'lda b'}
             actionDimensionReduction;
 
-        case {'classification', 'class', 'nearest', 'knn', 'svm', 'lbp'}
+        case {'knn'}
+           options.action = 'KNNClassifier';
            actionClassification;
-
-        case {'measuredoverlap', 'estimatedoverlap'}
-           actionOverlap;
            
-        case 'actionlbp'
+        case {'svm'}
+           options.action = 'SVMClassifier';
+           actionClassification;
+           
+        case {'lbp'}
+            options.action = 'LBP';
             actionLBP;
 
         otherwise
             disp('Nothing to do here. Aborting...');
     end
 
-    fprintf('Finished running action %s.\n', options.action);
+    fprintf('Finished running action.\n');
 
     elapsed = toc;
 
@@ -156,3 +178,44 @@ disp('Finished execution')
 
 end
 
+function outName = setup(options)
+
+if ~isfield(options, 'tryReadData')
+    options.tryReadData = false;
+end
+
+if ~isfield(options, 'datadir')
+    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', dataset);
+end
+
+if ~isfield(options, 'systemdir')
+    options.systemdir = fullfile('..', '..', 'input', options.dataset);
+end
+
+if ~isfield(options, 'pixelValueSelectionMethod')
+    options.pixelValueSelectionMethod = 'extended';
+end
+
+if ~isfield(options, 'saveOptions')
+    options.saveOptions = struct('saveImages', true, 'saveInHQ', false, ...
+        'savedir', fullfile('..', '..', 'output', options.dataset));
+end
+
+if ~isfield(options.saveOptions, 'savedir')
+    options.saveOptions.savedir = fullfile('..', '..', 'output', options.dataset);
+end
+
+if ~isfield(options, 'skipLoading')
+    options.skipLoading = true;
+end
+
+if ~isfield(options, 'showImages')
+    options.showImages = false;
+end
+
+fprintf('Data directory is set to %s.\n', options.datadir);
+fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
+
+outName = generateName(options, 'matfileout');
+
+end

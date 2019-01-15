@@ -64,7 +64,7 @@ if strcmp(smoothingMatrixMethod, 'markovian')
 end
 
 if strcmp(smoothingMatrixMethod, 'adaptive')
-    defaultAlpha = 0.5;
+    defaultAlpha = 0.4;
     if isfield(options, 'alpha')
         alpha = options.alpha;
     else
@@ -290,7 +290,7 @@ elseif strcmp(noiseType, 'spatial') || contains(noiseType, 'spatial')
     if isfield(options, 'windowDim')
         windowDim = options.windowDim;
     else 
-        windowDim = 3;
+        windowDim = 5;
     end
     windowKernel = ones(windowDim);
     windowElements = windowDim^2;
@@ -452,7 +452,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a)
 
     ff = matfile(fullfile(systemdir, 'in.mat'));
     measuredSpectra = ff.MeasuredSpectrumStruct;
-    [~, idxs] = unique({measuredSpectra.Name});
+    [~, idxs] = unique(strcat({measuredSpectra.Name}, {measuredSpectra.T}));
     measuredSpectra = measuredSpectra(idxs);
     wavelength = linspace(380, 780, 81)';
     n = length(measuredSpectra);

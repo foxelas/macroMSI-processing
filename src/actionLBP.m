@@ -3,6 +3,9 @@
 % load(fullfile(options.systemdir, 'ID.mat'));
 % load(fullfile(options.systemdir, 'data.mat'));
 % load(fullfile(options.systemdir, 'system.mat'));
+
+%code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
+
 msiN = 558; 
 
 radius = 1;

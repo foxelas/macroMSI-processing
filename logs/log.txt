@@ -1589,3 +1589,554 @@ Simple Wiener:: MinRMSE=0.02406, Noise from Olympus
 
 
 
+-------------------------------------------
+ Run on  15-Jan-2019 15:00:58 
+ 32.2091 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     svm     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     markovian     
+     saveImages     false     
+     saveInHQ     true     
+     savedir       output saitama_v2_min_region     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:24:36 
+ 43.6814 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.015 0.015     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:26:38 
+ 41.3394 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.015 0.015     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:28:34 
+ 40.9714 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.01 0.01     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:29:47 
+ 41.0524 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.012 0.012     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:31:12 
+ 40.9984 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.0     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:32:24 
+ 41.1753 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.017 0.0     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:34:08 
+ 40.7103 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.001     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:36:47 
+ 46.8049 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.01     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:41:12 
+ 42.9217 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.022     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:43:44 
+ 46.6644 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.025     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:47:25 
+ 46.5448 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.023     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:48:36 
+ 41.6174 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.0227     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:49:37 
+ 42.764 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.0225     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:50:58 
+ 41.9745 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.015     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:52:53 
+ 41.5164 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.015     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:54:06 
+ 42.2329 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.015 0.015     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:55:13 
+ 41.4725 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.02     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:56:17 
+ 41.7107 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.025     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:57:33 
+ 42.4703 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.03     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:58:38 
+ 41.2701 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.04     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 15:59:20 
+ 18.9564 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_square     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.02 0.04     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_square     
+     systemdir       input saitama_v2_min_square     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_square     
+     plotName       output saitama_v2_min_square reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  15-Jan-2019 17:43:20 
+ 81.654 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v2_min_region     
+     action     reflectanceestimationsimple     
+     pixelValueSelectionMethod     extended     
+     noiseType     spatial 0.0 0.0     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v2_min_region     
+     systemdir       input saitama_v2_min_region     
+     smoothingMatrixMethod     Cor_All     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v2_min_region     
+     plotName       output saitama_v2_min_region reflectanceestimationsimple reflectanceestimationsimple_right_13-11-28_139     
+ -------------------------------------------
+
+
+
+
+
+

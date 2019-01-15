@@ -1,20 +1,23 @@
-function [G, labels] = classifierInput(version, group, projection, name, labelsAsText)
+function [G, labels] = classifierInput(version, group, features, name, labelsAsText)
 
 if (nargin < 5)
     labelsAsText = false;
 end
 
-[Gfx, ~, ~, labelsfx] = subset(version, name, group);
+[Gfx, ~, subIdx, labelsfx] = subset(version, name, group);
 
-if contains(projection, 'pca' ) || contains(projection, 'lda')
-    [~, scores] = dimensionReduction(projection, Gfx, double(labelsfx));
+if contains(features, 'pca' ) || contains(features, 'lda')
+    [~, scores] = dimensionReduction(features, Gfx, double(labelsfx));
     G = scores(:, 1:10);
     
-elseif strcmp(projection, 'spectrum')
+else %contains(features, 'spectrum')
     G = Gfx;
-    
-else 
-    G = Gfx;
+end
+
+if contains(features, 'lbp')
+    e = matfile(fullfile('..', '..', 'output', name, 'LBP', 'lbp.mat'));
+    lbpFeatures = e.lbpFeatures;
+    G = [G lbpFeatures(subIdx,:)];
 end
 
 labels = ~labelsfx';

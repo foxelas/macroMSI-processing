@@ -19,8 +19,8 @@ votingRules = {'majority', 'weighted majority', 'complex vote'};
 votingRulesAbbr = {'M', 'W', 'C'};
 distances = {'correlation', 'chebychev', 'euclidean'};
 distancesAbbr = {'Cr', 'Ch', 'Eu'};
-groups = {'unique', 'fixed', 'unfixed'};
-projections = {'spectrum', 'pca', 'lda', 'pcalda'};
+groups = {'unique', 'fixed', 'unfixed', 'good'};
+projections = {'spectrum'}%, 'pca', 'lda', 'pcalda'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
@@ -67,8 +67,9 @@ if strcmp(method, 'knn')
     plots('classificationErrors', 2, [], '', 'errors', classificationError, 'saveOptions', options.saveOptions)
 
 elseif strcmp(method, 'svm')
+
     labelsAsText = true;
-    for j = 1:length(validations)
+    for j = 2:length(validations)
         m = 0;
         %% SVM
         classificationError = struct('Accuracy', [], 'TypeI', [], 'TypeII', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {});
@@ -76,6 +77,7 @@ elseif strcmp(method, 'svm')
             for p = 1:length(projections)
                 [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
                 for i = 1:length(kernels)
+                    
                     [a, b, c] = getSVMAccuracy(Gun, labels, kernels{i}, validations{j});
                     
                     SVMModel = fitcsvm(Gun, labels, 'KernelFunction', kernels{j}, 'Standardize',false,'ClassNames',{'Benign','Malignant'});

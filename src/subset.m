@@ -25,9 +25,9 @@ B = X(1+A);
 lineNames = strcat([ID.Sample], '_', [ID.Type], '_', B)';
 
 if strcmp(criterion, 'unique')
-    [~, subIdx, ~] = unique(strcat({ID.Csvid}), 'last'); %, {ID.T}
+    [~, subIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last'); %
 elseif strcmp(criterion, 'unfixed')
-    [~, unIdx, ~] = unique(strcat({ID.Csvid}), 'last');%, {ID.T}
+    [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');%, {ID.T}
     subIdx = intersect(unIdx, find([ID.IsFixed] == false));
 elseif strcmp(criterion, 'good')
     [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');

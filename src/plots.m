@@ -201,11 +201,10 @@ switch plotType
         end
         hold off
         
-        % ylim([0,1]);
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance Spectrum');
         xlim([400, 700]);
-        ylim([0, 1]);
+%         ylim([0, 1]);
         title(figTitle);
         legend(h, 'Location', 'eastoutside'); % 'Orientation','horizontal');
         
@@ -534,8 +533,10 @@ if (savePlot && ~isempty(plotName))
     strIdxs = strfind(plotName, '\');
     strIdx = strIdxs(end);
     fn = plotName(1:strIdx);
+    
     if ~exist(fn, 'dir')
         mkdir(fn);
+        addpath(fn);
     end
     
     if (saveInHQ)
