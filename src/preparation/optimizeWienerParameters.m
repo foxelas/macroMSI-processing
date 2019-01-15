@@ -82,7 +82,9 @@ function rmseCur = estimationGivenSNR(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
-    setup;
+    readData;
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
     options.noiseType = 'givenSNR';
     options.snr = x;
     actionReflectanceEstimationComparison;
@@ -100,7 +102,9 @@ function rmseCur = estimationAdaptive(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
-    setup;
+    readData;
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
     options.smoothingMatrixMethod = 'adaptive';
     options.noiseType = 'givenSNR';
     options.alpha = x;
@@ -119,7 +123,9 @@ function rmseCur = estimationWhiteGaussian(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
-    setup;
+    readData;
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
     options.noiseType = strcat(['white gaussian 10^{-', num2str(x),'}']);
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
@@ -137,7 +143,9 @@ function rmseCur = estimationDiffForChannel(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
-    setup;
+    readData;
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
     options.noiseType = 'diffForChannel';
     options.sigma = x';
     actionReflectanceEstimationComparison;
@@ -155,7 +163,10 @@ function rmseCur = estimationSameForChannel(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
-    setup;
+    readData;
+    outName = setup(options);
+    out = matfile(outName, 'Writable', true);
+    
     options.noiseType = 'sameForChannel';
     options.sigma = x;
     actionReflectanceEstimationComparison;

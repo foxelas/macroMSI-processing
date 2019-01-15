@@ -118,7 +118,7 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', actio
 readData;
     
 for i = 1:numel(actions)
-        
+    
     outName = setup(options);
     out = matfile(outName, 'Writable', true);
 
