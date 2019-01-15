@@ -132,14 +132,11 @@ for i = 1:numel(actions)
         case {'pca', 'lda', 'pcalda', 'dimred', 'pca b', 'lda b'}
             actionDimensionReduction;
 
-        case {'classification', 'class', 'nearest', 'knn', 'svm', 'lbp'}
+        case {'classification', 'class', 'nearest', 'knn', 'svm'}
            actionClassification;
 
         case {'measuredoverlap', 'estimatedoverlap'}
            actionOverlap;
-           
-        case 'actionlbp'
-            actionLBP;
 
         otherwise
             disp('Nothing to do here. Aborting...');

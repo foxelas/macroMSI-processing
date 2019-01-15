@@ -1,14 +1,23 @@
 %Data projection for dimension reduction (pca, lda, etc)
 additionalMethod = ''; 
 
-if contains(action, 'pca')
-    dimredMethod = 'pca';
+if contains(action, 'pcalda')
+    dimredMethod = 'pcalda';
+    
+elseif contains(action, 'pca b')
+    dimredMethod = 'pca b';
+    
+elseif contains(action, 'lda b')
+    dimredMethod = 'lda b';
+    
 elseif contains(action, 'lda')
     dimredMethod = 'lda';
-elseif contains(action, 'pcalda')
-    dimredMethod = 'pcalda';
-else 
+    
+elseif contains(action, 'pca')
     dimredMethod = 'pca';
+    
+else 
+    error('Unsupported dimension reduction method');
 end
 
 input = 'estimated';
@@ -16,15 +25,15 @@ input = 'estimated';
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gun, double(labelsun));
 %L = [ones(length(un),1) Gun] * W';
 %P = exp(L) ./ repmat(sum(exp(L),2),[1 2]);
-options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type', ldaMethod]);
-plots(dimredMethod, 1, score, [dimredMethod,' Fix'], 'lineNames', lineNamesun, 'saveOptions', options.saveOptions)
-options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample', ldaMethod]);
+options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type']);
+plots(dimredMethod, 1, score, [dimredMethod,' Fix'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10), 'saveOptions', options.saveOptions)
+options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample']);
 plots(dimredMethod, 2, score, [dimredMethod, ' Sample'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10), 'saveOptions', options.saveOptions)
 
 %unfixed data only
-[Gfx, lineNamesfx, ~, labelsfx] = subset('estimated', name, 'unfixed');
+[Gfx, lineNamesfx, ~, labelsfx] = subset(input, name, 'unfixed');
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gfx, double(labelsfx));
-options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample (only unfixed)', ldaMethod]);
+options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample (only unfixed)']);
 plots(dimredMethod, 3, score, [dimredMethod,' Sample'], 'lineNames', lineNamesfx, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
 
 input = 'measured';
@@ -32,14 +41,14 @@ input = 'measured';
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gun, double(labelsun));
 %L = [ones(length(un),1) Gun] * W';
 %P = exp(L) ./ repmat(sum(exp(L),2),[1 2]);
-options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type', ldaMethod]);
+options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type']);
 plots(dimredMethod, 4, score, [dimredMethod,' Fix'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
-options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample', ldaMethod]);
+options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample']);
 plots(dimredMethod, 5, score, [dimredMethod, ' Sample'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
 
 %unfixed data only
-[Gfx, lineNamesfx, ~, labelsfx] = subset('estimated', 'unfixed', options.saveOptions.savedir);
+[Gfx, lineNamesfx, ~, labelsfx] = subset(input, name, 'unfixed');
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gfx, double(labelsfx));
-options.saveOptions.plotName = generateName(options, [dimredMethod,' of ', input, ' spectra by sample (only unfixed)', ldaMethod]);
+options.saveOptions.plotName = generateName(options, [dimredMethod,' of ', input, ' spectra by sample (only unfixed)']);
 plots(dimredMethod, 6, score, [dimredMethod,' Sample'], 'lineNames', lineNamesfx, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
 

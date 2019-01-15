@@ -10,14 +10,20 @@ options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
 'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
 'showImages', showImages, 'saveOptions', saveOptions);
 setup;
-fminsearchOptions = optimset('MaxIter', 10, 'PlotFcns',@optimplotfval);
+fminsearchOptions = optimset('MaxIter', 5, 'PlotFcns',@optimplotfval);
 fileID = fopen('..\logs\optimization.txt', 'a');
 
 tic;
 %% Optimize noise model "givenSNR"
-[minSNR,minVal] = fminsearch(@estimationGivenSNR, 10, fminsearchOptions);
+[minSNR,minVal] = fminsearch(@estimationGivenSNR, 20, fminsearchOptions);
 outputLog = sprintf('Given SNR:: MinRMSE=%.5f, SNR=%d\n', minVal, minSNR)
 fprintf(fileID, outputLog);
+
+%% Optimize noise model "adaptive"
+[alpha,minVal] = fminsearch(@estimationAdaptive, 0.5, fminsearchOptions);
+outputLog = sprintf('Adaptive Wiener:: MinRMSE=%.5f, Alpha=%.4f\n', minVal, alpha)
+fprintf(fileID, outputLog);
+
 % 
 % %% Optimize noise model "White Gaussian"
 % [minNoiseOrder,minVal] = fminsearch(@estimationWhiteGaussian, 2, fminsearchOptions);
@@ -25,14 +31,14 @@ fprintf(fileID, outputLog);
 % fprintf(fileID, outputLog);
 
 %% Optimize noise model "SameForChannel noise"
-[minSNR,minVal] = fminsearch(@estimationSameForChannelNoise, 10, fminsearchOptions);
-outputLog = sprintf('Given SNR:: MinRMSE=%.5f, SNR=%d\n', minVal, minSNR)
+[minSigma,minVal] = fminsearch(@estimationSameForChannel, 0.04, fminsearchOptions);
+outputLog = sprintf('sigma n SNR:: MinRMSE=%.5f, sigma=%.5f\n', minVal, minSigma)
 fprintf(fileID, outputLog);
 
 
 %% Optimize noise model "DiffForChannel noise"
-[sigma,minVal] = fminsearch(@estimationDiffForChannelNoise, 0.003 * ones(7,1), fminsearchOptions);
-outputLog = sprintf('Independent noise:: MinRMSE=%.5f, Sigma=[%.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', minVal, sigma(1), sigma(2), sigma(3), sigma(4), sigma(5), sigma(6), sigma(7))
+[sigma,minVal] = fminsearch(@estimationDiffForChannel, 0.03 * ones(7,1), fminsearchOptions);
+outputLog = sprintf('Sigma noise:: MinRMSE=%.5f, Sigma=[%.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', minVal, sigma(1), sigma(2), sigma(3), sigma(4), sigma(5), sigma(6), sigma(7))
 fprintf(fileID, outputLog);
 clear('rmse');
 
@@ -55,12 +61,8 @@ clear('rmse');
 outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Sigma=[%.5f, %.5f, %.5f, %.5f, %.5f, %.5f, %.5f]\n', minVal, sigma(1), sigma(2), sigma(3), sigma(4), sigma(5), sigma(6), sigma(7))
 fprintf(fileID, outputLog);
 
-[sigma,minVal] = fminsearch(@estimationSpatiallyAdaptive, [0.0034; 0.0058], fminsearchOptions);
+[sigma,minVal] = fminsearch(@estimationSpatiallyAdaptive, [0.05; 0.01], fminsearchOptions);
 outputLog = sprintf('Spatially adaptive Wiener:: MinRMSE=%.5f, Sigma1=%.4f, Sigma2=%.4f\n', minVal, sigma(1), sigma(2))
-fprintf(fileID, outputLog);
-
-[alpha,minVal] = fminsearch(@estimationSpatiallyAdaptive, 0.5, fminsearchOptions);
-outputLog = sprintf('Adaptive Wiener:: MinRMSE=%.5f, Alpha=%.4f\n', minVal, alpha)
 fprintf(fileID, outputLog);
 
 
@@ -79,7 +81,7 @@ function rmseCur = estimationGivenSNR(x)
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-    'showImages', showImages, 'saveOptions', saveOptions);
+    'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
     setup;
     options.noiseType = 'givenSNR';
     options.snr = x;
@@ -99,7 +101,8 @@ function rmseCur = estimationAdaptive(x)
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
     setup;
-    options.noiseType = 'adaptive';
+    options.smoothingMatrixMethod = 'adaptive';
+    options.noiseType = 'givenSNR';
     options.alpha = x;
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
@@ -115,7 +118,7 @@ function rmseCur = estimationWhiteGaussian(x)
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-    'showImages', showImages, 'saveOptions', saveOptions);
+    'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
     setup;
     options.noiseType = strcat(['white gaussian 10^{-', num2str(x),'}']);
     actionReflectanceEstimationComparison;
@@ -151,7 +154,7 @@ function rmseCur = estimationSameForChannel(x)
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-    'showImages', showImages, 'saveOptions', saveOptions);
+    'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
     setup;
     options.noiseType = 'sameForChannel';
     options.sigma = x;
@@ -170,7 +173,7 @@ function rmseCur = estimationSpatiallyAdaptive(X)
     saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
-    'showImages', showImages, 'saveOptions', saveOptions);
+    'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
     setup;
     options.noiseType = 'spatial';
     if numel(X) == 2

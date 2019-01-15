@@ -1,9 +1,9 @@
 systemdir = {'..\..\input\saitama_v2_min_square\', '..\..\input\saitama_v2_min_region\'};
 
-for i = 1:2
+for i = 2:2
     
     options.systemdir = systemdir{i};
-    fprintf(strcat(['Pre-computing smoothing matrices for directory ', strrep(systemdir{i}, '..\..\input\', ''), 'n']));
+    fprintf(strcat(['Pre-computing smoothing matrices for directory ', strrep(systemdir{i}, '\n']));
     load(fullfile(options.systemdir, 'in.mat'));
     load(fullfile(options.systemdir, 'ID.mat'));
     load(fullfile(options.systemdir, 'data.mat'));
@@ -16,7 +16,7 @@ for i = 1:2
     param = matfile(fullfile(options.systemdir, 'precomputedParams.mat'), 'Writable', true);
 
     samples = unique([ID.Sample]);
-    [spectra, spectraIdx, ~] = unique(strcat({ID.Csvid}, '-', {ID.T}));
+    [spectra, spectraIdx, ~] = unique(strcat({ID.Csvid}, ' ', {ID.T}));
     dataNum = numel(spectraIdx);
 
     wavelengthN = size(sensitivity, 1);
@@ -66,9 +66,12 @@ for i = 1:2
 
         for j = 1:length(sampleSpectra)
             totals = totals + 1;
-            id = ID(sampleSpectraIdx(j));
-            ref = interp1(380:780, MeasuredSpectrumStruct(sampleSpectraIdx(j)).Spectrum, wavelength, 'nearest')';
-            
+            attr = strsplit(sampleSpectra(j), ' '); 
+            jj = find(strcmp({ID.Csvid}, attr{1}) & strcmp({ID.T}, attr{2}),1);
+
+            id = ID(sampleSpectraIdx(jj));
+
+            ref = interp1(380:780, MeasuredSpectrumStruct(jj).Spectrum, wavelength, 'nearest')';
             rAll = [rAll, ref];
             rSample = [rSample, ref];
 

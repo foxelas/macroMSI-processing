@@ -86,7 +86,7 @@ elseif strcmp(method, 'svm')
                     elseif (j == 2) 
                         %10fold cross
                         CVSVMModel = crossval(SVMModel);
-                        genloss = kfoldLoss(CVSVMModel);
+                        genloss = kfoldLoss(CVSVMModel, 'LossFun','epsiloninsensitive','Mode','individual');
                     end
                    
                     m = m + 1;
@@ -99,22 +99,21 @@ elseif strcmp(method, 'svm')
 elseif strcmp(method, 'lbp')
     
     load('lbp.mat');
-    classificationError = struct('Accuracy', [], 'TypeI', [], 'TypeII', [], 'GenLoss', [], 'Validation', {}, 'Kernel', {});
-
+    
     j = 2;
     m = 0;
     for i = 1:length(kernels)
         [a, b, c] = getSVMAccuracy(lbpFeatures, lbpLabels, kernels{i}, validations{j});
         SVMModel = fitcsvm(lbpFeatures, lbpLabels, 'KernelFunction', kernels{j}, 'Standardize',false,'ClassNames',{'Benign','Malignant'});
         CVSVMModel = crossval(SVMModel);
-        genloss = kfoldLoss(CVSVMModel);
+        genloss = kfoldLoss(CVSVMModel, 'LossFun','epsiloninsensitive','Mode','individual');
         
         m = m + 1;
         classificationError(m) = struct('Accuracy', a, 'TypeI', b, 'TypeII', c, 'GenLoss', genloss, ...
             'Validation', validations{j}, 'Kernel', kernels{i});
     end
  
-    save('classificationError.mat', 'classificationError');
+    save('classificationError.mat', 'classificationError')
 end
     
 function [a, falsePositivesRate, falseNegativesRate] = getSVMAccuracy(data, labels, kernel, validation)

@@ -1,8 +1,9 @@
 %Start of reflectance estimation comparison
-smmsFull = {'markovian', 'Cor_Macbeth', 'Cor_All', 'Cor_Malignancy',...
-    'Cor_Fixing', 'Cor_Sample', 'Cor_SampleMalignancy', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing',  'adaptive'}; %, 'Cor_SampleMalignancyFixing'};
+smmsFull = { 'Cor_All', 'Cor_Malignancy',...
+    'Cor_Fixing', 'Cor_Sample',  'adaptive'}; %, 'Cor_SampleMalignancy', 'Cor_SampleMalignancyFixing', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing', 'markovian', 'Cor_Macbeth',};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
-nmsFull = {'none', 'white gaussian 10^{-4}', 'diffForChannel [0.01, 0.01, 0.01, 0.01, 0.1, 0.1, 0.1]', 'givenSNR 15dB', 'fromOlympus', 'spatial', 'spatial 0.0035 0.0055'};
+nmsFull = {'sameForChannel 0.001', 'diffForChannel [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024]', ...
+    'givenSNR 17.5dB', 'spatial 0.02 0.01'}; %, 'fromOlympus', 'spatial', 
 
 %% Comparison settings
 if contains(action, 'matrixsystem')
@@ -37,9 +38,15 @@ elseif contains(action, 'noise model') || contains(action, 'noise')
 
 elseif contains(action, 'simple') 
         pvsms = {'extended'};
-        smms = {'Cor_Sample'}; %{'Cor_Malignancy'}; 
-        nms = {options.noiseType}; %{'givenSNR'};
+        smms =  {options.smoothingMatrixMethod};
+        nms = {options.noiseType};
         estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);
+        
+elseif contains(action, 'preset')
+        pvsms = {'extended'};
+        smms =  {'Cor_Sample'}; %{'Cor_Malignancy'}; 
+        nms = {'givenSNR'};
+        estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);    
      
 else 
         error('Not implemented yet.')
@@ -102,7 +109,7 @@ for k = 1:msiN
                     lineNames{j+2} = strcat('Est-', nms{m});
                 end
 
-                if contains(action, 'simple') 
+                if contains(action, 'preset') || contains(action, 'simple')
                     estimatedSpectrumStruct(k) = struct('Name', sampleName, 'Index', MSIStruct(k).Index, 'Spectrum', est(:, j));
                 end
                 
@@ -127,7 +134,7 @@ errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse'
 minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
 
-if contains(action, 'simple') 
+if contains(action, 'preset') || contains(action, 'simple')
     out.EstimatedSpectrumStruct = estimatedSpectrumStruct;
 else
     options.saveOptions.plotName = generateName(options, ['ComparisonRmse', plotType]);

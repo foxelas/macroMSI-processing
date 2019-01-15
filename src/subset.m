@@ -1,18 +1,18 @@
 function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
 
 if strcmp(input, 'measured')
-    e = matfile(fullfile('..', 'data', name, 'in.mat'));
+    e = matfile(fullfile('..', '..', 'input', name, 'in.mat'));
     wavelengthN = 401;
     spectrumStruct = e.MeasuredSpectrumStruct;
 elseif strcmp(input, 'estimated')
-    e = matfile(fullfile('..', 'output', name, 'ReflectanceEstimationSimple', 'out.mat'));
+    e = matfile(fullfile('..', '..', 'output', name, 'reflectanceestimationpreset', 'out.mat'));
     wavelengthN = 81;
     spectrumStruct = e.EstimatedSpectrumStruct;
 else
     error('Not acceptable input. Choose "measured" or "estimated".')
 end
 
-load(fullfile('..', 'data', name, 'ID.mat'), 'ID');
+load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
 
 msiN = length(spectrumStruct);
 G = zeros(msiN, wavelengthN); % G rows are observations and columns are variables
@@ -20,14 +20,14 @@ for k = 1:msiN
     G(k, :) = spectrumStruct(k).Spectrum;
 end
 A = [ID.IsNormal];
-X = {'Cancer', 'Normal'};
+X = {'Malignant', 'Benign'};
 B = X(1+A);
 lineNames = strcat([ID.Sample], '_', [ID.Type], '_', B)';
 
 if strcmp(criterion, 'unique')
-    [~, subIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+    [~, subIdx, ~] = unique(strcat({ID.Csvid}), 'last'); %, {ID.T}
 elseif strcmp(criterion, 'unfixed')
-    [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+    [~, unIdx, ~] = unique(strcat({ID.Csvid}), 'last');%, {ID.T}
     subIdx = intersect(unIdx, find([ID.IsFixed] == false));
 elseif strcmp(criterion, 'good')
     [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');

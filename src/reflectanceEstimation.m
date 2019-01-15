@@ -12,7 +12,7 @@ function [estimatedReflectance, rmse, nmse] = reflectanceEstimation(g, spectrum,
 %                'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'}; for selecting the smoothing matrix
 %'rho' =  parameter for markovian smoothing matrix , default: 0.99
 %'variance' =  parameter for noise covariance matrix , default: 1
-%'noiseType' = to include noise component,{'none', 'independent', 'spatial', 'givenSNR', 'white gaussian', 'fromOlympus'}
+%'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'givenSNR', 'white gaussian', 'fromOlympus'}
 %'reference' = the reference white image values
 %'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
 %'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false 
@@ -70,6 +70,7 @@ if strcmp(smoothingMatrixMethod, 'adaptive')
     else
         alpha = defaultAlpha;
     end
+end 
 
 if isfield(options, 'pixelValueSelectionMethod')
     pixelValueSelectionMethod = options.pixelValueSelectionMethod;
@@ -245,7 +246,7 @@ if contains(noiseType, 'sameForChannel')
     elseif isfield(options, 'sigma')
         sigma = options.sigma;
     else
-        defaultSigma = 0.0004097321;
+        defaultSigma = 0.0001;
         sigma = defaultSigma;
     end
     variance = sigma *ones(msibands, 1);
@@ -267,7 +268,7 @@ elseif contains(noiseType, 'givenSNR')
     elseif isfield(options, 'snr')
         snr = options.snr;
     else
-        defaultSNR = 15.40625; %dB
+        defaultSNR = 17.5; %dB
         snr = defaultSNR; %dB
     end
     variance = (trace(HMH) / (msibands * 10^(snr / 10))) * ones(msibands, 1);
@@ -451,7 +452,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a)
 
     ff = matfile(fullfile(systemdir, 'in.mat'));
     measuredSpectra = ff.MeasuredSpectrumStruct;
-    idxs = unique([measuredSpectra.Name]);
+    [~, idxs] = unique({measuredSpectra.Name});
     measuredSpectra = measuredSpectra(idxs);
     wavelength = linspace(380, 780, 81)';
     n = length(measuredSpectra);
@@ -466,7 +467,11 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a)
     
     spectra = [];
     for i = 1:n 
-        k = replicationTimes(d(i), dmax);
+        if dmax > 0 
+            k = replicationTimes(d(i), dmax);
+        else 
+            k = 1;
+        end
         spectra = [ spectra, repmat(r(:,i),1,k)];
     end
     

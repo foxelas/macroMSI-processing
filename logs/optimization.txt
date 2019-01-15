@@ -15,3 +15,6 @@ Spatially adaptive Wiener:: MinRMSE=0.08066, Sigma1=0.0034, Sigma2=0.0058
 Spatially adaptive Wiener:: MinRMSE=0.08053, Sigma1=0.0119, Sigma2=-0.0011
 Spatially adaptive Wiener:: MinRMSE=0.08052, Sigma1=0.0035, Sigma2=0.0055
 Spatially adaptive Wiener:: MinRMSE=0.09285, Sigma1=0.0031, Sigma2=0.0033
+Given SNR:: MinRMSE=0.05618, SNR=1.550000e+01
+Given SNR:: MinRMSE=0.05073, SNR=1.743750e+01
+Given SNR:: MinRMSE=0.05073, SNR=1.750000e+01
