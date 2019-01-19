@@ -139,44 +139,44 @@ if ~options.skipLoading
                 id = ID(sampleSpectraIdx(j));
                 ref = interp1(380:780, uniqueSpectra(:, uniqueSpectraIdxsInID(id)), wavelength, 'nearest')';
 
-                rAll = [rAll, ref];
-                rSample = [rSample, ref];
+                rAll(:, total) =  ref; %[rAll, ref];
+                rSample(:, j) =  ref; %[rSample, ref];
 
                 if (id.IsNormal)
                     %% Benign case
-                    rBenign = [rBenign, ref];
-                    rSampleBenign = [rSampleBenign, ref];
+                    rBenign(:, total) =  ref; %[rBenign, ref];
+                    rSampleBenign(:, j) =  ref; %[rSampleBenign, ref];
 
                     if (id.IsCut)
-                        rCut = [rCut, ref];
-                        rBenignCut = [rBenignCut, ref];
-                        rSampleBenignCut = [rSampleBenignCut, ref];
+                        rCut(:, total) = ref; %[rCut, ref];
+                        rBenignCut(:, total) = ref; %[rBenignCut, ref];
+                        rSampleBenignCut(:, j) = ref; %[rSampleBenignCut, ref];
                     elseif (id.IsFixed)
-                        rFixed = [rFixed, ref];
-                        rBenignFixed = [rBenignFixed, ref];
-                        rSampleBenignFixed = [rSampleBenignFixed, ref];
+                        rFixed(:, total) = ref; %[rFixed, ref];
+                        rBenignFixed(:, total) = ref; %[rBenignFixed, ref];
+                        rSampleBenignFixed(:, j) = ref; %[rSampleBenignFixed, ref];
                     else
-                        rUnfixed = [rUnfixed, ref];
-                        rBenignUnfixed = [rBenignUnfixed, ref];
-                        rSampleBenignUnfixed = [rSampleBenignUnfixed, ref];
+                        rUnfixed(:, total) = ref; %[rUnfixed, ref];
+                        rBenignUnfixed(:, total) = ref; %[rBenignUnfixed, ref];
+                        rSampleBenignUnfixed(:, j) = ref; %[rSampleBenignUnfixed, ref];
                     end
                 else
                     %% Malignant case 
-                    rMalignant = [rMalignant, ref];
-                    rSampleMalignant = [rSampleMalignant, ref];
+                    rMalignant(:, total) = ref; %[rMalignant, ref];
+                    rSampleMalignant(:, j) = ref; %[rSampleMalignant, ref];
 
                     if (id.IsCut)
-                        rCut = [rCut, ref];
-                        rMalignantCut = [rMalignantCut, ref];
-                        rSampleMalignantCut = [rSampleMalignantCut, ref];
+                        rCut(:, total) = ref; %[rCut, ref];
+                        rMalignantCut(:, total) = ref; %[rMalignantCut, ref];
+                        rSampleMalignantCut(:, j) = ref; %[rSampleMalignantCut, ref];
                     elseif (id.IsFixed)
-                        rFixed = [rFixed, ref];
-                        rMalignantFixed = [rMalignantFixed, ref];
-                        rSampleMalignantFixed = [rSampleMalignantFixed, ref];
+                        rFixed(:, total) = ref; %[rFixed, ref];
+                        rMalignantFixed(:, total) = ref; %[rMalignantFixed, ref];
+                        rSampleMalignantFixed(:, j) = ref; %[rSampleMalignantFixed, ref];
                     else
-                        rUnfixed = [rUnfixed, ref];
-                        rMalignantUnfixed = [rMalignantUnfixed, ref];
-                        rSampleMalignantUnfixed = [rSampleMalignantUnfixed, ref];
+                        rUnfixed(:, total) = ref; %[rUnfixed, ref];
+                        rMalignantUnfixed(:, total) = ref; %[rMalignantUnfixed, ref];
+                        rSampleMalignantUnfixed(:, j) = ref; %[rSampleMalignantUnfixed, ref];
                     end
                 end
             end  

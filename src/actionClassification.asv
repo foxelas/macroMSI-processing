@@ -3,6 +3,8 @@ if contains(action, 'svm')
     classifier = 'svm'; 
 elseif contains(action, 'knn')
     classifier = 'knn';
+elseif contains(action, 'lbp')
+    classifier = 'lbp';
 else 
      error('Unsupported classification method.Aborting...');
 end
@@ -12,10 +14,13 @@ version = 'estimated';
 fprintf('Classifying %s data with %s classifier...\n', version, classifier);
 
 validations = {'LeaveMOut', 'Kfold'};
+validationShort = {'1O', 'Kf'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
+votingRulesAbbr = {'M', 'W', 'C'};
 distances = {'correlation', 'chebychev', 'euclidean'};
+distancesAbbr = {'Cr', 'Ch', 'Eu'};
 groups = {'unique', 'fixed', 'unfixed', 'good'};
-projections = {'spectrum'}; %, 'pca', 'lda', 'pcalda', 'spectrumlbp'};
+projections = {'spectrum'}%, 'pca', 'lda', 'pcalda'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
@@ -24,47 +29,58 @@ validation = validations{2};
 
 %% KNN
 if strcmp(classifier, 'knn')   
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {});
-    for g = 1:length(groups)
-        for p = 1:length(projections)
-            [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name);
-            for i = 1:length(votingRules)
-                for k = [1, 3, 5]
-                    for d = 1:length(distances)
-
-                        [a, b, c] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
-                        m = m + 1;
-                        classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d});
+        classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {});
+        for g = 1:length(groups)
+            for p = 1:length(projections)
+                [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name);
+                for i = 1:length(votingRules)
+                    for k = [1, 3, 5]
+                        for d = 1:length(distances)
+                            
+                            [a, b, c] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
+                            m = m + 1;
+                            classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
+                                'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d});
+                        end
                     end
                 end
             end
         end
-    end  
-    
+        
 %% SVM
 elseif strcmp(classifier, 'svm')
 
     labelsAsText = true;
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {});
-    for g = 1:length(groups)
-        for p = 1:length(projections)
-            [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
-            for i = 1:length(kernels)
-
-                [a, b, c] = crossValidation(validation, Gun, labels, classifier, [], [], [], kernels{i});                                             
-                m = m + 1;
-                classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'Kernel', kernels{i});
+    
+        classificationError = struct('Accuracy', [], 'TypeI', [], 'TypeII', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {});
+        for g = 1:length(groups)
+            for p = 1:length(projections)
+                [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
+                for i = 1:length(kernels)
+                    
+                    [a, b, c] = getSVMAccuracy(Gun, labels, kernels{i}, validations{j});
+                    
+                    SVMModel = fitcsvm(Gun, labels, 'KernelFunction', kernels{j}, 'Standardize',false,'ClassNames',{'Benign','Malignant'});
+                    if (j ==1)
+                        %leave out
+                        CVSVMModel = crossval(SVMModel,'Holdout',0.15);
+                        genloss = kfoldLoss(CVSVMModel);
+                    elseif (j == 2) 
+                        %10fold cross
+                        CVSVMModel = crossval(SVMModel);
+                        genloss = kfoldLoss(CVSVMModel);
+                    end
+                   
+                    m = m + 1;
+                    classificationError(m) = struct('Accuracy', a, 'TypeI', b, 'TypeII', c, 'GenLoss', genloss, 'Input', groups{g}, 'Projection', projections{p}, ...
+                                'Validation', validations{j}, 'Kernel', kernels{i});
+                end
             end
         end
-    end
         
 end
  
 save('classificationError.mat', 'classificationError');
-
-pause;
 
 classificationErrorFields = fieldnames(classificationError);
 classificationErrorCell = struct2cell(classificationError);
@@ -228,35 +244,3 @@ function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate] = crossVa
     
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [G, labels] = classifierInput(version, group, features, name, labelsAsText)
-
-    if (nargin < 5)
-        labelsAsText = false;
-    end
-
-    [Gfx, ~, subIdx, labelsfx] = subset(version, name, group);
-
-    if contains(features, 'pca' ) || contains(features, 'lda')
-        [~, scores] = dimensionReduction(features, Gfx, double(labelsfx));
-        G = scores(:, 1:10);
-
-    else %contains(features, 'spectrum')
-        G = Gfx;
-    end
-
-    if contains(features, 'lbp')
-        e = matfile(fullfile('..', '..', 'output', name, 'LBP', 'lbp.mat'));
-        lbpFeatures = e.lbpFeatures;
-        G = [G lbpFeatures(subIdx,:)];
-    end
-
-    labels = ~labelsfx';
-
-    if (labelsAsText)
-        X = {'Benign', 'Malignant'};
-        labels = X(1+labels);
-    end
-
-end

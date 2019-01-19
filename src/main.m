@@ -178,6 +178,8 @@ disp('Finished execution')
 
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function outName = setup(options)
 
 if ~isfield(options, 'tryReadData')
@@ -213,9 +215,44 @@ if ~isfield(options, 'showImages')
     options.showImages = false;
 end
 
+if ~isfield(options, 'luminanceCorrection')
+    options.luminanceCorrection = 1;
+end
+
+validateattributes(options.luminanceCorrection,{'double'},{'positive','scalar', '<=', 1});
+
 fprintf('Data directory is set to %s.\n', options.datadir);
 fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
 
 outName = generateName(options, 'matfileout');
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [outputLog] = logInfo(options, runTime)
+%LOGINFO produces a log of the current action run
+
+    %% Make a struct without nested structs
+    saveOptions = options.saveOptions;
+    f = fieldnames(saveOptions);
+    for i = 1:length(f)
+        options.(f{i}) = saveOptions.(f{i});
+    end
+    options = rmfield(options, {'saveOptions'});
+
+    %% Produce output log
+    optionsTab = struct2table(options);
+    outputLog = '-------------------------------------------\n';
+    outputLog = strjoin([outputLog, 'Run on ', string(datetime), '\n'], ' ');
+    outputLog = strjoin([outputLog, string(runTime), 's elapsed.', '\n'], ' ');
+    for i = 1:width(optionsTab)
+        outputLog = strjoin([outputLog, optionsTab.Properties.VariableNames(i), strrep(strrep(string(optionsTab(1, i).Variables), '..', ''), '\', ' '), '\n'], '     ');
+    end
+    outputLog = strjoin([outputLog, '-------------------------------------------\n\n\n\n\n\n\n']);
+    logname = strcat(action.datadir, '_log.txt');
+    fileID = fopen(fullfile('..', 'logs', logname), 'a');
+    fprintf(fileID, outputLog);
+    fclose(fileID);
 
 end

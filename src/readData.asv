@@ -139,13 +139,13 @@ if ~options.skipLoading
                 id = ID(sampleSpectraIdx(j));
                 ref = interp1(380:780, uniqueSpectra(:, uniqueSpectraIdxsInID(id)), wavelength, 'nearest')';
 
-                rAll = [rAll, ref];
-                rSample = [rSample, ref];
+                rAll(:, total) =  ref; %[rAll, ref];
+                rSample(:, total) =  ref; %[rSample, ref];
 
                 if (id.IsNormal)
                     %% Benign case
-                    rBenign = [rBenign, ref];
-                    rSampleBenign = [rSampleBenign, ref];
+                    rBenign(:, total) =  ref; %[rBenign, ref];
+                    rSampleBenign(:, total) =  ref; % = %[rSampleBenign, ref];
 
                     if (id.IsCut)
                         rCut = [rCut, ref];
@@ -265,6 +265,7 @@ if ~options.skipLoading
     name = options.dataset;
     fprintf('Finished initialization.\n\n')
     fprintf('Let''s get down to business :muscle:\n\n');
+    
 end
 % LOAD DATA & INITIALIZE ends   
     

@@ -5,8 +5,6 @@ pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
 nmsFull = {'sameForChannel 0.001', 'diffForChannel [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024]', ...
     'givenSNR 17.5dB', 'spatial 0.02 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
 
-options.noiseType = 'sameForChannel 0.002';
-options.smoothingMatrixMethod = 'Cor_All';
 
 %% Comparison settings
 if contains(action, 'matrixsystem')
