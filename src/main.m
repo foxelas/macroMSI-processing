@@ -118,7 +118,7 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', actio
     
 for i = 1:numel(actions)
     
-    options = set(options);
+    options = setOpt(options);
     out = matfile(options.outName, 'Writable', true);
     readData;
 
@@ -126,8 +126,8 @@ for i = 1:numel(actions)
     tic;
     fprintf('Running action %s...\n', options.action);
 
-    switch (lower(options.action))
-        case {'systemplots', 'systemspecs'}
+    switch (options.action)
+        case {'systemplots', 'systemspecs', 'SystemSpecs'}
             options.action = 'SystemSpecs';
             actionCreateSystemPlots;
             
@@ -137,14 +137,14 @@ for i = 1:numel(actions)
         case {'ReflectanceEstimationSystemComparison', ...
               'ReflectanceEstimationMatrixComparison', ...
               'ReflectanceEstimationMatrixSystemComparison', ...
-              'ReflectanceEstimationNoiseComparison',  ...
+              'ReflectanceEstimationNoiseComparison', ...
               'ReflectanceEstimationMatrixNoiseComparison', ...
               'ReflectanceEstimationPreset', ...
               'ReflectanceEstimationSimple'
               }
             actionReflectanceEstimationComparison;
 
-        case {'createsrgb', 'reconstructsrgb'} % from the MSI reflectances   
+        case {'CreatesRGB', 'reconstructsrgb'} % from the MSI reflectances   
             options.action = 'CreatesRGB';
             actionReconstructSRGB;
 
@@ -182,7 +182,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function options = set(options)
+function options = setOpt(options)
 
 if ~isfield(options, 'tryReadData')
     options.tryReadData = false;
@@ -252,7 +252,7 @@ function [outputLog] = logInfo(options, runTime)
         outputLog = strjoin([outputLog, optionsTab.Properties.VariableNames(i), strrep(strrep(string(optionsTab(1, i).Variables), '..', ''), '\', ' '), '\n'], '     ');
     end
     outputLog = strjoin([outputLog, '-------------------------------------------\n\n\n\n\n\n\n']);
-    logname = strcat(action.datadir, '_log.txt');
+    logname = strcat(options.action, '_log.txt');
     fileID = fopen(fullfile('..', 'logs', logname), 'a');
     fprintf(fileID, outputLog);
     fclose(fileID);

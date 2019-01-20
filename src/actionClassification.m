@@ -1,7 +1,7 @@
 % Classify malignancy
-if contains(action, 'svm')
+if contains(lower(options.action), 'svm')
     classifier = 'svm'; 
-elseif contains(action, 'knn')
+elseif contains(lower(options.action), 'knn')
     classifier = 'knn';
 else 
      error('Unsupported classification method.Aborting...');

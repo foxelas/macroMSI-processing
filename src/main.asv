@@ -115,30 +115,26 @@ saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
 options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', actions{1}, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'sameForChannel', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
-
-outName = setup(options);
-readData;
     
 for i = 1:numel(actions)
     
-    outName = setup(options);
+    options = set(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-
-    out = matfile(outName, 'Writable', true);
 
     %% main
     tic;
     fprintf('Running action %s...\n', options.action);
 
     switch (lower(options.action))
-        case {'systemplots', 'systemspecs'}
+        case {'systemplots', 'systemspecs', 'SystemSpecs'}
             options.action = 'SystemSpecs';
             actionCreateSystemPlots;
             
         case lower('PrepareSmoothingMatrix') % needs to be performed before doing reflectance estimation 
             prepareSmoothingMatrix;
 
-        case {'ReflectanceEstimationSystemComparison', ...
+        case {'ReflectanceEstimationSystemComparison',  ...
               'ReflectanceEstimationMatrixComparison', ...
               'ReflectanceEstimationMatrixSystemComparison', ...
               'ReflectanceEstimationNoiseComparison',  ...
@@ -170,7 +166,9 @@ for i = 1:numel(actions)
         otherwise
             disp('Nothing to do here. Aborting...');
     end
-
+    
+    options.tryReadData = false; %don't read again after the first time
+    
     fprintf('Finished running action.\n');
 
     elapsed = toc;
@@ -184,14 +182,14 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function outName = setup(options)
+function options = set(options)
 
 if ~isfield(options, 'tryReadData')
     options.tryReadData = false;
 end
 
 if ~isfield(options, 'datadir')
-    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', dataset);
+    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', options.dataset);
 end
 
 if ~isfield(options, 'systemdir')
@@ -228,7 +226,7 @@ validateattributes(options.luminanceCorrection,{'double'},{'positive','scalar', 
 fprintf('Data directory is set to %s.\n', options.datadir);
 fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
 
-outName = generateName(options, 'matfileout');
+options.outName = generateName(options, 'matfileout');
 
 end
 
@@ -254,7 +252,7 @@ function [outputLog] = logInfo(options, runTime)
         outputLog = strjoin([outputLog, optionsTab.Properties.VariableNames(i), strrep(strrep(string(optionsTab(1, i).Variables), '..', ''), '\', ' '), '\n'], '     ');
     end
     outputLog = strjoin([outputLog, '-------------------------------------------\n\n\n\n\n\n\n']);
-    logname = strcat(action.datadir, '_log.txt');
+    logname = strcat(options.action, '_log.txt');
     fileID = fopen(fullfile('..', 'logs', logname), 'a');
     fprintf(fileID, outputLog);
     fclose(fileID);

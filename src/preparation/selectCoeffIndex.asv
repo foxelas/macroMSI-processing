@@ -1,4 +1,4 @@
-function [ID] = selectCoeffIndex(options)
+function [ID] = selectCoeffIndex(dataset, options)
 %% SelectCoeffIndex  updates the values of CoeffIndex of ID.mat
 % based on the image point which produces minimum average estimation rmse,
 % when coefficient values are adjusted to it. 
@@ -10,7 +10,7 @@ options.action = 'ReflectanceEstimationPreset';
 options.skipLoading = false;
 options.showImages = false;
 options.saveImages = false;
-options.tryReadData = false;
+options.trey
 
 out = matfile(options.outName, 'Writable', true);
 readData;

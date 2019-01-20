@@ -5,11 +5,10 @@ if ~options.skipLoading
     load(fullfile(options.systemdir, 'system.mat')); % camera system parameters
     load(fullfile(options.systemdir, 'data.mat')); % image data
     load(fullfile(options.systemdir, 'ID.mat')); % image data id and info struct
-    
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
     if (options.tryReadData)
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         fprintf('Reading spectral data according to ID file.\n');
         m = matfile(generateName(options, 'matfilein'), 'Writable', true);
@@ -46,7 +45,7 @@ if ~options.skipLoading
                 m.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', generateName([], 'csv', [], ID(i)), 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
             end
 
-        %% Read MSI (region growing case)
+        %% Read MSI
             [options.saveOptions.plotName, ~] = generateName(options, 'plot+save', data(ID(i).Representative), ID(i));
             files = {data(ID(i).Data).File};    
             x = ID(i).Originx;
@@ -55,8 +54,7 @@ if ~options.skipLoading
                 files = {data(ID(i).Data).File};    
                 [MSI, patchMask, whiteReference, darkReference] = segmentMSIRegion(files, x, y, options);
 
-            else
-        %% Read MSI (square case)
+            else % (square case)
                 width = 5;
                 height = 5;
                 [MSI, whiteReference, darkReference] = readMSI(files, x, y, width, height, options); 
@@ -82,7 +80,7 @@ if ~options.skipLoading
 
         fprintf('Finished reading all spectral data according to ID file. Saving in %s.\n', options.systemdir);
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %% Precompute correlation smoothing Matrices 
         fprintf('Pre-compute smoothing matrices.\n');
@@ -119,12 +117,12 @@ if ~options.skipLoading
         Cor_SampleMalignant = zeros(length(samples), wavelengthN, wavelengthN);
         Cor_SampleBenign = zeros(length(samples), wavelengthN, wavelengthN);
 
-        totals = 0;
+        total = 0;
         for i = 1:length(samples)
             %find the relative samples
             name = samples{i};
             sampleSpectra = uniqueSpectraNames(contains(uniqueSpectraNames, name));
-            sampleSpectraIdx = uniqueSpectraIdxs(contains(uniqueSpectraNames, name));
+            sampleSpectraIdx = find(contains(uniqueSpectraNames, name));
 
             sampleNum = numel(sampleSpectraIdx);
             rSample = zeros(81, sampleNum);
@@ -138,9 +136,10 @@ if ~options.skipLoading
             rSampleMalignantUnfixed = zeros(81, sampleNum);
 
             for j = 1:length(sampleSpectra)
-                totals = totals + 1;
-                id = ID(sampleSpectraIdx(j));
-                ref = interp1(380:780, uniqueSpectra(:, uniqueSpectraIdxsInID(id)), wavelength, 'nearest')';
+                total = total + 1;
+                jj = sampleSpectraIdx(j);
+                id = ID(uniqueSpectraIdxs(jj));
+                ref = interp1(380:780, uniqueSpectra(:, jj), wavelength, 'nearest')';
 
                 rAll(:, total) =  ref; %[rAll, ref];
                 rSample(:, j) =  ref; %[rSample, ref];
@@ -226,7 +225,6 @@ if ~options.skipLoading
         param.(matlab.lang.makeValidName('Cor_SampleMalignant')) = Cor_SampleMalignant;
         param.(matlab.lang.makeValidName('Cor_SampleBenign')) = Cor_SampleBenign;
 
-
         %% Smoothing matrix based on markovian process 
         if isfield(options, 'rho')
             rho = options.rho;
@@ -257,20 +255,57 @@ if ~options.skipLoading
 
         fprintf('Finished Pre-compute smoothing matrices.\n');
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
-    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %% Read newly created files 
     in = matfile(generateName(options, 'matfilein')');
     MSIStruct = in.MSIStruct;
     whiteStruct = in.WhiteMSIStruct;
     darkStruct = in.DarkMSIStruct;
     measuredSpectrumStruct = in.MeasuredSpectrumStruct;
     name = options.dataset;
-    fprintf('Finished initialization.\n\n')
-    fprintf('Let''s get down to business :muscle:\n\n');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    %% Create coefficient table
+    if (options.tryReadData)
+        pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
+        coeff = ones(length(ID), 3, 7);
+        src = '../../input/others/coeff.xlsx';
+        for k = 1:msiN
+            sampleName = generateName([], 'image', data(ID(k).Representative), ID(k));
+
+            % Retrieve MSI data
+            g = MSIStruct(k).MSI;
+
+            % Retrieve spectrum data
+            refmeasured = measuredSpectrumStruct(k).Spectrum;
+
+            for m = 1:length(pixelValueSelectionMethods)
+                gg = valueSelect(g, pixelValueSelectionMethods{m});
+                if contains(options.systemdir, 'region')
+                    mask = reshape( MSIStruct(k).Mask, 1, size(gg,2)*size(gg,3));
+                    gg = reshape(gg, size(gg,1), size(gg,2)*size(gg,3));
+                    gg = gg(:,mask);
+                else
+                    gg = gg(:,2:4,2:4); %optional step
+                    gg = reshape(gg, size(gg,1), 3*3);
+                end
+                refmsi = im2uint16(mean(gg, 2))';
+                xlswrite2(src, refmeasured, 4, 'B3');
+                xlswrite2(src, refmsi, 4, 'D407:J407');
+                ctemp = xlsread(src, 4, 'D414:J414');
+                coeff(k, m, :) = ctemp;
+            end
+        end
+        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
+        ID = selectCoeffIndex(options);  
+    end
     
 end
+
+fprintf('Finished initialization.\n\n')
+fprintf('Let''s get down to business :muscle:\n\n');
 % LOAD DATA & INITIALIZE ends   
     
-
-
