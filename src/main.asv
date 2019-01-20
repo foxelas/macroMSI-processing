@@ -115,12 +115,16 @@ saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
 options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', actions{1}, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'sameForChannel', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
+
+outName = setup(options);
+readData;
     
 for i = 1:numel(actions)
     
-    options = set(options);
-    out = matfile(options.outName, 'Writable', true);
+    outName = setup(options);
     readData;
+
+    out = matfile(outName, 'Writable', true);
 
     %% main
     tic;
@@ -166,9 +170,7 @@ for i = 1:numel(actions)
         otherwise
             disp('Nothing to do here. Aborting...');
     end
-    
-    options.tryReadData = false; %don't read again after the first time
-    
+
     fprintf('Finished running action.\n');
 
     elapsed = toc;
@@ -182,14 +184,14 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function options = set(options)
+function outName = setup(options)
 
 if ~isfield(options, 'tryReadData')
     options.tryReadData = false;
 end
 
 if ~isfield(options, 'datadir')
-    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', options.dataset);
+    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', dataset);
 end
 
 if ~isfield(options, 'systemdir')
@@ -226,7 +228,7 @@ validateattributes(options.luminanceCorrection,{'double'},{'positive','scalar', 
 fprintf('Data directory is set to %s.\n', options.datadir);
 fprintf('Save directory is set to %s.\n', options.saveOptions.savedir);
 
-options.outName = generateName(options, 'matfileout');
+outName = generateName(options, 'matfileout');
 
 end
 

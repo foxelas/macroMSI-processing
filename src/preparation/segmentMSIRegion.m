@@ -8,7 +8,7 @@ function [patch, patchMask, whiteI, darkI] = segmentMSIRegion( files, x, y, opti
         accTheta = 0.6;
     end
     if (nargin < 6) || isempty(regionRadius)
-        regionRadius = 50;
+        regionRadius = 36;
     end
     if (nargin < 7) || isempty(fc)
         fc = [450, 465, 505, 525, 575, 605, 630];
@@ -67,7 +67,7 @@ function [patch, patchMask, whiteI, darkI] = segmentMSIRegion( files, x, y, opti
     
         fig2 = figure(2);
         colormap(bandColors);
-        masked = I2 + maskForFig;
+        masked = whiteI + maskForFig;
         imshow(masked);
         c = colorbar('location','southoutside', 'Ticks', linspace(0,1,9),...
              'TickLabels',{'450','465','505','525','575','605', '630', 'All', ''});

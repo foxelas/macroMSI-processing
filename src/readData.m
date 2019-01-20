@@ -20,7 +20,6 @@ if ~options.skipLoading
         uniqueSpectra = zeros(401, specN);
 
         for i = 1:specN
-
             % read raw measured spectrum
             rawSpectrum = readSpectrum(ID(i).Csvid, ID(i).T);
             % read raw white measured spectrum of the reference surface
@@ -35,12 +34,16 @@ if ~options.skipLoading
         end
 
         %% Save data structures 
-
+         m.MeasuredSpectrumStruct = struct( 'Index', [], 'Name', {}, 'Spectrum', [], 'T', {});
+         m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', []);
+         m.WhiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
+         m.DarkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
+ 
         for i = 1:msiN
-
+            
         %% Save Spectra Struct
             if ~isempty(uniqueSpectra(:, uniqueSpectraIdxsInID))
-                m.MeasuredSpectrumStruct(i) = struct( 'Index', i, 'Name', generateName([], 'csv', [], ID(i)), 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
+                m.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', generateName([], 'csv', [], ID(i)), 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
             end
 
         %% Read MSI (region growing case)
@@ -64,15 +67,15 @@ if ~options.skipLoading
             name = generateName([], 'image', data(ID(i).Representative), ID(i));
 
             if ~(isempty(MSI))
-                m.MSIStruct(i) = struct('Name', name, 'Index', i, 'MSI', MSI, 'Mask', patchMask);
+                m.MSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', MSI, 'Mask', patchMask);
             end
 
             if ~(isempty(whiteReference))
-                m.WhiteMSIStruct(i) = struct('Name', name, 'Index', i, 'MSI', whiteReference);
+                m.WhiteMSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', whiteReference);
             end
 
             if ~(isempty(darkReference))
-                m.DarkMSIStruct(i) = struct('Name', name, 'Index', i, 'MSI', darkReference);
+                m.DarkMSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', darkReference);
             end
 
         end
@@ -121,7 +124,7 @@ if ~options.skipLoading
             %find the relative samples
             name = samples{i};
             sampleSpectra = uniqueSpectraNames(contains(uniqueSpectraNames, name));
-            sampleSpectraIdx = spectraIdx(contains(uniqueSpectraNames, name));
+            sampleSpectraIdx = uniqueSpectraIdxs(contains(uniqueSpectraNames, name));
 
             sampleNum = numel(sampleSpectraIdx);
             rSample = zeros(81, sampleNum);
