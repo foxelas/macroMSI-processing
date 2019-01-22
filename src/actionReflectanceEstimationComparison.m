@@ -75,7 +75,7 @@ nmse = zeros(methodsN, msiN);
 % range = 146:187; %; %1:msiN; [66, 165, 175, 236, 297]
 for k = 1:msiN
     % Give a name
-    [options.saveOptions.plotName, sampleName] = generateName(options, 'plot+save', data(ID(k).Representative), ID(k));
+    [options.saveOptions.plotName, sampleName] = generateName(options, 'plot', ID(k));
     
     % Retrieve MSI data
     g = MSIStruct(k);

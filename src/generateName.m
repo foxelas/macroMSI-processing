@@ -1,76 +1,70 @@
-function [savefilename, sampleName] = generateName(options, filename, datax, idx)
+function [dirCurrentName, currentName] = generateName(options, filename, idx)
 %GENERATEOUTNAME generates the name of the file,
 %where the result will be saved.
 %savefilename: the saveas filename icluding directory in the form (..\..\..\savename.extension)
 %sampleName: the sample name
 
-if (nargin < 2)
-    filename = 'default';
-end
-
 if (nargin < 3)
-    datax = [];
-end
-
-if (nargin < 4)
     idx = [];
 end
 
-if (~isempty(datax) && isnumeric(datax.Sample))
-    datax.Sample = num2str(datax.Sample);
-end
-sampleName = [];
+currentName = [];
+dirCurrentName = [];
 
 switch filename
-    case 'default'
-        extra = {};
+    case 'matfilein'
+        dirCurrentName = fullfile(options.systemdir, 'in.mat');
+        
+    case 'matfileout'
+        dirCurrentName = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
+        
+    case 'action detail'
+        [~, currentName] = generateName(options, 'current', idx);
+        
+        extra = {options.smoothingMatrixMethod, options.noiseType};
         if strcmp(options.action, 'ReflectanceEstimation')
             if strcmp(options.smoothingMatrixMethod, 'markovian')
                 extra{end+1} = num2str(options.rho);
             end
-            if (options.withNoise)
-                extra{end+1} = 'Noise';
-            else
-                extra{end+1} = 'NoNoise';
-            end
         end
-        savefilename = strjoin([options.action, options.smoothingMatrixMethod, extra], '_');
-        savefilename = fullfile(options.saveOptions.savedir, savefilename);
-        
-    case 'matfilein'
-        savefilename = fullfile(options.systemdir, 'in.mat');
-        
-    case 'matfileout'
-        savefilename = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
-        
-    case 'image'
-        if isempty(idx.T)
-            savefilename = strjoin([datax.Camera{1}, num2str(idx.UniqueCount)], '_');
-        else
-            savefilename = strjoin({datax.Camera{1}, idx.T, num2str(idx.UniqueCount)}, '_');
-        end
-        savefilename = strrep(savefilename, ':', '-');
-        savefilename = strrep(savefilename, '.', '-');
+        extra{end+1} = currentName;
+        currentName = strjoin(extra, '_');
+        dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
         
     case 'csv'
         if isempty(idx.Csvid)
-            savefilename = num2str(idx.UniqueCount);
+            currentName = num2str(idx.UniqueCount);
         else
-            savefilename = strrep(idx.Csvid, '.csv', '');
-            savefilename = strrep(savefilename, '\', '_');
+            currentName = strrep(idx.Csvid, '.csv', '');
+            currentName = strrep(currentName, '\', '_');
         end
         
     case 'sample'
         splits = strsplit(idx.Csvid, '\');
-        savefilename = splits{1};
+        currentName = splits{1};
         
-    case 'plot+save'
-        sampleName = generateName(options, 'image', datax, idx);
-        fn = fullfile(options.saveOptions.savedir, options.action);
-        savefilename = fullfile(fn, [options.action, '_', sampleName]);
+    case 'current'  
+        [~, csv] = generateName(options, 'csv', idx);
+        time = strrep(idx.T, ':', ' ');
+        time = strrep(time, '.', ',');
+        un = strcat('(', num2str(idx.UniqueCount) , ')');
+        datafile = matfile(fullfile(options.systemdir, 'data.mat'));
+        datax = datafile.data(:, idx.Representative);
+        if (~isempty(datax) && isnumeric(datax.Sample))
+            datax.Sample = num2str(datax.Sample);
+        end
+        currentName = strjoin({csv, time, char(datax.Camera), un }, '_');
+        
+    case 'read'    
+        [~, currentName] = generateName(options, 'current', idx);
+        dirCurrentName = fullfile(options.saveOptions.savedir, 'Input', currentName);
+        
+    case 'plot'
+        [~, currentName] = generateName(options, 'current', idx);
+        dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
         
     otherwise
-        savefilename = fullfile(options.saveOptions.savedir, options.action, filename);     
+        dirCurrentName = fullfile(options.saveOptions.savedir, options.action, filename);     
 end
 
 end

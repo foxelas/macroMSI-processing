@@ -1,11 +1,11 @@
-function [patch, patchMask, whiteI, darkI] = segmentMSIRegion( files, x, y, options, accTheta, regionRadius, fc, bandColors)
+function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, x, y, options, accTheta, regionRadius, fc, bandColors)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
 %%seed position [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
 %The resulting mask is decided per agreement of accTheta * 1/NumberOfChannels
 
     if (nargin < 5) || isempty(accTheta)
-        accTheta = 0.6;
+        accTheta = 0.7;
     end
     if (nargin < 6) || isempty(regionRadius)
         regionRadius = 36;
@@ -52,6 +52,7 @@ function [patch, patchMask, whiteI, darkI] = segmentMSIRegion( files, x, y, opti
         patchY = (y-2):(y+2);
         mask(patchY, patchX) = 1;
     end
+    maskI = mask;
     [r, c] = find(mask);
     patchY = min(r):max(r);
     patchX = min(c):max(c);

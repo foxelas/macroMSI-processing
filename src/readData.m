@@ -34,7 +34,7 @@ if ~options.skipLoading
 
         %% Save data structures 
          m.MeasuredSpectrumStruct = struct( 'Index', [], 'Name', {}, 'Spectrum', [], 'T', {});
-         m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', []);
+         m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', [], 'MaskI', []);
          m.WhiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
          m.DarkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
  
@@ -42,30 +42,36 @@ if ~options.skipLoading
             
         %% Save Spectra Struct
             if ~isempty(uniqueSpectra(:, uniqueSpectraIdxsInID))
-                m.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', generateName([], 'csv', [], ID(i)), 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
+                [~, csv] =  generateName(options, 'csv', ID(i));
+                m.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', csv, 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
             end
 
         %% Read MSI
-            [options.saveOptions.plotName, ~] = generateName(options, 'plot+save', data(ID(i).Representative), ID(i));
+            [options.saveOptions.plotName, name] = generateName(options, 'read', ID(i));
+            directory = fileparts(options.saveOptions.plotName);
+            if ~exist(directory, 'dir')
+                mkdir(directory);
+                addpath(directory);
+            end
+    
             files = {data(ID(i).Data).File};    
             x = ID(i).Originx;
             y = ID(i).Originy;
             if contains(options.dataset, 'region')
                 files = {data(ID(i).Data).File};    
-                [MSI, patchMask, whiteReference, darkReference] = segmentMSIRegion(files, x, y, options);
+                [MSI, whiteReference, darkReference, patchMask, maskI] = segmentMSIRegion(files, x, y, options);
 
             else % (square case)
                 width = 5;
                 height = 5;
-                [MSI, whiteReference, darkReference] = readMSI(files, x, y, width, height, options); 
+                [MSI, whiteReference, darkReference, patchMask, maskI] = readMSI(files, x, y, width, height, options); 
 
             end  
 
         %% Save MSI   
-            name = generateName([], 'image', data(ID(i).Representative), ID(i));
-
+            
             if ~(isempty(MSI))
-                m.MSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', MSI, 'Mask', patchMask);
+                m.MSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', MSI, 'Mask', patchMask, 'MaskI', maskI);
             end
 
             if ~(isempty(whiteReference))
@@ -274,8 +280,6 @@ if ~options.skipLoading
         coeff = ones(length(ID), 3, 7);
         src = '../../input/others/coeff.xlsx';
         for k = 1:msiN
-            sampleName = generateName([], 'image', data(ID(k).Representative), ID(k));
-
             % Retrieve MSI data
             g = MSIStruct(k).MSI;
 

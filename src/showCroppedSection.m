@@ -1,63 +1,48 @@
-function [] = showCroppedSection(image, imagePath, x, y, figtitle, savedir, toClean, color, boxdim)
+function [] = showCroppedSection(idx, x, y, mask, figtitle, savedir, color)
 
-if (nargin < 5) || isempty(figtitle)
-    figtitle = '';
-end
-
-if (nargin < 6) || isempty(savedir)
-    savedir = '';
-    toSave = false;
-else
-    toSave = true;
-end
-
-if (nargin < 7)
-    toClean = true;
-end
-
-if (nargin < 8)
-    color = 'y';
-end
-
-if (nargin < 9)
-    height = 5;
-    width = 5;
-else
-    height = boxdim(1);
-    width = boxdim(2);
-end
-
-%to check that we read the correct region
-if toClean
-    fig = figure(1);
-    clf(fig);
-else
-    fig = gcf;
-end
-
-w = warning('off', 'all');
-
-hold on
-
-if toClean
-    if isempty(image)
-        imshow(imread(imagePath), 'Border', 'tight');
-    else
-        imshow(image, 'Border', 'tight');
+    if ~exist('x', 'var') || ~exist('y', 'var')
+        x = idx.Originx;
+        y = idx.Originy;
     end
-end
 
-rectangle('Position', [x, y, width, height], 'EdgeColor', color);
-title(figtitle)
-if toSave
-    print(fig, savedir, '-djpeg');
-end
+    if (nargin < 4)
+        infile = matfile(fullfile('..', '..','input', 'saitama_v3_min_region', 'in.mat'));
+        mask = infile.MSIstruct(idx.Index).MaskI;
+    end
 
-hold off
+    if (nargin < 5) || isempty(figtitle)
+        figtitle = '';
+    end
 
-warning(w)
+    if (nargin < 6) || isempty(savedir)
+        savedir = '';
+        toSave = false;
+    else
+        toSave = true;
+    end
 
-pause(0.01);
+    if (nargin < 7)
+        color = 'r';
+    end
 
+    datafile = matfile(fullfile('..', '..','input', 'saitama_v3_min_region', 'data.mat'));
+    files = {datafile.data(idx.Data).File};
+    [~, im] = readMSI(files);
+    I = im + 0.3 * cat(3, mask, mask, mask);
+    w = warning('off', 'all');
+
+    figure(1);
+    hold on
+    imshow(I);
+    plot(x, y, strcat(color,'*'), 'LineWidth', 2, 'MarkerSize', 5);
+    hold off
+    %rectangle('Position', [x, y, width, height], 'EdgeColor', color);
+
+    title(figtitle)
+    if toSave
+        print(fig, savedir, '-djpeg');
+    end
+
+    warning(w);
 
 end
