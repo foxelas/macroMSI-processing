@@ -1,8 +1,10 @@
-function [W, score, latent, explained] = dimensionReduction(method, input, varargin)
+function [W, score, latent, explained] = dimensionReduction(method, input, labels, priors, targetDimension)
 %% DIMENSIONREDUCTION provides data projections for dimension reduction
 % Available methods
-% 'pca' Principal Component Analysis
+% 'pca' Principal Component Analysis, MATLAB built-in
+% 'pca b' Variation of pca
 % 'lda' Linear Dimension Analysis
+% 'lda b' Variation of lda
 % 'pcalda' Combination or PCA and LDA 
 % 
 % Use:
@@ -16,27 +18,29 @@ function [W, score, latent, explained] = dimensionReduction(method, input, varar
 % Example: 
 % 
 % [W, score, latent, explained] = dimensionReduction('pca', X);
-% [W, score] = dimensionReduction('pca', X, 'TargetDimension', 2);
+% [W, score] = dimensionReduction('pca', X, [], [], 2);
 % [W, score] = dimensionReduction('lda', X, labels);
-% [W, score] = dimensionReduction('lda', X, labels, 'TargetDimension', 2, 'Priors', [0.3, 0.7]);
+% [W, score] = dimensionReduction('lda', X, labels, [0.3, 0.7], 2 );
+
+[n, m] = size(input); %n observations, m variables
     
-p = inputParser;
-p.addRequired(p, 'method', @ischar);
-p.addRequired(p, 'input', @isnumeric);
-p.addOptional(p, 'labels', [] );
-p.addParameter(p, 'Priors', [], @(x) isnumeric(x));
-p.addParameter(p, 'TargetDimension', [], @(x) isnumeric(x));
-p.parse(p, method, input, varargin{:})
+if (nargin < 3)
+    labels = [];
+end
 
-method = p.Results.method;
-input = p.Results.input;
-labels = p.Results.labels;
-priors = p.Results.Priors;
-targetDimension = p.Results.TargetDimension;
+if (nargin < 4)
+    priors = [];
+end
 
+if (nargin < 5)
+    targetDimension = m;
+end
+
+latent = zeros(10,1);
+explained = zeros(10,1);
+    
 if contains(method, 'lda')
     % Determine size of input data
-    [n, ~] = size(input);
     if (n ~= length(labels))
         error('Inconsistent number of observation values and labels');
     end
@@ -59,15 +63,12 @@ if contains(method, 'lda')
     if (numel(priors)~= C)
         error('Inconsistent number of classes and prior probabilities.')
     end
-
-    latent = [];
-    explained = [];
 end
 
 
 switch method
     case 'pca'
-        [W, score, latent, explained] = PCA(input, 'Centered', true);
+        [W, score, latent, ~, explained] = pca(input, 'Centered', true); %PCA(input);
 
     case 'pca b'
         mu = mean(X);
@@ -110,7 +111,7 @@ switch method
         % the projection vector
         W = V(:, :); %eigenvector of the maximum eigenvalue 
         % W2 = inv(Sw) * (mu(:,1) - mu(:,2));
-        score = Input * W;
+        score = input * W;
         %         transMean = W' * mu;
         
     case 'lda b'
@@ -133,7 +134,7 @@ switch method
             % Linear
             W(i, 2:end) = tmp;
         end
-        score = [ones(n, 1), Input] * W';
+        score = [ones(n, 1), input] * W';
 
     case 'pcalda'
         [~, score, ~, ~] = dimensionReduction('pca', input, labels);
@@ -143,10 +144,8 @@ switch method
         error('Not implemented dimension reduction method')
 end
 
-if ~isempty(targetDimension)
-    W = W(:,1:n);
-    score = score(:,1:n);
-end
+targetDimension = min(targetDimension, size(W,2));
+W = W(:,1:targetDimension);
 
 end
 

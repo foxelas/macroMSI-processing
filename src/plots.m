@@ -18,7 +18,7 @@ function [] = plots(plotType, varargin)
 p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
-    'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'classificationErrors'})));
+    'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', 'pcalda', 'classificationErrors'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'name', '', @(x) ischar(x));
@@ -197,14 +197,14 @@ switch plotType
         hold on
         h(1) = plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}); % plot measured reflectance
         for i = 1:curveN
-            h(i+1) = plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', lineWidth(i), 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
+            h(i+1) = plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', lineWidth(i), 'DisplayName', strrep(lineNames{i + 1}, '_', ' ')); % plot estimated reflectances
         end
         hold off
         
-        % ylim([0,1]);
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance Spectrum');
         xlim([400, 700]);
+%         ylim([0, 1]);
         title(figTitle);
         legend(h, 'Location', 'eastoutside'); % 'Orientation','horizontal');
         
@@ -246,7 +246,7 @@ switch plotType
         
         %% plot single measurement %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hold on
-        plot(wavelength, curves, 'DisplayName', lineNames, 'Color', 'm')
+        plot(wavelength, curves, 'DisplayName', strrep(lineNames, '_', ' '), 'Color', 'm')
         xlabel('wavelength (nm)');
         ylabel('Reflectance ratio');
         title('Reflectance spectrum of a point object');
@@ -445,7 +445,7 @@ switch plotType
         legend(h, 'Location', 'best');
         %end overlap measured spectrum
         
-    case {'pca', 'lda'}
+    case {'pca', 'lda', 'pca b', 'lda b', 'pcalda'}
         
         %% plot discriminant analysis results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -467,7 +467,7 @@ switch plotType
         sample = {attr{:, 1}}';
         type = {attr{:, 2}}';
         isNormal = {attr{:, 3}}';
-        idx = strcmp(isNormal, 'Normal');
+        idx = strcmp(isNormal, 'Normal') | strcmp(isNormal, 'Benign');
         colors(idx) = 'b';
         colors(~ismember(idx, 1:length(isNormal))) = 'r';
         
@@ -511,13 +511,14 @@ switch plotType
             title('PCA scores for PC1&2')
             xlabel('Principal component 1');
             ylabel('Principal component 2');
-            titl = strsplit(plotName, '\');
-            suptitle(titl{end})
         else
             title('LDA projections for LD1&2')
             xlabel('Lidear discriminant 1');
             ylabel('Linear Discriminant 2');
         end
+        titl = strsplit(plotName, '\');
+        suptitle(titl{end})
+        
         legend(h, 'Location', 'best');
         set(gcf, 'Position', get(0, 'Screensize'));
         % End plot discriminant analysis results
@@ -532,8 +533,10 @@ if (savePlot && ~isempty(plotName))
     strIdxs = strfind(plotName, '\');
     strIdx = strIdxs(end);
     fn = plotName(1:strIdx);
+    
     if ~exist(fn, 'dir')
         mkdir(fn);
+        addpath(fn);
     end
     
     if (saveInHQ)

@@ -128,6 +128,16 @@ if ~isempty(csvList)
     ID = ID(ii);
 end
 
+
+samples = unique([ID.Sample]);
+for i = 1 : length(samples)
+    for j = 1:length(ID)
+        if strcmp(samples(i), ID(j).Sample)
+            ID(j).SampleId = i;
+        end
+    end
+end
+
 measuredmat = dir('*MeasuredReflectance.mat');
 if ~isempty(measuredmat)
     load(measuredmat.name);

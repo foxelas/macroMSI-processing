@@ -1,4 +1,4 @@
-function [MSI, whiteReference, darkReference] = readMSI(files, x, y, width, height, bands, savedir, id)
+function [MSI, whiteReference, darkReference] = readMSI(files, x, y, width, height, options, fc)
 %Reads the MSI image file and contains it in a matrix g
 % files: the subimages related to the MSI
 % x: origin x to read image box
@@ -27,16 +27,12 @@ if (width == 0) || (height == 0)
     error('No region to be read.')
 end
 
-if (nargin < 6) || isempty(bands)
-    bands = [1, 450, 465, 505, 525, 575, 605, 630];
+if (nargin < 6) || isempty(options)
+    options.saveOptions.plotName = '../output/cropped/q';
 end
 
-if (nargin < 7)
-    savedir = '..\MATLAB\Cropped\';
-end
-
-if (nargin < 8)
-    id = 0;
+if (nargin < 7) || isempty(fc)
+    fc = [1, 450, 465, 505, 525, 575, 605, 630];
 end
 
     function [SMSI] = readSubimage(loc)
@@ -49,8 +45,8 @@ end
         end
         
         %to check that we read the correct region
-        if (loc == 1 && bands(1) == 1 && ~modeAll) || (loc == 2 && bands(1) ~= 1 && ~modeAll)
-            %                 showCroppedSection( ImFull, '', x, y, strrep([files{loc} ,' ', num2str(id)], '_', ' '),  strcat(savedir, 'ROI_ ',strrep(strrep([ files{loc}, '_UnID_', id], '\', '_'), '.tif', ''), '.jpg') )
+        if (loc == 1 && fc(1) == 1 && ~modeAll) || (loc == 2 && fc(1) ~= 1 && ~modeAll)
+            showCroppedSection( ImFull, '', x, y, strrep([files{loc} ,' ', num2str(id)], '_', ' '),  [options.saveOptions.plotName, '_cropped.jpg']);
         end
         
         SMSI = im2double(I);
@@ -58,7 +54,7 @@ end
 
 %  fig1 = figure(1);
 extraImages = 0;
-[hasWhiteReference, idx] = ismember(1, bands);
+[hasWhiteReference, idx] = ismember(1, fc);
 if hasWhiteReference
     whiteReference = readSubimage(idx);
     files{idx} = [];
@@ -67,7 +63,7 @@ else
     whiteReference = [];
 end
 
-[hasDarkReference, idx] = ismember(0, bands);
+[hasDarkReference, idx] = ismember(0, fc);
 if hasDarkReference
     darkReference = readSubimage(idx);
     files{idx} = [];
