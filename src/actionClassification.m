@@ -82,7 +82,7 @@ plots('classificationErrors', 2, [], '', 'errors', classificationError, 'saveOpt
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [accuracyRate, falsePositiveRate, falseNegativeRate] = getAccuracyStatistics(predictions, labels)
+function [performance] = getPerformanceStatistics(predictions, labels)
 %%Returns accuracy statistics for binary classification predictions
 %Predictions: an 1D vector of prediction labels 
 %Labels: an 1D vector of test labels 
@@ -91,14 +91,28 @@ function [accuracyRate, falsePositiveRate, falseNegativeRate] = getAccuracyStati
         error('Incompatible length of input data.')
     end
     % true = cancer condition is true
-    falsePredictionIdxs = ~(predictions == labels);
-    falsePositives = sum(labels(falsePredictionIdxs) == false);
-    falseNegatives = sum(labels(falsePredictionIdxs) == true);
-    
-    total = length(predictions);
-    falsePositiveRate = falsePositives / total * 100;
-    falseNegativeRate = falseNegatives / total * 100;
-    accuracyRate = 100 - falsePositiveRate - falseNegativeRate;
+	truePredictionIdxs = (predictions == labels);
+	falsePredictionIdxs = (predictions ~= labels);
+	
+	a = sum(labels(truePredictionIdxs) == true);
+	d = sum(labels(truePredictionIdxs) == false);
+	c = sum(labels(falsePredictionIdxs) == true); 
+	b = sum(labels(falsePredictionIdxs) == false);
+	
+	total = length(predictions);
+	if (sum(a,b,c,d) ~= total)
+		error('Incorrect performance statistics.');
+	end
+	
+	performance.ConfusionMatrix = [a, c ; b, d]; 
+	performance.FalsePositiveRate = b / total * 100;
+	performance.FalseNegativeRate = c / total * 100;
+	performance.Sensitivity = a / (a + c) * 100; %or recall
+	performance.Specificity = d / (b + d) * 100;
+	performance.Precision = a / (a + b) * 100; %or positive predictive value
+	performance.NegativePredictionValue = d / (c + d) * 100;
+	performance.Accuracy = (a + d) / total * 100;
+	
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,7 +172,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [predictions, scores, accuracyRate, falsePositiveRate, falseNegativeRate] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel)
+function [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel)
 %%Classify returns the class predictions using 'classifier'
 %test, train: rows = samples, columns = features
 
@@ -173,7 +187,7 @@ function [predictions, scores, accuracyRate, falsePositiveRate, falseNegativeRat
        error('Unsupported classification method');
     end
     
-    [accuracyRate, falsePositiveRate, falseNegativeRate] = getAccuracyStatistics(predictions, testLabels);
+    performance = getPerformanceStatistics(predictions, testLabels);
     
 end
 

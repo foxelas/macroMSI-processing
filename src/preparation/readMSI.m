@@ -8,9 +8,13 @@ function [MSI, whiteReference, darkReference, patchMask, maskI] = readMSI(files,
 
     if ~exist('x', 'var') || ~exist('y', 'var')
         modeAll = true; 
-
+        x = 0;
+        y = 0;
+        
     elseif isempty(x) || isempty(y)
         modeAll = true;   
+        x = 0;
+        y = 0;
 
     elseif (x < 0) || (y < 0)
         error('Negative origin points.')
@@ -42,7 +46,6 @@ function [MSI, whiteReference, darkReference, patchMask, maskI] = readMSI(files,
         function [SMSI] = readSubimage(loc)
             ImFull = imread(files{loc});
             if ~(modeAll)
-                %             fprintf('now at %d %d\n', x, y)
                 I = ImFull(y:(y + height - 1), x:(x + width - 1), :);
             else
                 I = ImFull;            
@@ -97,6 +100,8 @@ function  [patchMask, maskI] = makeMasks(filedir, x, y, width, height)
     ImFull = imread(filedir);
     [imHeight, imWidth, ~] = size(ImFull);
     maskI = zeros(imHeight, imWidth);
-    maskI(y:(y + height - 1), x:(x + width - 1)) = 1;
+    if (x > 0) && (y > 0)
+        maskI(y:(y + height - 1), x:(x + width - 1)) = 1;
+    end
     
 end
