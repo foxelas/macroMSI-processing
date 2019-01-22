@@ -9,7 +9,9 @@ if ~options.skipLoading
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
     if (options.tryReadData)
-
+        
+        w = warning('off', 'all');
+        
         fprintf('Reading spectral data according to ID file.\n');
         m = matfile(generateName(options, 'matfilein'), 'Writable', true);
 
@@ -33,10 +35,10 @@ if ~options.skipLoading
         end
 
         %% Save data structures 
-         m.MeasuredSpectrumStruct = struct( 'Index', [], 'Name', {}, 'Spectrum', [], 'T', {});
-         m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', [], 'MaskI', []);
-         m.WhiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
-         m.DarkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
+%          m.MeasuredSpectrumStruct = struct( 'Index', [], 'Name', {}, 'Spectrum', [], 'T', {});
+%          m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', [], 'MaskI', []);
+%          m.WhiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
+%          m.DarkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
  
         for i = 1:msiN
             
@@ -83,7 +85,8 @@ if ~options.skipLoading
             end
 
         end
-
+        
+        warning(w);
         fprintf('Finished reading all spectral data according to ID file. Saving in %s.\n', options.systemdir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

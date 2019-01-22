@@ -119,8 +119,8 @@ for k = 1:msiN
     end
     
     if (options.showImages)
-        plots('estimationComparison', 2, [measured, est], sampleName, 'wavelength', wavelength, 'method', options.pixelValueSelectionMethod, ...
-            'saveOptions', options.saveOptions, 'lineNames', lineNames);
+        plots('estimationComparison', 2, [measured, est], sampleName, 'Wavelength', wavelength, 'Method', options.pixelValueSelectionMethod, ...
+            'SaveOptions', options.saveOptions, 'LineNames', lineNames);
         pause(0.1)
     end
     
@@ -139,10 +139,10 @@ if contains(lower(options.action), 'preset') || contains(lower(options.action), 
     out.EstimatedSpectrumStruct = estimatedSpectrumStruct;
 else
     options.saveOptions.plotName = generateName(options, ['ComparisonRmse', plotType]);
-    plots('methodErrors', 3, [], ['Rmse', plotType], 'errors', errors, 'saveOptions', options.saveOptions)
+    plots('methodErrors', 3, [], ['Rmse', plotType], 'Errors', errors, 'SaveOptions', options.saveOptions)
 
     options.saveOptions.plotName = generateName(options, ['ComparisonNmse', plotType]);
-    plots('methodErrors', 4, [], ['Nmse', plotType], 'errors', errors, 'saveOptions', options.saveOptions)
+    plots('methodErrors', 4, [], ['Nmse', plotType], 'Errors', errors, 'SaveOptions', options.saveOptions)
 
     errorfilename = generateName(options, ['ComparisonErrors', plotType, '.mat']);
     save(errorfilename, 'errors');

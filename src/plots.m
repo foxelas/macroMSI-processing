@@ -18,41 +18,45 @@ function [] = plots(plotType, varargin)
 p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
-    'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', 'pcalda', 'classificationErrors'})));
+    'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'name', '', @(x) ischar(x));
-addParameter(p, 'wavelength', []);
-addParameter(p, 'sensitivity', []);
-addParameter(p, 'illumination', []);
-addParameter(p, 'method', '', @(x) ischar(x));
-addParameter(p, 'fc', defaultfc);
-addParameter(p, 'plotName', [], @(x) ischar(x));
-addParameter(p, 'lineNames', {});
-addParameter(p, 'markers', {});
-addParameter(p, 'errors', []);
-addParameter(p, 'latent', []);
-addParameter(p, 'explained', []);
-addParameter(p, 'saveOptions', []);
+addParameter(p, 'Wavelength', []);
+addParameter(p, 'Sensitivity', []);
+addParameter(p, 'Illumination', []);
+addParameter(p, 'Method', '', @(x) ischar(x));
+addParameter(p, 'Fc', defaultfc);
+addParameter(p, 'PlotName', [], @(x) ischar(x));
+addParameter(p, 'LineNames', {});
+addParameter(p, 'Markers', {});
+addParameter(p, 'Errors', []);
+addParameter(p, 'Latent', []);
+addParameter(p, 'Explained', []);
+addParameter(p, 'SaveOptions', []);
+addParameter(p, 'Image', []);
+addParameter(p, 'Coordinates', []);
 
 parse(p, plotType, varargin{:});
 plotType = p.Results.plotType;
 fig = p.Results.fig;
 curves = p.Results.curves;
 name = p.Results.name;
-sensitivity = p.Results.sensitivity;
-wavelength = p.Results.wavelength;
-illumination = p.Results.illumination;
-method = p.Results.method;
-fc = p.Results.fc;
-plotName = p.Results.plotName;
-lineNames = p.Results.lineNames;
-markers = p.Results.markers;
-errors = p.Results.errors;
-latent = p.Results.latent;
-explained = p.Results.explained;
-saveOptions = p.Results.saveOptions;
-
+sensitivity = p.Results.Sensitivity;
+wavelength = p.Results.Wavelength;
+illumination = p.Results.Illumination;
+method = p.Results.Method;
+fc = p.Results.Fc;
+plotName = p.Results.PlotName;
+lineNames = p.Results.LineNames;
+markers = p.Results.Markers;
+errors = p.Results.Errors;
+latent = p.Results.Latent;
+explained = p.Results.Explained;
+saveOptions = p.Results.SaveOptions;
+I = p.Results.Image;
+coordinates = p.Results.Coordinates;
 
 if fig < 0
     figure;
@@ -70,8 +74,7 @@ else
 end
 
 switch plotType
-    case 'sensitivity'
-        
+    case 'sensitivity'     
         %% Plot camera sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         sensitivityN = size(sensitivity, 2);
         hold on;
@@ -91,9 +94,8 @@ switch plotType
         legend(fnames)
         % End Plot camera sensitivity
         
-    case 'illuminationAndSensitivity'
-        
-        %% Plot illumination and sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case 'illuminationAndSensitivity'     
+        %% Plot illumination and sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %{
             % Arguments  ( wavelength, bandWavelength, illumination )
             % wavelength: 401x1 or 81x1
@@ -131,7 +133,7 @@ switch plotType
         %End Plot illumination and sensitivity
         
     case 'illumination'
-        %%Plot illumination%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                     %% Plot illumination
+        %% Plot illumination%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                     
         % Arguments ( wavelength, fc, illumination )
         % wavelength: 401x1 or 81x1
         % fc: central frequencies of the bands (string cell )
@@ -147,8 +149,7 @@ switch plotType
         xlabel('Wavelength \lambda (nm)');
         ylabel('Luminous Intensity (cd/m^2)');
         
-    case 'estimationComparison'
-        
+    case 'estimationComparison'       
         %% Plot estimation comparison%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %{
@@ -186,7 +187,7 @@ switch plotType
         set(gcf, 'Toolbar', 'none', 'Menu', 'none');
         
         figTitle = {sprintf('Comparative plot of Wiener estimation results '); ...
-            sprintf('Sample: %s | Method: %s ', strrep(name, '_', ' '), method)};
+            sprintf('Sample: %s | Method: %s ', name, method)};
         lineWidth = 0.5 * ones(1, curveN);
         lineWidth(1) = 1;
         %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
@@ -194,6 +195,7 @@ switch plotType
         
         [~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths.
         subplot(1, plotN, [1, 2]);
+        h = zeros(size(curves,1), curveN + 1);
         hold on
         h(1) = plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}); % plot measured reflectance
         for i = 1:curveN
@@ -205,6 +207,7 @@ switch plotType
         ylabel('Reflectance Spectrum');
         xlim([400, 700]);
 %         ylim([0, 1]);
+        figTitle = strrepAll(figTitle);
         title(figTitle);
         legend(h, 'Location', 'eastoutside'); % 'Orientation','horizontal');
         
@@ -222,8 +225,7 @@ switch plotType
         end
         % End Plot estimation comparison
         
-    case 'allEstimations'
-        
+    case 'allEstimations'       
         %% plots all estimated curves for all pixels in an image area%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hold on
         for i = 2:length(curves) - 1
@@ -234,7 +236,8 @@ switch plotType
         hold off
         
         figTitle = {sprintf('Comparative plot of Wiener estimation results for a pixel area '); ...
-            sprintf('Sample %s with %s smoothing matrix ', strrep(name, '_', ' '), method)};
+            sprintf('Sample %s with %s smoothing matrix ', name, method)};
+        figTitle = strrepAll(figTitle);
         title(figTitle);
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance');
@@ -242,8 +245,7 @@ switch plotType
         legend(h2, {'Estimated reflectance'});
         % end plots all estimated curves for all pixels in an image area
         
-    case 'singlemeasurement'
-        
+    case 'singlemeasurement'       
         %% plot single measurement %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hold on
         plot(wavelength, curves, 'DisplayName', strrep(lineNames, '_', ' '), 'Color', 'm')
@@ -254,8 +256,7 @@ switch plotType
         hold off
         %end plot single measurement
         
-    case 'd65'
-        
+    case 'd65'      
         %% plot d65 illumination %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         [lambda, illum] = illuminant('d65');
         plot(lambda, illum/max(illum), 'm', 'LineWidth', 2);
@@ -264,10 +265,8 @@ switch plotType
         ylabel('relative spectral power distribution')
         title('The CIE D65 daylight illuminant ')
         %end plot d65 illumination
-        
-        
-    case 'methodErrors'
-        
+              
+    case 'methodErrors'     
         %% plot method errors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if contains(name, 'nmse', 'IgnoreCase', true)
             avge = [errors.avgrmse];
@@ -353,10 +352,8 @@ switch plotType
         legend(h, 'Location', 'best');
         title('Comparison of estimation results for the various method variations')
         %end  plot method errors
-        
-        
-    case 'classificationErrors'
-        
+               
+    case 'classificationErrors'       
         %% Classication errors%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         n = min(20, length(errors));
         accuracy = [errors(1:n).Accuracy];
@@ -384,69 +381,8 @@ switch plotType
         ylabel('Classification Accuracy')
         title(strcat('Classification results (', errors(i).Validation, ' validation)'));
         
-        %%
-    case 'overlapSpectrum'
         
-        %% overlap measured spectrum%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        types = unique(lineNames);
-        colors = {'m', 'g', 'b', 'r', 'k', 'y'};
-        
-        hold on
-        %dummy plots for the legend
-        h = [];
-        for i = 1:length(types)
-            h(i) = plot([NaN, NaN], colors{i}, 'DisplayName', types{i});
-        end
-        
-        for i = 1:size(curves, 2)
-            plot(wavelength, curves(:, i), colors{strcmp(lineNames{i}, types)});
-        end
-        hold off
-        xlabel('wavelength (nm)');
-        ylabel('Reflectance ratio');
-        title('Measured Reflectance');
-        xlim([400, 700]);
-        legend(h, 'Location', 'best');
-        %end overlap measured spectrum
-        
-    case 'overlapSpectrumSample'
-        
-        %% overlap measured spectrum with different color for every sample%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        sep = regexp(lineNames, '_', 'split', 'once'); % Split On First Underscore
-        samples = cellfun(@(x)x(:, 1), sep);
-        lineNames = cellfun(@(x)x(:, 2), sep);
-        
-        types = unique(lineNames);
-        names = unique(samples);
-        
-        colors = {'m', 'g', 'b', 'r', 'k', 'y'};
-        markers = {'none', 'o', 'h', '*'};
-        widths = [1.3, 0.5];
-        hold on
-        %dummy plots for the legend
-        h = [];
-        for i = 1:length(types)
-            h(i) = plot([NaN, NaN], 'k', 'DisplayName', types{i}, 'Marker', markers{i});
-        end
-        for i = 1:length(names)
-            h(length(types)+i) = plot([NaN, NaN], colors{i}, 'DisplayName', names{i});
-        end
-        
-        for i = 1:size(curves, 2)
-            plot(wavelength, curves(:, i), colors{strcmp(samples{i}, names)}, 'Marker', markers{strcmp(lineNames{i}, types)}, ...
-                'LineWidth', widths(strcmp(lineNames{i}, types)), 'MarkerIndices', 1:10:length(wavelength));
-        end
-        hold off
-        xlabel('wavelength (nm)');
-        ylabel('Reflectance ratio');
-        title('Measured Reflectance');
-        xlim([400, 700]);
-        legend(h, 'Location', 'best');
-        %end overlap measured spectrum
-        
-    case {'pca', 'lda', 'pca b', 'lda b', 'pcalda'}
-        
+    case {'pca', 'lda', 'pca b', 'lda b', 'pcalda'}     
         %% plot discriminant analysis results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         if strcmp(plotType, 'pca')
@@ -517,12 +453,48 @@ switch plotType
             ylabel('Linear Discriminant 2');
         end
         titl = strsplit(plotName, '\');
-        suptitle(titl{end})
+        figTitle = strrepAll(titl{end});
+        suptitle(figTitle);
         
         legend(h, 'Location', 'best');
         set(gcf, 'Position', get(0, 'Screensize'));
-        % End plot discriminant analysis results
+        % End plot discriminant analysis results 
         
+    case 'cropped'
+        %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        x = coordinates(1);
+        y = coordinates(2);
+        if isempty(markers)
+            markers = 'r*';
+        end
+        imshow(I);
+        hold on
+        plot(x, y, markers, 'LineWidth', 2, 'MarkerSize', 5);
+        hold off
+        figTitle = strrepAll(strcat('Cropped area of ', plotName));
+        title(figTitle);
+        plotName = strcat(plotName, '_origin');
+        
+    case 'segmentation'
+        %% Show segmentation images %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
+        bandColors = [  0,70,255   ; 
+                0,146,255  ;
+                0,255,84   ;
+                74,255,0   ;
+                240,255,0  ;
+                255,173,0  ;
+                255,79,0   ;
+                255,255,255
+              ];
+        bandColors = bandColors./255;
+        colormap(bandColors);
+        imshow(I);
+        c = colorbar('location','southoutside', 'Ticks', linspace(0,1,9),...
+             'TickLabels',{'450','465','505','525','575','605', '630', 'All', ''});
+        c.Label.String = 'Respective MSI band (nm)';
+        figTitle = strrepAll(strcat('Segmented area of ', plotName));
+        title(figTitle);
 end
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -539,11 +511,25 @@ if (savePlot && ~isempty(plotName))
         addpath(fn);
     end
     
+    set(0, 'CurrentFigure', fig);
     if (saveInHQ)
-        print(fig, strcat(plotName, '.jpg'), '-djpeg', '-r600');
+        export_fig(strcat(plotName, '.jpg') , '-jpg','-native');
+        %print(fig, strcat(plotName, '.jpg'), '-djpeg', '-r600');
     else
-        print(fig, strcat(plotName, '.jpg'), '-djpeg');
+        export_fig(strcat(plotName, '.jpg') , '-jpg');
+        %print(fig, strcat(plotName, '.jpg'), '-djpeg');
     end
 end
+
+end
+
+function [outname] = strrepAll(inname)
+    
+    attr = strsplit(inname, 'Input');
+    outname = attr{end};
+    outname = strrep(outname, '\', ' ');
+    outname = strrep(outname, '_', ' ');
+    outname = strrep(outname, '.csv', '');
+    outname = strrep(outname, '.mat', '');
 
 end

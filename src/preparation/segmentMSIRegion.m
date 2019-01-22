@@ -1,4 +1,4 @@
-function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, x, y, options, accTheta, regionRadius, fc, bandColors)
+function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, x, y, options, accTheta, regionRadius, fc)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
 %%seed position [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
@@ -13,21 +13,20 @@ function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, x, 
     if (nargin < 7) || isempty(fc)
         fc = [450, 465, 505, 525, 575, 605, 630];
     end
-    if (nargin < 8) || isempty(bandColors)
-        % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
-        bandColors = [  0,70,255   ; 
-                        0,146,255  ;
-                        0,255,84   ;
-                        74,255,0   ;
-                        240,255,0  ;
-                        255,173,0  ;
-                        255,79,0   ;
-                        255,255,255
-                      ];
-    end
     
-    bands = length(fc);
+    % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
+    bandColors = [  0,70,255   ; 
+            0,146,255  ;
+            0,255,84   ;
+            74,255,0   ;
+            240,255,0  ;
+            255,173,0  ;
+            255,79,0   ;
+            255,255,255
+          ];
     bandColors = bandColors./255;
+        
+    bands = length(fc);
     bandWeight = 1 / bands;       
 
     % Retrieve whole MSI
@@ -60,26 +59,8 @@ function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, x, 
     patchMask = mask(patchY, patchX);
     
     if (options.showImages)
-        fig1 = figure(1);
-        imshow(whiteI + mask); %imshow(squeeze(MSI(4,:,:,:)));
-        hold on
-        plot(x, y, 'r*', 'LineWidth', 2, 'MarkerSize', 15);
-        hold off
-    
-        fig2 = figure(2);
-        colormap(bandColors);
-        masked = whiteI + maskForFig;
-        imshow(masked);
-        c = colorbar('location','southoutside', 'Ticks', linspace(0,1,9),...
-             'TickLabels',{'450','465','505','525','575','605', '630', 'All', ''});
-        c.Label.String = 'Respective MSI band (nm)';
-        
-        if (options.saveOptions.saveImages)
-            set(0, 'CurrentFigure', fig1)
-            export_fig([options.saveOptions.plotName, '_origin.jpg'] , '-jpg')
-            set(0, 'CurrentFigure', fig2)
-            export_fig([options.saveOptions.plotName, '.jpg'] , '-jpg','-native')
-        end
+        plots('cropped', 1, 'Image', whiteI + mask, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', options.saveOptions);
+        plots('segmentation', 2, 'Image', whiteI + maskForFig, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', options.saveOptions);
     end
     
     if ~isempty(whiteI)

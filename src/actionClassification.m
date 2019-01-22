@@ -78,11 +78,11 @@ classificationErrorCell = sortrows(classificationErrorCell, -1);
 classificationErrorCell = reshape(classificationErrorCell', sz);
 classificationError = cell2struct(classificationErrorCell, classificationErrorFields, 1);
 options.saveOptions.plotName = generateName(options, ['Classification error of ', version, ' spectra with ', validation]);
-plots('classificationErrors', 2, [], '', 'errors', classificationError, 'saveOptions', options.saveOptions)
+plots('classificationErrors', 2, [], '', 'Errors', classificationError, 'SaveOptions', options.saveOptions)
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [performance] = getPerformanceStatistics(predictions, labels)
+function [performance] = getPerformanceStatistics(predictions, labels, scores)
 %%Returns accuracy statistics for binary classification predictions
 %Predictions: an 1D vector of prediction labels 
 %Labels: an 1D vector of test labels 
@@ -110,9 +110,14 @@ function [performance] = getPerformanceStatistics(predictions, labels)
 	performance.Sensitivity = a / (a + c) * 100; %or recall
 	performance.Specificity = d / (b + d) * 100;
 	performance.Precision = a / (a + b) * 100; %or positive predictive value
-	performance.NegativePredictionValue = d / (c + d) * 100;
+	performance.NegativePredictiveValue = d / (c + d) * 100;
 	performance.Accuracy = (a + d) / total * 100;
-	
+	[performance.ROCX, performance.ROCY, performance.ROCT, performance.AUC] = perfcurve(labels, scores, 'Malignant');
+%     performance.ROCX = X;
+%     performance.ROCY = Y;
+%     performance.ROCT = T;
+%     performance.AUC = AUC;
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -182,12 +187,13 @@ function [predictions, scores, performance] = classify(classifier, train, trainL
     elseif strcmp(classifier, 'svm')
         SVMModel = fitcsvm(train, trainLabels, 'KernelFunction', kernel, 'Standardize',true,'ClassNames',{'Benign','Malignant'}, 'BoxConstraint', 1);
         [predictions,scores] = predict(SVMModel,test);
+        %SVMModel = fitPosterior(SVMModel); [predictions,scores] = resubPredict(SVMModel);
         
     else 
        error('Unsupported classification method');
     end
     
-    performance = getPerformanceStatistics(predictions, testLabels);
+    performance = getPerformanceStatistics(predictions, testLabels, scores);
     
 end
 
@@ -216,7 +222,10 @@ function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate] = crossVa
     else
         error('Unsupported validation method.');
     end
-        
+    
+    cvPerformance = struct('Fold', [],'testIdx', [], 'Predictions', [], 'Scores', [], 'ConfusionMatrix', [], ...
+        'FalsePositiveRate', [], 'FalseNegativeRate', [], 'Sensitivity', [], 'Specificity', [], ...
+        'Precision', [], 'NegativePredictiveValue', [], 'Accuracy', [], 'ROCX', [], 'ROCY', [], 'ROCT', [], 'AUC', []);
     for i = 1:folds
         
         if strcmp(validation, 'Kfold')
@@ -234,10 +243,15 @@ function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate] = crossVa
         train = data(trainIdx, :);
         test = data(testIdx, :);
         
-        [predictions, scores, accuracyRate, falsePositiveRate, falseNegativeRate] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel);
-        avgAccuracyRate = avgAccuracyRate + accuracyRate / folds;
-        avgFalseNegativeRate = avgFalseNegativeRate + falseNegativeRate / folds;
-        avgFalsePositiveRate = avgFalsePositiveRate + falsePositiveRate / folds;
+        [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel);
+        cvPerformance(i) = struct('Fold', i,'testIdx', testIdx, 'Predictions', predictions, 'Scores', scores, 'ConfusionMatrix', performance.ConfusionMatrix, ...
+            'FalsePositiveRate', performance.FalsePositiveRate, 'FalseNegativeRate', performance.FalseNegativeRate, 'Sensitivity', performance.Sensitivity, ...
+            'Specificity', performance.Specificity, 'Precision', performance.Precision, 'NegativePredictiveValue', performance.NegativePredictiveValue,...
+            'Accuracy', performance.Accuracy, 'ROCX', performance.ROCX, 'ROCY', performance.ROCY, 'ROCT', performance.ROCT, 'AUC', performance.AUC);
+        
+        avgAccuracyRate = avgAccuracyRate + performance.Accuracy / folds;
+        avgFalseNegativeRate = avgFalseNegativeRate + performance.FalseNegativeRate / folds;
+        avgFalsePositiveRate = avgFalsePositiveRate + performance.FalsePositiveRate / folds;
     end
     
 end

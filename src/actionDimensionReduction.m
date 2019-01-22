@@ -26,15 +26,15 @@ input = 'estimated';
 %L = [ones(length(un),1) Gun] * W';
 %P = exp(L) ./ repmat(sum(exp(L),2),[1 2]);
 options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type']);
-plots(dimredMethod, 1, score, [dimredMethod,' Fix'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10), 'saveOptions', options.saveOptions)
+plots(dimredMethod, 1, score, [dimredMethod,' Fix'], 'LineNames', lineNamesun, 'Latent', latent(1:10), 'Explained', explained(1:10), 'SaveOptions', options.saveOptions)
 options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample']);
-plots(dimredMethod, 2, score, [dimredMethod, ' Sample'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10), 'saveOptions', options.saveOptions)
+plots(dimredMethod, 2, score, [dimredMethod, ' Sample'], 'LineNames', lineNamesun, 'Latent', latent(1:10), 'Explained', explained(1:10), 'SaveOptions', options.saveOptions)
 
 %unfixed data only
 [Gfx, lineNamesfx, ~, labelsfx] = subset(input, name, 'unfixed');
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gfx, double(labelsfx));
 options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample (only unfixed)']);
-plots(dimredMethod, 3, score, [dimredMethod,' Sample'], 'lineNames', lineNamesfx, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
+plots(dimredMethod, 3, score, [dimredMethod,' Sample'], 'LineNames', lineNamesfx, 'Latent', latent(1:10), 'Explained', explained(1:10),'SaveOptions', options.saveOptions)
 
 input = 'measured';
 [Gun, lineNamesun, ~, labelsun] = subset(input, name, 'unique');
@@ -42,13 +42,13 @@ input = 'measured';
 %L = [ones(length(un),1) Gun] * W';
 %P = exp(L) ./ repmat(sum(exp(L),2),[1 2]);
 options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by type']);
-plots(dimredMethod, 4, score, [dimredMethod,' Fix'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
+plots(dimredMethod, 4, score, [dimredMethod,' Fix'], 'LineNames', lineNamesun, 'Latent', latent(1:10), 'Explained', explained(1:10),'SaveOptions', options.saveOptions)
 options.saveOptions.plotName = generateName(options, [dimredMethod, ' of ', input, ' spectra by sample']);
-plots(dimredMethod, 5, score, [dimredMethod, ' Sample'], 'lineNames', lineNamesun, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
+plots(dimredMethod, 5, score, [dimredMethod, ' Sample'], 'LineNames', lineNamesun, 'Latent', latent(1:10), 'Explained', explained(1:10),'SaveOptions', options.saveOptions)
 
 %unfixed data only
 [Gfx, lineNamesfx, ~, labelsfx] = subset(input, name, 'unfixed');
 [W, score, latent, explained] = dimensionReduction(dimredMethod, Gfx, double(labelsfx));
 options.saveOptions.plotName = generateName(options, [dimredMethod,' of ', input, ' spectra by sample (only unfixed)']);
-plots(dimredMethod, 6, score, [dimredMethod,' Sample'], 'lineNames', lineNamesfx, 'latent', latent(1:10), 'explained', explained(1:10),'saveOptions', options.saveOptions)
+plots(dimredMethod, 6, score, [dimredMethod,' Sample'], 'LineNames', lineNamesfx, 'Latent', latent(1:10), 'Explained', explained(1:10),'SaveOptions', options.saveOptions)
 
