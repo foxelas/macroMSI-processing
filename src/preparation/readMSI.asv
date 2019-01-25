@@ -6,28 +6,27 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
 % width: width of image box to be read (x axis)
 % height: height of image box to be read (y axis)
 
-    if ~exist('coordinates', 'var') 
+    if ~exist('x', 'var') || ~exist('y', 'var')
         modeAll = true; 
+        x = 0;
+        y = 0;
         
-    elseif isempty(coordinates) 
+    elseif isempty(x) || isempty(y)
         modeAll = true;   
-        
+        x = 0;
+        y = 0;
+
+    elseif (x < 0) || (y < 0)
+        error('Negative origin points.')
     else
         modeAll = false;
-        if (size(coordinates, 1) == 2)
-            coordinates = coordinates';
-        end
-        [ROIs, coor] = size(coordinates); % m is the number of ROIs to be read from the MSI, n is 2 for (x,y)
-        if (coor ~= 2)
-            error('Coordinates should consist of 2 dimensions.');
-        end
-    end
-
-    if (nargin < 3)
-        width = 5;
     end
 
     if (nargin < 4)
+        width = 5;
+    end
+
+    if (nargin < 5)
         height = 5;
     end
 
@@ -36,11 +35,11 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
         error('No region to be read.')
     end
 
-    if (nargin < 5) || isempty(options)
+    if (nargin < 6) || isempty(options)
         options.saveOptions.plotName = '../output/cropped/';
     end
 
-    if (nargin < 6) || isempty(fc)
+    if (nargin < 7) || isempty(fc)
         fc = [1, 450, 465, 505, 525, 575, 605, 630];
     end   
     
@@ -75,6 +74,14 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
         segments(1).maskI = ones(imHeight, imWidth);
         
     else
+        
+        if (size(coordinates, 1) == 2)
+            coordinates = coordinates';
+        end
+        [ROIs, coor] = size(coordinates); % m is the number of ROIs to be read from the MSI, n is 2 for (x,y)
+        if (coor ~= 2)
+            error('Coordinates should consist of 2 dimensions.');
+        end
     
         for roi = 1:ROIs
             

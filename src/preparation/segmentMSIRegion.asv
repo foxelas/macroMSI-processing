@@ -1,6 +1,6 @@
-function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, regionRadius, fc)
+function [patch, whiteI, darkI, patchMask, maskI] = segmentMSIRegion( files, coordinates, options, accTheta, regionRadius, fc)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
-%%seed position coordinates = [x,y], based on region agreement threshold 'accTheta' and 
+%%seed position [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
 %The resulting mask is decided per agreement of accTheta * 1/NumberOfChannels
 
@@ -42,8 +42,6 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
     
     g = permute(valueSelect(MSI, 'adjusted'), [2, 3, 1]);
     
-    segments = struct('msi', [], 'whiteI', [], 'darkI', [], 'patchMask', [], 'maskI', []);
-    
     for roi = 1:ROIs
         
         [m, n, ~] = size(g);
@@ -64,12 +62,12 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
             patchY = (y-2):(y+2);
             mask(patchY, patchX) = 1;
         end
-        segments(roi).maskI = mask;
+        maskI = mask;
         [r, c] = find(mask);
         patchY = min(r):max(r);
         patchX = min(c):max(c);
-        segments(roi).msi = MSI(:, patchY, patchX, :);
-        segments(roi).patchMask = mask(patchY, patchX);
+        patch = MSI(:, patchY, patchX, :);
+        patchMask = mask(patchY, patchX);
 
         if (options.showImages)
             plots('cropped', 1, 'Image', whiteI + mask, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', options.saveOptions);
@@ -77,11 +75,12 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
         end
 
         if ~isempty(whiteI)
-            segments(roi).whiteI = whiteI(patchY, patchX,:);
+            whiteI = whiteI(patchY, patchX,:);
         end
         if ~isempty(darkI)
-            segments(roi).darkI = darkI(patchY, patchX,:);
+            darkI = darkI(patchY, patchX,:);
         end
+        
         
     end
 end
