@@ -33,13 +33,7 @@ if ~options.skipLoading
             uniqueSpectra(:,i) = rawSpectrum ./ referenceSpectrum;
 
         end
-
-        %% Save data structures 
-%          m.MeasuredSpectrumStruct = struct( 'Index', [], 'Name', {}, 'Spectrum', [], 'T', {});
-%          m.MSIStruct = struct('Name', {}, 'Index', [], 'MSI', [], 'Mask', [], 'MaskI', []);
-%          m.WhiteMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
-%          m.DarkMSIStruct = struct('Name', {}, 'Index', [], 'MSI', []);
- 
+         
         for i = 1:msiN
             
         %% Save Spectra Struct
@@ -47,52 +41,53 @@ if ~options.skipLoading
                 [~, csv] =  generateName(options, 'csv', ID(i));
                 m.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', csv, 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
             end
-
+        end 
+        
+        fprintf('Reading MSI data according to ID file.\n');
+        groups = findgroups([ID.UniqueCount]);
+        for g = 1:max(groups)
         %% Read MSI
-            [options.saveOptions.plotName, name] = generateName(options, 'read', ID(i));
-            directory = fileparts(options.saveOptions.plotName);
-            if ~exist(directory, 'dir')
-                mkdir(directory);
-                addpath(directory);
+            gIdxs = find(groups == g);
+            gMembers = ID(gIdxs);
+            coordinates = [gMembers.Originx; gMembers.Originy];
+            
+            currentOptions = options;
+            names = cell(length(gMembers), 1);
+            for j = 1:length(gMembers)
+                [plotName, name] = generateName(options, 'read', ID(gIdxs(j)));
+                currentOptions.saveOptions.plotName{j} = plotName;
+                names{j} = name;
+                directory = fileparts(plotName);
+                if ~exist(directory, 'dir')
+                    mkdir(directory);
+                    addpath(directory);
+                end
             end
-    
-            files = {data(ID(i).Data).File};    
-            x = ID(i).Originx;
-            y = ID(i).Originy;
+            
+            idd = ID(gIdxs(1));
+            files = {data(idd.Data).File};    
             if contains(options.dataset, 'region')
-                files = {data(ID(i).Data).File};    
-                [MSI, whiteReference, darkReference, patchMask, maskI] = segmentMSIRegion(files, x, y, options);
+                segment = segmentMSIRegion(files, coordinates, currentOptions);
 
             else % (square case)
-                width = 5;
-                height = 5;
-                [MSI, whiteReference, darkReference, patchMask, maskI] = readMSI(files, x, y, width, height, options); 
-
+                segment = readMSI(files, coordinates, 5, 5, currentOptions); 
             end  
 
         %% Save MSI   
-            
-            if ~(isempty(MSI))
-                m.MSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', MSI, 'Mask', patchMask, 'MaskI', maskI);
+            for j = 1:length(gMembers)
+                jj = gIdxs(j);
+                m.MSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).MSI, 'Mask', segment(j).patchMask, 'MaskI', segment(j).maskI);
+                m.WhiteMSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).whiteReference);
+                m.DarkMSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).darkReference);
             end
-
-            if ~(isempty(whiteReference))
-                m.WhiteMSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', whiteReference);
-            end
-
-            if ~(isempty(darkReference))
-                m.DarkMSIStruct(i,1) = struct('Name', name, 'Index', i, 'MSI', darkReference);
-            end
-
         end
         
         warning(w);
-        fprintf('Finished reading all spectral data according to ID file. Saving in %s.\n', options.systemdir);
-
+        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %% Precompute correlation smoothing Matrices 
-        fprintf('Pre-compute smoothing matrices.\n');
+        fprintf('Pre-computing smoothing matrices.\n');
         param = matfile(fullfile(options.systemdir, 'precomputedParams.mat'), 'Writable', true);
 
         samples = unique([ID.Sample]);
@@ -261,8 +256,6 @@ if ~options.skipLoading
         z=xcorr(macbeths, macbeths, 'coeff');
         r = z(wavelengthN:end);
         param.(matlab.lang.makeValidName('Cor_Macbeth')) = toeplitz(r);
-
-        fprintf('Finished Pre-compute smoothing matrices.\n');
 
     end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -98,7 +98,7 @@ for k = 1:msiN
                 j = (m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l ;
 
                 % optionsSelection(j).coeff = squeeze(coeff(k, min(find(strcmp(pvsms , optionsSelection(j).pixelValueSelectionMethod)),3), :))';
-                [est(:, j), rmse(j, k), nmse(j, k)] = reflectanceEstimation(g, measured, ID(k), optionsSelection(j));
+                [est(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(g, measured, ID(k), optionsSelection(j));
                 if (pvsmsN < 2)
                     lineNames{j+2} = strcat('Est-', smms{n});
                 elseif (smmsN < 2)
@@ -119,7 +119,8 @@ for k = 1:msiN
     end
     
     if (options.showImages)
-        plots('estimationComparison', 2, [measured, est], sampleName, 'Wavelength', wavelength, 'Method', options.pixelValueSelectionMethod, ...
+        plots('estimationComparison', 2, [measured, est], sampleName, 'Wavelength', wavelength, 'Method', ...
+            strcat(optionsSelection(j).smoothingMatrixMethod, ' +  ', optionsSelection(j).noiseType), ...
             'SaveOptions', options.saveOptions, 'LineNames', lineNames);
         pause(0.1)
     end

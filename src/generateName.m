@@ -7,20 +7,20 @@ function [dirCurrentName, currentName] = generateName(options, filename, idx)
 if (nargin < 3)
     idx = [];
 end
-
+    
 currentName = [];
 dirCurrentName = [];
 
 switch filename
     case 'matfilein'
         dirCurrentName = fullfile(options.systemdir, 'in.mat');
-        
+
     case 'matfileout'
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
-        
+
     case 'action detail'
         [~, currentName] = generateName(options, 'current', idx);
-        
+
         extra = {options.smoothingMatrixMethod, options.noiseType};
         if strcmp(options.action, 'ReflectanceEstimation')
             if strcmp(options.smoothingMatrixMethod, 'markovian')
@@ -30,7 +30,7 @@ switch filename
         extra{end+1} = currentName;
         currentName = strjoin(extra, '_');
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
-        
+
     case 'csv'
         if isempty(idx.Csvid)
             currentName = num2str(idx.UniqueCount);
@@ -38,11 +38,11 @@ switch filename
             currentName = strrep(idx.Csvid, '.csv', '');
             currentName = strrep(currentName, '\', '_');
         end
-        
+
     case 'sample'
         splits = strsplit(idx.Csvid, '\');
         currentName = splits{1};
-        
+
     case 'current'  
         [~, csv] = generateName(options, 'csv', idx);
         time = strrep(idx.T, ':', ' ');
@@ -54,15 +54,15 @@ switch filename
             datax.Sample = num2str(datax.Sample);
         end
         currentName = strjoin({csv, time, char(datax.Camera), un }, '_');
-        
+
     case 'read'    
         [~, currentName] = generateName(options, 'current', idx);
-        dirCurrentName = fullfile(options.saveOptions.savedir, 'Input', currentName);
-        
+        dirCurrentName = fullfile(options.saveOptions.savedir, 'Cropped', currentName);
+
     case 'plot'
         [~, currentName] = generateName(options, 'current', idx);
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
-        
+
     otherwise
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, filename);     
 end

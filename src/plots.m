@@ -73,6 +73,16 @@ else
     savePlot = false;
 end
 
+if ~isempty(lineNames)
+    lineNames = cellfun(@(x) strrep(x, '_', ' '), lineNames, 'un', 0);
+end
+if ~isempty(name)
+    name = strrep(name, '_', ' ');
+end
+if ~isempty(method)
+    method = strrep(method, '_', ' ');
+end
+
 switch plotType
     case 'sensitivity'     
         %% Plot camera sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,30 +196,25 @@ switch plotType
         % Get rid of tool bar and pulldown menus that are along top of figure.
         set(gcf, 'Toolbar', 'none', 'Menu', 'none');
         
-        figTitle = {sprintf('Comparative plot of Wiener estimation results '); ...
-            sprintf('Sample: %s | Method: %s ', name, method)};
-        lineWidth = 0.5 * ones(1, curveN);
-        lineWidth(1) = 1;
+        figTitle = sprintf('Sample: %s | Method: %s',name, method);
         %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
         color = colorcube(curveN+10); %color = [ 'b', 'g' , 'k',  'c' , 'y' , 'm'];
         
         [~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths.
         subplot(1, plotN, [1, 2]);
-        h = zeros(size(curves,1), curveN + 1);
         hold on
-        h(1) = plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}); % plot measured reflectance
         for i = 1:curveN
-            h(i+1) = plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', lineWidth(i), 'DisplayName', strrep(lineNames{i + 1}, '_', ' ')); % plot estimated reflectances
+            plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', 1.3, 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
         end
+        plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}, 'LineWidth', 1.3); % plot measured reflectance
         hold off
         
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance Spectrum');
         xlim([400, 700]);
-%         ylim([0, 1]);
-        figTitle = strrepAll(figTitle);
+        suptitle('Comparative plot of Wiener estimation results')
         title(figTitle);
-        legend(h, 'Location', 'eastoutside'); % 'Orientation','horizontal');
+        legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'northwest', 'FontSize', 14); % 'Orientation','horizontal');
         
         if (plotN > 2)
             subplot(1, plotN, 3);
@@ -473,7 +478,6 @@ switch plotType
         hold off
         figTitle = strrepAll(strcat('Cropped area of ', plotName));
         title(figTitle);
-        plotName = strcat(plotName, '_origin');
         
     case 'segmentation'
         %% Show segmentation images %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -495,6 +499,7 @@ switch plotType
         c.Label.String = 'Respective MSI band (nm)';
         figTitle = strrepAll(strcat('Segmented area of ', plotName));
         title(figTitle);
+        plotName = strcat(plotName, '_segments');
 end
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -525,8 +530,7 @@ end
 
 function [outname] = strrepAll(inname)
     
-    attr = strsplit(inname, 'Input');
-    outname = attr{end};
+    [~, outname] = fileparts(inname);
     outname = strrep(outname, '\', ' ');
     outname = strrep(outname, '_', ' ');
     outname = strrep(outname, '.csv', '');

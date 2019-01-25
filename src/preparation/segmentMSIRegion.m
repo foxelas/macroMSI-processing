@@ -38,11 +38,14 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
     bandWeight = 1 / bands;       
 
     % Retrieve whole MSI
-    [MSI, whiteI, darkI] = readMSI(files, []); %     I = squeeze(MSI(1,:,:,:));
+    seg = readMSI(files); %     I = squeeze(MSI(1,:,:,:));
+    MSI = seg.MSI;
+    whiteReference = seg.whiteReference;
+    darkReference = seg.darkReference;
     
     g = permute(valueSelect(MSI, 'adjusted'), [2, 3, 1]);
     
-    segments = struct('msi', [], 'whiteI', [], 'darkI', [], 'patchMask', [], 'maskI', []);
+    segments = struct('MSI', [], 'whiteReference', [], 'darkReference', [], 'patchMask', [], 'maskI', []);
     
     for roi = 1:ROIs
         
@@ -68,19 +71,21 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
         [r, c] = find(mask);
         patchY = min(r):max(r);
         patchX = min(c):max(c);
-        segments(roi).msi = MSI(:, patchY, patchX, :);
+        segments(roi).MSI = MSI(:, patchY, patchX, :);
         segments(roi).patchMask = mask(patchY, patchX);
 
         if (options.showImages)
-            plots('cropped', 1, 'Image', whiteI + mask, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', options.saveOptions);
-            plots('segmentation', 2, 'Image', whiteI + maskForFig, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', options.saveOptions);
+            currentOptions = options.saveOptions;
+            currentOptions.plotName = options.saveOptions.plotName{roi};
+            plots('cropped', 1, 'Image', whiteReference + mask, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+            plots('segmentation', 2, 'Image', whiteReference + maskForFig, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', currentOptions);
         end
 
-        if ~isempty(whiteI)
-            segments(roi).whiteI = whiteI(patchY, patchX,:);
+        if ~isempty(whiteReference)
+            segments(roi).whiteReference = whiteReference(patchY, patchX,:);
         end
-        if ~isempty(darkI)
-            segments(roi).darkI = darkI(patchY, patchX,:);
+        if ~isempty(darkReference)
+            segments(roi).darkReference = darkReference(patchY, patchX,:);
         end
         
     end

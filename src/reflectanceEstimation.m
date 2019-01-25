@@ -1,4 +1,4 @@
-function [estimatedReflectance, rmse, nmse] = reflectanceEstimation(g, spectrum, id, options)
+function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(g, spectrum, id, options)
 
 %% wienerEstimation Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %Input arguments
@@ -381,14 +381,15 @@ if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = reshape(estimatedReflectance, numel(wavelength), height, width);
 else   
 
-%     if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
-%         warning('Estimated reflectance spectrum is out of bounds!');
-%     end
+    if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
+        warning('Estimated reflectance spectrum is out of bounds!');
+    end
+    
     idx = any(estimatedReflectance < 0) | any(estimatedReflectance > 1);
     if sum(idx) == size(estimatedReflectance, 2)
         estimatedReflectance = max(estimatedReflectance, 0);
         estimatedReflectance = min(estimatedReflectance, 1);
-        % warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!')
+        warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!')
     else
         estimatedReflectance = estimatedReflectance(:,~idx);
     end
@@ -398,6 +399,9 @@ else
         [nmse, nmseIdx] = min(Nmse(spectrum, estimatedReflectance));
         %either min error index produces similar results. 
         estimatedReflectance = estimatedReflectance(:,rmseIdx);
+        mini = activeRegion(rmseIdx) / width;
+        minj = mod(activeRegion(rmseIdx) , width);
+        minIdx = [mini, minj];
     end
 end
 
@@ -448,11 +452,11 @@ function di = reflectanceDistance(ri, rhat, a)
         + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
 end
 
-function k = replicationTimes(d, dhigh, gamma)
+function k = replicationTimes(d, dmax, gamma)
     if (nargin < 3)
         gamma = 1;
     end
-    k = floor((dhigh / d)^gamma + 0.5);
+    k = floor((dmax / d)^gamma + 0.5);
 end
 
 function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a)
