@@ -77,8 +77,8 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
         if (options.showImages)
             currentOptions = options.saveOptions;
             currentOptions.plotName = options.saveOptions.plotName{roi};
-            plots('cropped', 1, 'Image', whiteReference + mask, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', currentOptions);
-            plots('segmentation', 2, 'Image', whiteReference + maskForFig, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+            plots('cropped', 1, 'Image', whiteReference + mask, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+            plots('segmentation', 2, 'Image', whiteReference + maskForFig, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
         end
 
         if ~isempty(whiteReference)

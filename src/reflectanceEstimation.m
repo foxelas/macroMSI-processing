@@ -25,7 +25,7 @@ function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(g, s
 %nmse = normalized mean square error
 
 %% Argument parsing
-
+tic;
 c = matfile(fullfile(options.systemdir, 'system.mat'));
 sensitivity = c.sensitivity; %sensitivity = spectral sensitivity of RGB camera (3 columns)
 illumination = c.illumination; %illumination = spectral illumination for all channels
@@ -64,7 +64,7 @@ if strcmp(smoothingMatrixMethod, 'markovian')
 end
 
 if strcmp(smoothingMatrixMethod, 'adaptive')
-    defaultAlpha = 0.4;
+    defaultAlpha = 0.7;
     if isfield(options, 'alpha')
         alpha = options.alpha;
     else
@@ -114,6 +114,10 @@ else
     tol = 1;
 end
 
+if size(spectrum,2) ~= 1 
+    spectrum = spectrum';
+end
+
 % sample = generateName([], 'sample', [], id);
 
 isBenign = id.IsNormal;
@@ -129,7 +133,7 @@ end
 
 %% Generate smoothing matrix for estimation
 
-G = valueSelect(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
+G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
 [msibands, height, width] = size(G);
 G = G ./ options.luminanceCorrection;
 
@@ -226,7 +230,6 @@ switch smoothingMatrixMethod
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
 end
-
 % Generate smoothing matrix for estimation ends
 
 %% Illumination X sensitivity
@@ -331,12 +334,12 @@ if (length(variance) < msibands)
     variance = [variance(1:2), variance(2), variance(3:5), variance(6), variance(6:7)];
 end
 Kn = diag(variance); %different at every channel
-    
 % Covariance matrix of the additive noise ends
 
 Gres = reshape(G, msibands, height*width); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
 mask = reshape(mask, 1, height*width);
-    
+activeRegionIdx = find(mask);
+   
 if strcmp(noiseType, 'spatial')
 %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
 %  Based on "A Spatially AdaptiveWiener Filter for Reflectance Estimation"[Urban2008]
@@ -354,9 +357,8 @@ if strcmp(noiseType, 'spatial')
         Kcov(i, :) =  reshape(conv2(varGi, windowKernel ./ (windowElements - 1), 'same'), 1, width * height); 
     end
     
-    activeRegion = find(mask);
-    estimatedReflectance = zeros(wavelengthN, length(activeRegion));
-    for i = 1:activeRegion
+    estimatedReflectance = zeros(wavelengthN, length(activeRegionIdx));
+    for i = 1:activeRegionIdx
         meanGij = squeeze(meanG(:,i));
         centeredGij = squeeze(centeredG(:,i));
         Kij = diag(squeeze(Kcov(:,i)));
@@ -371,9 +373,7 @@ else
     estimatedReflectance = div * activeRegion; % 401 x 100 
 end  
 
-
 %% Perform Wiener estimation for all pixels in an image area
-
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = max(estimatedReflectance, 0);
     estimatedReflectance = min(estimatedReflectance, 1);
@@ -381,28 +381,20 @@ if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = reshape(estimatedReflectance, numel(wavelength), height, width);
 else   
 
-    if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
-        warning('Estimated reflectance spectrum is out of bounds!');
-    end
-    
     idx = any(estimatedReflectance < 0) | any(estimatedReflectance > 1);
-    if sum(idx) == size(estimatedReflectance, 2)
+    if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
         estimatedReflectance = max(estimatedReflectance, 0);
         estimatedReflectance = min(estimatedReflectance, 1);
-        warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!')
+        warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!(ID index = %d)', id.Index);
     else
         estimatedReflectance = estimatedReflectance(:,~idx);
     end
     
-    if ~isempty(spectrum)    
-        [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
-        [nmse, nmseIdx] = min(Nmse(spectrum, estimatedReflectance));
-        %either min error index produces similar results. 
-        estimatedReflectance = estimatedReflectance(:,rmseIdx);
-        mini = activeRegion(rmseIdx) / width;
-        minj = mod(activeRegion(rmseIdx) , width);
-        minIdx = [mini, minj];
-    end
+    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
+    [nmse, ~] = min(Nmse(spectrum, estimatedReflectance));
+    estimatedReflectance = estimatedReflectance(:,rmseIdx);
+    [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
+    minIdx = [mini, minj]; 
 end
 
 % Perform the estimation for all pixels in an image area ends
@@ -465,27 +457,17 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a)
     measuredSpectra = ff.MeasuredSpectrumStruct;
     [~, idxs] = unique(strcat({measuredSpectra.Name}, {measuredSpectra.T}));
     measuredSpectra = measuredSpectra(idxs);
-    wavelength = linspace(380, 780, 81)';
-    n = length(measuredSpectra);
-    r = zeros(81,n);
-    d = zeros(1,n);
-    for i = 1:n
-        ri =  interp1(380:780, measuredSpectra(i).Spectrum, wavelength, 'nearest');
-        d(i) = reflectanceDistance(ri, rhat, a);
-        r(:,i) = ri;
+    r = cellfun(@(x) interp1(380:780, x, linspace(380, 780, 81)', 'nearest'), {measuredSpectra.Spectrum}, 'un', 0);
+    d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r);
+    reps = arrayfun(@(x) replicationTimes(x, max(d)), d);
+    spectra = zeros(length(rhat), sum(reps));
+    j = 0;
+    for i = 1:length(d)
+        k = reps(i);
+        spectra(:, (j+1):(j+k)) = repmat(r{i}, 1, k);
+        j = j + k;
     end
-    dmax = max(d);
-    
-    spectra = [];
-    for i = 1:n 
-        if dmax > 0 
-            k = replicationTimes(d(i), dmax);
-        else 
-            k = 1;
-        end
-        spectra = [ spectra, repmat(r(:,i),1,k)];
-    end
-    
+
     means = mean(spectra,2);
     adaptedM = 1 / (size(spectra, 2) - 1) * (spectra - means) * (spectra - means)';
 end
@@ -508,10 +490,6 @@ function [H] = illumXsensitivity(E, S, pixelValueSelectionMethod)
         else
             pixelValueSelectionMethod = 'fullband';
         end
-    end
-
-    if (size(E, 1) ~= size(S, 1))
-
     end
 
     switch pixelValueSelectionMethod

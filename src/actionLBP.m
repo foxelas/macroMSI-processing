@@ -20,7 +20,7 @@ for k=1:msiN
 	g = MSIStruct(k).MSI;
 	mask = MSIStruct(k).Mask;
 	
-	gg = valueSelect(g, 'adjusted');
+	gg = raw2msi(g, 'adjusted');
 	
 	%MATLAB built-in implementation 
 	%'radius' represents scale, 'upright' represents rotation invariance

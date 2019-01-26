@@ -272,6 +272,7 @@ if ~options.skipLoading
 
     %% Create coefficient table
     if (options.tryReadData)
+        disp('Reading coefficients from excel file...')
         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
         coeff = ones(length(ID), 3, 7);
         src = '../../input/others/coeff.xlsx';
@@ -283,16 +284,11 @@ if ~options.skipLoading
             refmeasured = measuredSpectrumStruct(k).Spectrum;
 
             for m = 1:length(pixelValueSelectionMethods)
-                gg = valueSelect(g, pixelValueSelectionMethods{m});
-                if contains(options.systemdir, 'region')
-                    mask = reshape( MSIStruct(k).Mask, 1, size(gg,2)*size(gg,3));
-                    gg = reshape(gg, size(gg,1), size(gg,2)*size(gg,3));
-                    gg = gg(:,mask);
-                else
-                    gg = gg(:,2:4,2:4); %optional step
-                    gg = reshape(gg, size(gg,1), 3*3);
-                end
-                refmsi = im2uint16(mean(gg, 2))';
+                gg = raw2msi(g, pixelValueSelectionMethods{m});
+                [r, c] = find(MSIStruct(k).MaskI);
+                x = ID(k).Originx - min(c) + 1;
+                y = ID(k).Originy - min(r) + 1;
+                refmsi = im2uint16(squeeze(gg(:,y,x)))';
                 xlswrite2(src, refmeasured, 4, 'B3');
                 xlswrite2(src, refmsi, 4, 'D407:J407');
                 ctemp = xlsread(src, 4, 'D414:J414');
@@ -300,6 +296,7 @@ if ~options.skipLoading
             end
         end
         save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
+        disp('Searching for reference coefficient...')
         ID = selectCoeffIndex(options);  
     end
     

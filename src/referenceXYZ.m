@@ -5,7 +5,7 @@ flist = dir('D:\temp\mspi\saitamav2\white\unfixed\left');
 g = readMSI({flist(12:18).name}, 826, 2445, 30, 30, wavelength);
 figure;
 imshow(squeeze(g(1, :, :, :)));
-gg = valueSelect(g, pixelValueSelectionMethod);
+gg = raw2msi(g, pixelValueSelectionMethod);
 refWhite = mean(reshape(gg, [30 * 30, 7]), 1);
 
 % load color matching functions

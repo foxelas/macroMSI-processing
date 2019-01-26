@@ -88,7 +88,7 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
                 if (options.showImages)
                     currentOptions = options.saveOptions;
                     currentOptions.plotName = options.saveOptions.plotName{roi};
-                    plots('cropped', 1, 'Image', whiteReference + maskI, 'Markers', 'r*', 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+                    plots('cropped', 1, 'Image', whiteReference + maskI, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
                 end
             end
             

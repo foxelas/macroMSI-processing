@@ -83,6 +83,7 @@ if ~isempty(method)
     method = strrep(method, '_', ' ');
 end
 
+w = warning('off', 'all');
 switch plotType
     case 'sensitivity'     
         %% Plot camera sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -219,7 +220,7 @@ switch plotType
         if (plotN > 2)
             subplot(1, plotN, 3);
             
-            gg = valueSelect(MSIreflectances, 'rms');
+            gg = raw2msi(MSIreflectances, 'rms');
             ref = mean(mean(gg, 3), 2);
             plot(fc, ref', 'm*-'); %magenda new
             xlim([400, 750]);
@@ -467,14 +468,14 @@ switch plotType
         
     case 'cropped'
         %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        x = coordinates(1);
-        y = coordinates(2);
-        if isempty(markers)
-            markers = 'r*';
-        end
+        markers = {'r*', 'g*', 'm*', 'y*', 'c*'};
         imshow(I);
         hold on
-        plot(x, y, markers, 'LineWidth', 2, 'MarkerSize', 5);
+        for i = 1:size(coordinates, 1)
+            x = coordinates(i,1);
+            y = coordinates(i,2);
+            plot(x, y, markers{i}, 'LineWidth', 2, 'MarkerSize', 5);
+        end
         hold off
         figTitle = strrepAll(strcat('Cropped area of ', plotName));
         title(figTitle);
@@ -501,6 +502,7 @@ switch plotType
         title(figTitle);
         plotName = strcat(plotName, '_segments');
 end
+warning(w);
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

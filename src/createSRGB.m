@@ -50,7 +50,7 @@ if strcmp(method, 'original')
     
     
 elseif strcmp(method, 'tutorial')
-    g = valueSelect(I, 'adjusted');
+    g = raw2msi(I, 'adjusted');
     [w, r, c] = size(g);
     if (w == 7)
         wavelength = [450, 465, 505, 525, 575, 605, 630]; % 7 BANDS
@@ -145,7 +145,7 @@ end
 
 %% Makes a 2D histogram style image of wavelength versus intensity of the spectral map
 
-I = valueSelect(I, 'adjusted');
+I = raw2msi(I, 'adjusted');
 
 vec = zeros(w, r*c);
 vech = zeros(256, w);
