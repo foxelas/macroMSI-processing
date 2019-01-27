@@ -111,15 +111,6 @@ else
     tol = 1;
 end
 
-isBenign = id.IsNormal;
-if (id.IsCut)
-    fixing = 'Cut';
-elseif (id.IsFixed)
-    fixing = 'Fixed';
-else
-    fixing = 'Unfixed';
-end
-
 % Argument parsing ends
 
 %% Generate smoothing matrix for estimation
@@ -129,6 +120,15 @@ G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI
 %G = G ./ options.luminanceCorrection;
 
 % computed beforehand with prepareSmoothingMatrix
+isBenign = id.IsNormal;
+if (id.IsCut)
+    fixing = 'Cut';
+elseif (id.IsFixed)
+    fixing = 'Fixed';
+else
+    fixing = 'Unfixed';
+end
+
 switch smoothingMatrixMethod
     case {'Markovian 0.99', 'markovian'}
         if rho ~= defaultRho
@@ -148,8 +148,7 @@ switch smoothingMatrixMethod
         
     case 'Cor_Malignancy'
         if isBenign
-            M = m.Cor_Benign;  %m.Mn; 
-            
+            M = m.Cor_Benign;  %m.Mn;            
         else
             M = m.Cor_Malignant; %m.Mc;
         end

@@ -13,7 +13,8 @@ fprintf('Classifying %s data with %s classifier...\n', version, classifier);
 
 validations = {'LeaveMOut', 'Kfold'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
-distances = {'correlation', 'chebychev', 'euclidean'};
+frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
+distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
 groups = {'unique', 'fixed', 'unfixed', 'good'};
 projections = {'spectrum'}; %, 'pca', 'lda', 'pcalda', 'spectrumlbp'};
 options.saveOptions.saveInHQ = true;
@@ -24,7 +25,7 @@ validation = validations{2};
 
 %% KNN
 if strcmp(classifier, 'knn')   
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {});
+    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {}, 'Folds', []);
     for g = 1:length(groups)
         for p = 1:length(projections)
             [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name);
@@ -32,10 +33,10 @@ if strcmp(classifier, 'knn')
                 for k = [1, 3, 5]
                     for d = 1:length(distances)
 
-                        [a, b, c] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
+                        [a, b, c, cvPerformance] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
                         m = m + 1;
                         classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d});
+                            'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d}, 'Folds', cvPerformance);
                     end
                 end
             end
@@ -46,16 +47,16 @@ if strcmp(classifier, 'knn')
 elseif strcmp(classifier, 'svm')
 
     labelsAsText = true;
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {});
+    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {}, 'Folds', []);
     for g = 1:length(groups)
         for p = 1:length(projections)
             [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
             for i = 1:length(kernels)
 
-                [a, b, c] = crossValidation(validation, Gun, labels, classifier, [], [], [], kernels{i});                                             
+                [a, b, c, cvPerformance] = crossValidation(validation, Gun, labels, classifier, [], [], [], kernels{i});                                             
                 m = m + 1;
                 classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'Kernel', kernels{i});
+                            'Validation', validation, 'Kernel', kernels{i}, 'Folds', cvPerformance);
             end
         end
     end
@@ -100,7 +101,7 @@ function [performance] = getPerformanceStatistics(predictions, labels, scores)
 	b = sum(labels(falsePredictionIdxs) == false);
 	
 	total = length(predictions);
-	if (sum(a,b,c,d) ~= total)
+	if (sum([a,b,c,d]) ~= total)
 		error('Incorrect performance statistics.');
 	end
 	
@@ -112,11 +113,16 @@ function [performance] = getPerformanceStatistics(predictions, labels, scores)
 	performance.Precision = a / (a + b) * 100; %or positive predictive value
 	performance.NegativePredictiveValue = d / (c + d) * 100;
 	performance.Accuracy = (a + d) / total * 100;
-	[performance.ROCX, performance.ROCY, performance.ROCT, performance.AUC] = perfcurve(labels, scores, 'Malignant');
-%     performance.ROCX = X;
-%     performance.ROCY = Y;
-%     performance.ROCT = T;
-%     performance.AUC = AUC;
+    categories = {'Benign', 'Malignant'};
+    textLabels = categories(1 + labels);
+    if any(labels == 0) && any(labels == 1)
+        [performance.ROCX, performance.ROCY, performance.ROCT, performance.AUC] = perfcurve(textLabels, scores, 'Malignant');
+    else 
+        performance.ROCX = [];
+        performance.ROCY = [];
+        performance.ROCT = [];
+        performance.AUC = [];
+    end
 
 end
 
@@ -141,36 +147,36 @@ function [predictions, scores] = knn(testdata, database, databaselabels, k, dist
     end
     
     [m, n] = size(testdata);
-    predictions = zero(m,1);
-    scores = zero(m,1);
+    predictions = zeros(m,1);
+    scores = zeros(m,1);
     for i = 1:m
-        [knnIdx, D] = knnsearch(testdata(i,:), database, 'K', k, 'Distance', distance);
+        [knnIdx, D] = knnsearch(database, testdata(i,:), 'K', k, 'Distance', distance);
         nnrLabels = databaselabels(knnIdx);
         trueNeighbors = D(nnrLabels);
         falseNeighbors = D(~nnrLabels);
 
         if sum(nnrLabels) == 0
             predictions(i) = 0;
-            scores(i) = -k;
+            scores(i) = 0;
             
         elseif sum(nnrLabels) == k
             predictions(i) = 1;
-            scores(i) = k;
+            scores(i) = 1;
             
         elseif strcmp(rule, 'complex vote')
-            predictions(i) = (4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prob(falseNeighbors))) > ...
-                (4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prob(trueNeighbors)));
-            scores(i) = (4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prob(falseNeighbors))) - ...
-                (4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prob(trueNeighbors)));
+            predictions(i) = (4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prod(falseNeighbors))) > ...
+                (4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prod(trueNeighbors)));
+            scores(i) =  mean(nnrLabels);
             
         elseif strcmp(rule, 'weighted majority')
             predictions(i) = sum(1./falseNeighbors) < sum(1 ./ trueNeighbors);
-            scores(i) = sum(1./falseNeighbors) - sum(1 ./ trueNeighbors);
+            scores(i) =  mean(nnrLabels);
             
         else %majority vote
             predictions(i) = round(mean(nnrLabels));
-            scores(i) = trueNeighbors - falseNeighbors; 
+            scores(i) = mean(nnrLabels);
         end
+
     end
     
 end
@@ -199,7 +205,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate] = crossValidation(validation, data, labels, classifier, k, distance, rule, kernel)
+function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate, cvPerformance] = crossValidation(validation, data, labels, classifier, k, distance, rule, kernel)
 %%CrossValidation returns crossvalidated accuracy statistics for
 %%classification using 'classifier'
     if (nargin < 3)
@@ -210,7 +216,7 @@ function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate] = crossVa
     avgFalsePositiveRate = 0;
     avgFalseNegativeRate = 0;
         
-    [m, n] = size(testdata);
+    [m, n] = size(data);
     if strcmp(validation, 'Kfold')
         folds = 10;
         indices = crossvalind('Kfold', n, folds);
