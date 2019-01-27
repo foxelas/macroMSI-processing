@@ -3,7 +3,7 @@ close all; clc;
 dataset = 'saitama_v3_min_region';
 action = lower('ReflectanceEstimationSimple');
 skipLoading = false;
-showImages = true;
+showImages = false;
 saveImages = false;
 
 saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
@@ -22,7 +22,7 @@ readData;
 %     snr = snrRange(i);
 %     options.noiseType = 'givenSNR';
 %     options.smoothingMatrixMethod = 'Cor_All';
-%     options.snr = snr;
+%     options.noiseParam = snr;
 %     actionReflectanceEstimationComparison;
 %     errSNR(i,:) = [snr, minError];
 % end
@@ -36,19 +36,20 @@ minSnr = 17;
 % for i = 1:length(gammaRange)
 %     gamma = gammaRange(i);
 %     options.noiseType = 'givenSNR';
-%     options.snr = minSnr; 
+%     options.noiseParam = minSnr;
 %     options.smoothingMatrixMethod = 'adaptive';
 %     options.gamma = gamma;
 %     actionReflectanceEstimationComparison;
 %     errGamma(i,:) = [gamma, minError];
 % end
+%minGamma = errGamma(errGamma(:,2) == min(errGamma(:,2)),1);
 minGamma = 2;
 
 
 %% For spatially Adaptive 
 
 sigma1Range = 0.001:0.05:0.2;
-sigma2Range = 0.001:0.05:0.2;
+sigma2Range = 0.01:0.01:0.2;
 
 errSigma = zeros(length(sigma1Range) * length(sigma2Range), 3);
 for i = 1:length(sigma1Range)
@@ -56,13 +57,11 @@ for i = 1:length(sigma1Range)
     for j = 1:length(sigma2Range)
         sigma2 = sigma2Range(j);
         options.noiseType = 'spatial';
-        options.sigma1 = sigma1; 
-        options.sigma2 = sigma2;
+        options.noiseParam = [sigma1, sigma2]; 
         options.smoothingMatrixMethod = 'Cor_All';
         actionReflectanceEstimationComparison;
         k = sub2ind([length(sigma1Range), length(sigma2Range)], i, j);
         errSigma(k,:) = [sigma1, sigma2, minError];
-
     end
 end
 

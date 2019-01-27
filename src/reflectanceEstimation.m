@@ -64,7 +64,7 @@ if strcmp(smoothingMatrixMethod, 'adaptive')
         alpha = defaultAlpha;
     end
     
-    defaultGamma = 1;
+    defaultGamma = 2;
     if isfield(options, 'gamma')
         gamma = options.gamma;
     else
@@ -220,46 +220,21 @@ MH = M * H';
 HMH = H * M * H';
 
 %% Covariance matrix of the additive noise
+noiseParts = strsplit(noiseType, {' ', ','});
+if (numel(noiseParts) > 1); options.noiseParam = cellfun(@str2double , noiseParts(2:end)); end
+hasNoiseParam = isfield(options, 'noiseParam');
+
 if contains(noiseType, 'sameForChannel')
-    attr = strsplit(noiseType, {' '});
-    if (numel(attr) > 1)
-        sigma = str2double(attr{2});
-    elseif isfield(options, 'sigma')
-        sigma = options.sigma;
-    else
-        defaultSigma = 0.0001;
-        sigma = defaultSigma;
-    end
-    variance = sigma *ones(msibands, 1);
+    if (hasNoiseParam); variance = options.noiseParam * ones(msibands, 1); else; variance = 0.001 * ones(msibands, 1); end
     
 elseif contains(noiseType, 'diffForChannel')
-    attr = strsplit(noiseType, {' ', '[', ',', ']'});
-    if (numel(attr) > 1)
-        variance = (cellfun(@str2num,  attr(1, 2:(end-1)))).^2;
-    elseif isfield(options, 'sigma')
-        variance = options.sigma.^2;
-    else
-        variance = [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024];
-    end
+    if (hasNoiseParam); variance = options.noiseParam; else; variance = [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024]; end
     
 elseif contains(noiseType, 'givenSNR')
-    attr = strsplit(noiseType, {' ', 'dB'});
-    if (numel(attr) > 1)
-        snr = str2double(attr{2});
-    elseif isfield(options, 'snr')
-        snr = options.snr;
-    else
-        defaultSNR = 17.5; %dB
-        snr = defaultSNR; %dB
-    end
-    variance = (trace(HMH) / (msibands * 10^(snr / 10))) * ones(msibands, 1);
+    if (hasNoiseParam); variance = (trace(HMH) / (msibands * 10^(options.noiseParam / 10))) * ones(msibands, 1); else; variance = (trace(HMH) / (msibands * 10^( 17 / 10))) * ones(msibands, 1); end
     
 elseif contains(noiseType, 'white gaussian')
-    attr = strsplit(options.noiseType, {' ', '^{', '}'});
-    if (numel(attr) > 1)
-        options.noiseOrder = str2double(attr{3})^str2double(attr{4});
-    end
-    variance = (randn(1, msibands) .* options.noiseOrder).^2;  %different at every channel
+    if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
 elseif strcmp(noiseType, 'fromOlympus')
     variance = (m.noiseparam').^2;
@@ -268,40 +243,9 @@ elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
     
 elseif strcmp(noiseType, 'spatial') || contains(noiseType, 'spatial')
-    if isfield(options, 'windowDim')
-        windowDim = options.windowDim;
-    else 
-        windowDim = 5;
-    end
-    windowKernel = ones(windowDim);
-    windowElements = windowDim^2;
-    
-    if size(windowKernel, 1) > height || size(windowKernel,2) > width
-        windowKernel = ones(min(height, width));
-        windowElements = min(height, width);
-    end
-    
-    attr = strsplit(options.noiseType, {' '});
-    
-    if isfield(options, 'sigma1')
-        sigma1 = options.sigma1;
-    elseif (numel(attr) > 1)
-        sigma1 = str2double(attr{2});
-    end
-    
-    if isfield(options, 'sigma2')
-        sigma2 = options.sigma2;
-    elseif (numel(attr) > 2)
-        sigma2 = str2double(attr{3});
-    end 
-    
-    if exist('sigma1', 'var') && exist('sigma2', 'var')
-        variance = ones(msibands,1) * (sqrt(0.5) * sigma1 + sigma2)^2; %else use noise variance from Olympus 
-    elseif isfield(options, 'sigma') 
-        variance = options.sigma.^2;
-    else 
-        variance = (m.noiseparam').^2;
-    end
+    if isfield(options, 'windowDim'); windowDim = options.windowDim; else; windowDim = 5; end
+    [windowKernel, windowElements] = makeKernel(windowDim, height, width);  
+    if (hasNoiseParam); variance = ones(msibands,1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2; else; variance = ones(msibands,1) * (sqrt(0.5) * 0.001 + 0.03)^2; end
         
 else 
     error('Not implemented');
@@ -313,41 +257,39 @@ end
 Kn = diag(variance); %different at every channel
 % Covariance matrix of the additive noise ends
 
-Gres = reshape(G, msibands, height*width); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
-mask = reshape(mask, 1, height*width);
-activeRegionIdx = find(mask);
+hw = height * width;
+Gres = reshape(G, msibands, hw); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
+activeRegionIdx = sub2ind([height,width], find(mask));
    
 if strcmp(noiseType, 'spatial')
 %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
 %  Based on "A Spatially AdaptiveWiener Filter for Reflectance Estimation"[Urban2008]
 
-    meanG = zeros(msibands, width * height);
-    centeredG = zeros(msibands, width * height);
-    Kcov = zeros(msibands, width * height);
-    for i = 1:msibands
-        Gi = squeeze(G(i,:,:));
-        means = conv2(Gi, windowKernel ./ windowElements,'same');        
-        meanG(i, :) = reshape(means, 1, width * height);
-        centeredG(i, :) =  reshape(Gi - means, 1, width * height);
-        sdGi = stdfilt(Gi, windowKernel);
-        varGi = sdGi.^2;
-        Kcov(i, :) =  reshape(varGi, 1, width * height); 
+    meanG = zeros(msibands, height, width);
+    centeredG = zeros(msibands, height, width);
+    Kcov = zeros(msibands, height, width);
+    for b = 1:msibands
+        Gb = squeeze(G(b,:,:));
+        meanG(b,:,:) = conv2(Gb, windowKernel ./ windowElements,'same');        
+        centeredG(b,:,:) = reshape(Gb, [1, height, width]) - meanG(b,:,:);
+        sdGb = stdfilt(Gb, windowKernel);
+        Kcov(b, :, :) = sdGb.^2;
     end
     
     estimatedReflectance = zeros(length(spectrum), length(activeRegionIdx));
-    for i = 1:activeRegionIdx
-        meanGij = squeeze(meanG(:,i));
-        centeredGij = squeeze(centeredG(:,i));
-        Kij = diag(squeeze(Kcov(:,i)));
+    for p = 1:length(activeRegionIdx)
+        [i, j] = ind2sub([height,width], activeRegionIdx(p));
+        meanGij = meanG(:,i,j);
+        centeredGij = centeredG(:,i,j);
+        Kij = diag(Kcov(:,i,j));
         W = multiplyToInverse(Kij, Kij + Kn); % same as kInWindow * inv(kInWindow + Kn)
         What = multiplyToInverse(MH, HMH + Kij - W * Kij, hasSVDTol, tol);
-        estimatedReflectance(:, i) = What * W * centeredGij + What * meanGij;  
+        estimatedReflectance(:, p) = What * W * centeredGij + What * meanGij;  
     end
     
 else    
-    activeRegion = Gres(:,mask);
     div = multiplyToInverse(MH , HMH + Kn, hasSVDTol, tol); % M 401x401, H' 401x7, inv() 7x7
-    estimatedReflectance = div * activeRegion; % 401 x 100 
+    estimatedReflectance = div * Gres(:, activeRegionIdx); % 401 x 100 
 end  
 
 %% Perform Wiener estimation for all pixels in an image area
@@ -449,3 +391,18 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [windowKernel, windowElements] = makeKernel(windowDim, height, width)
+
+    windowKernel = ones(windowDim);
+    windowElements = windowDim^2;
+    
+    if size(windowKernel, 1) > height || size(windowKernel,2) > width
+        mindim = min(height, width);
+        if mod(mindim,2)==0
+            mindim = mindim - 1;
+        end
+        windowKernel = ones(mindim);
+        windowElements = min(height, width);
+    end
+end
