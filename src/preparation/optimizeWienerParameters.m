@@ -1,5 +1,6 @@
 close all; clc;
-dataset = 'saitama_v2_min_region';
+
+dataset = 'saitama_v3_min_region';
 action = lower('ReflectanceEstimationSimple');
 skipLoading = false;
 showImages = false;
@@ -10,7 +11,7 @@ options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
 'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
 'showImages', showImages, 'saveOptions', saveOptions);
 setup;
-fminsearchOptions = optimset('MaxIter', 5, 'PlotFcns',@optimplotfval);
+fminsearchOptions = optimset('MaxIter', 15, 'PlotFcns',@optimplotfval);
 fileID = fopen('..\logs\optimization.txt', 'a');
 
 tic;
@@ -20,9 +21,9 @@ outputLog = sprintf('Given SNR:: MinRMSE=%.5f, SNR=%d\n', minVal, minSNR)
 fprintf(fileID, outputLog);
 
 %% Optimize noise model "adaptive"
-[alpha,minVal] = fminsearch(@estimationAdaptive, 0.5, fminsearchOptions);
-outputLog = sprintf('Adaptive Wiener:: MinRMSE=%.5f, Alpha=%.4f\n', minVal, alpha)
-fprintf(fileID, outputLog);
+% [alpha,minVal] = fminsearch(@estimationAdaptive, 0.5, fminsearchOptions);
+% outputLog = sprintf('Adaptive Wiener:: MinRMSE=%.5f, Alpha=%.4f\n', minVal, alpha)
+% fprintf(fileID, outputLog);
 
 % 
 % %% Optimize noise model "White Gaussian"
@@ -72,7 +73,7 @@ fprintf('Action elapsed %.2f mins.\n', t / 60);
 clear variables; 
 
 function rmseCur = estimationGivenSNR(x)
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -82,9 +83,11 @@ function rmseCur = estimationGivenSNR(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
+
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-    outName = setup(options);
-    out = matfile(outName, 'Writable', true);
+    
     options.noiseType = 'givenSNR';
     options.snr = x;
     actionReflectanceEstimationComparison;
@@ -92,7 +95,7 @@ function rmseCur = estimationGivenSNR(x)
 end
 
 function rmseCur = estimationAdaptive(x)
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -102,9 +105,9 @@ function rmseCur = estimationAdaptive(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-    outName = setup(options);
-    out = matfile(outName, 'Writable', true);
     options.smoothingMatrixMethod = 'adaptive';
     options.noiseType = 'givenSNR';
     options.alpha = x;
@@ -113,7 +116,7 @@ function rmseCur = estimationAdaptive(x)
 end
 
 function rmseCur = estimationWhiteGaussian(x)
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -123,9 +126,9 @@ function rmseCur = estimationWhiteGaussian(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-    outName = setup(options);
-    out = matfile(outName, 'Writable', true);
     options.noiseType = strcat(['white gaussian 10^{-', num2str(x),'}']);
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
@@ -133,7 +136,7 @@ end
 
 
 function rmseCur = estimationDiffForChannel(x)
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -143,9 +146,9 @@ function rmseCur = estimationDiffForChannel(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions);
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-    outName = setup(options);
-    out = matfile(outName, 'Writable', true);
     options.noiseType = 'diffForChannel';
     options.sigma = x';
     actionReflectanceEstimationComparison;
@@ -153,7 +156,7 @@ function rmseCur = estimationDiffForChannel(x)
 end
 
 function rmseCur = estimationSameForChannel(x)
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -163,9 +166,9 @@ function rmseCur = estimationSameForChannel(x)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
     readData;
-    outName = setup(options);
-    out = matfile(outName, 'Writable', true);
     
     options.noiseType = 'sameForChannel';
     options.sigma = x;
@@ -175,7 +178,7 @@ end
 
 function rmseCur = estimationSpatiallyAdaptive(X)
 
-    dataset = 'saitama_v2_min_region';
+    dataset = 'saitama_v3_min_region';
     action = lower('ReflectanceEstimationSimple');
     skipLoading = false;
     showImages = false;
@@ -185,7 +188,10 @@ function rmseCur = estimationSpatiallyAdaptive(X)
     options = struct('tryReadData', false, 'dataset', dataset, 'action', action, ...
     'pixelValueSelectionMethod', 'extended', 'noiseType', 'givenSNR', 'skipLoading', skipLoading, ...
     'showImages', showImages, 'saveOptions', saveOptions, 'smoothingMatrixMethod', 'Cor_Malignancy');
-    setup;
+    options = setOpt(options);
+    out = matfile(options.outName, 'Writable', true);
+    readData;
+    
     options.noiseType = 'spatial';
     if numel(X) == 2
         options.sigma1 = X(1);
@@ -197,3 +203,4 @@ function rmseCur = estimationSpatiallyAdaptive(X)
     actionReflectanceEstimationComparison;
     rmseCur = mean(rmse, 2);
 end
+

@@ -331,7 +331,7 @@ if strcmp(noiseType, 'spatial')
         centeredG(i, :) =  reshape(Gi - means, 1, width * height);
         sdGi = stdfilt(Gi, windowKernel);
         varGi = sdGi.^2;
-        Kcov(i, :) =  reshape(varGi, 1, width * height); 
+        Kcov(i, :) =  reshape(conv2(varGi, windowKernel ./ (windowElements - 1), 'same'), 1, width * height); 
     end
     
     estimatedReflectance = zeros(length(spectrum), length(activeRegionIdx));

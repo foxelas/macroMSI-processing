@@ -1,3 +1,5 @@
+tic;
+
 %Start of reflectance estimation comparison
 
 [optionsSelection, lineNames, plotType] = getComparisons(options);
@@ -9,6 +11,8 @@ newCoordinates = zeros(msiN, 2);
 
 %% Comparison
 measured = cellfun(@(x) interp1(380:780, x, wavelength, 'nearest'), {measuredSpectrumStruct.Spectrum}, 'un', 0);
+t1 = toc; 
+fprintf('Init time %.5f', t1);
 
 tic;
 for k = 1:msiN
@@ -84,9 +88,7 @@ else
     errorfilename = generateName(options, ['ComparisonErrors', plotType, '.mat']);
     save(errorfilename, 'errors');
 end
-t2 = toc; 
-fprintf('Run time time %.5f\n', t2);
-
+t = toc
 %End of reflectance estimation comparison
 
 
