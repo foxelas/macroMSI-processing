@@ -1,0 +1,24 @@
+-------------------------------------------
+ Run on  30-Jan-2019 22:59:03 
+ 0.00092879 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v3_min_region     
+     action     lpb     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v3_min_region     
+     systemdir       input saitama_v3_min_region     
+     luminanceCorrection     1     
+     outName       output saitama_v3_min_region lpb out.mat     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v3_min_region     
+ -------------------------------------------
+
+
+
+
+
+

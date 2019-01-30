@@ -19,7 +19,7 @@ p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
-    'pcalda', 'classificationErrors', 'cropped', 'segmentation'})));
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'name', '', @(x) ischar(x));
@@ -37,6 +37,9 @@ addParameter(p, 'Explained', []);
 addParameter(p, 'SaveOptions', []);
 addParameter(p, 'Image', []);
 addParameter(p, 'Coordinates', []);
+addParameter(p, 'Performance', []);
+addParameter(p, 'FoldPerformance', []);
+addParameter(p, 'Title', []);
 
 parse(p, plotType, varargin{:});
 plotType = p.Results.plotType;
@@ -57,6 +60,9 @@ explained = p.Results.Explained;
 saveOptions = p.Results.SaveOptions;
 I = p.Results.Image;
 coordinates = p.Results.Coordinates;
+performance = p.Results.Performance;
+foldPerformance= p.Results.FoldPerformance;
+figTitle = p.Results.Title;
 
 if fig < 0
     figure;
@@ -501,6 +507,30 @@ switch plotType
         figTitle = strrepAll(strcat('Segmented area of ', plotName));
         title(figTitle);
         plotName = strcat(plotName, '_segments');
+        
+    case 'roc'
+        %% Show ROC performance of classifier %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        c = colormap(lines);    
+        hold on
+        folds = length(foldPerformance);
+        for i = 1:folds*(folds < 11)
+            if ~isempty(foldPerformance(i).AUC)
+                plot(foldPerformance(i).ROCX, foldPerformance(i).ROCY, 'DisplayName', sprintf('Fold %d (AUC = %.3f)', i, foldPerformance(i).AUC), 'LineWidth', 2);
+            end
+        end
+        plot(0:0.1:1, 0:0.1:1, 'k--', 'DisplayName', 'Chance');
+        plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
+        shadedErrorBar(performance.ROCX(:,1), performance.ROCY(:,1), abs(performance.ROCY(:,1) - performance.ROCY(:,2:3)),'lineprops','m-*');
+        hold off 
+        xlim([-0.1, 1.1]);
+        ylim([-0.1, 1.1]);
+        xlabel('False positive rate');
+        ylabel('True positive rate');
+        h = findobj(gca,'Type','line');
+        hh = h(contains({h.DisplayName}, {'AUC', 'Chance'}));
+        legend(hh, 'Location', 'eastoutside');
+        title(figTitle);
+        set(gcf, 'Position', get(0, 'Screensize'));
 end
 warning(w);
 

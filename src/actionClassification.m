@@ -16,27 +16,31 @@ votingRules = {'majority', 'weighted majority', 'complex vote'};
 frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
 distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
 groups = {'unique', 'fixed', 'unfixed', 'good'};
-projections = {'spectrum'}; %, 'pca', 'lda', 'pcalda', 'spectrumlbp'};
+projections = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
 m = 0;
 validation = validations{2};
+labelsAsText = true;
+
 
 %% KNN
 if strcmp(classifier, 'knn')   
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {}, 'Folds', []);
+    classificationError = struct('Input', {}, 'Projection', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Distance', {}, 'FoldPerformance', [], 'Performance', [],...
+        'Accuracy', [], 'AccuracySD', [], 'AUC', []);
     for g = 1:length(groups)
         for p = 1:length(projections)
-            [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name);
+            [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
             for i = 1:length(votingRules)
                 for k = [1, 3, 5]
                     for d = 1:length(distances)
 
-                        [a, b, c, cvPerformance] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
+                        [performance, cvPerformance] = crossValidation(validation, Gun, labels, classifier, k,  distances{d}, votingRules{i}, []);                          
                         m = m + 1;
-                        classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d}, 'Folds', cvPerformance);
+                        classificationError(m) = struct('Input', groups{g}, 'Projection', projections{p}, ...
+                            'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Distance', distances{d}, 'FoldPerformance', cvPerformance,...
+                            'Performance', performance, 'Accuracy', performance.Accuracy, 'AccuracySD', performance.AccuracySD, 'AUC', performance.AUC);
                     end
                 end
             end
@@ -46,52 +50,72 @@ if strcmp(classifier, 'knn')
 %% SVM
 elseif strcmp(classifier, 'svm')
 
-    labelsAsText = true;
-    classificationError = struct('Accuracy', [], 'FalsePositives', [], 'FalseNegatives', [], 'GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {}, 'Folds', []);
+    classificationError = struct('GenLoss', [], 'Input', {}, 'Projection', {}, 'Validation', {}, 'Kernel', {}, 'FoldPerformance', [], 'Performance', [],...
+        'Accuracy', [], 'AccuracySD', [], 'AUC', []);
     for g = 1:length(groups)
         for p = 1:length(projections)
             [Gun, labels] = classifierInput(version, groups{g}, projections{p}, name, labelsAsText);
             for i = 1:length(kernels)
 
-                [a, b, c, cvPerformance] = crossValidation(validation, Gun, labels, classifier, [], [], [], kernels{i});                                             
+                [performance,cvPerformance] = crossValidation(validation, Gun, labels, classifier, [], [], [], kernels{i});                                             
                 m = m + 1;
-                classificationError(m) = struct('Accuracy', a, 'FalsePositives', b, 'FalseNegatives', c, 'Input', groups{g}, 'Projection', projections{p}, ...
-                            'Validation', validation, 'Kernel', kernels{i}, 'Folds', cvPerformance);
+                classificationError(m) = struct('Input', groups{g}, 'Projection', projections{p},  ...
+                    'Validation', validation, 'Kernel', kernels{i}, 'FoldPerformance', cvPerformance, 'GenLoss', [], ...
+                    'Performance', performance, 'Accuracy', performance.Accuracy, 'AccuracySD', performance.AccuracySD, 'AUC', performance.AUC);
             end
         end
     end
         
 end
- 
-save('classificationError.mat', 'classificationError');
 
-pause;
+classificationError = orderfields(classificationError);
+dirr = fullfile(options.saveOptions.savedir, 'Classification');
+if ~exist(dirr, 'dir')
+    mkdir(dirr);
+    addpath(dirr);
+end
+save( fullfile(dirr, strcat(classifier, 'Error.mat')),'classificationError');
 
-classificationErrorFields = fieldnames(classificationError);
-classificationErrorCell = struct2cell(classificationError);
-sz = size(classificationErrorCell);
-% Convert to a matrix
-classificationErrorCell = reshape(classificationErrorCell, sz(1), []);
-% Make each field a column
-classificationErrorCell = classificationErrorCell';
-% Sort by first field "name"
-classificationErrorCell = sortrows(classificationErrorCell, -1);
-classificationErrorCell = reshape(classificationErrorCell', sz);
-classificationError = cell2struct(classificationErrorCell, classificationErrorFields, 1);
-options.saveOptions.plotName = generateName(options, ['Classification error of ', version, ' spectra with ', validation]);
-plots('classificationErrors', 2, [], '', 'Errors', classificationError, 'SaveOptions', options.saveOptions)
+[~, sortIdx] = sort([classificationError.Accuracy], 'descend'); % or classificationError.AvgAUC
+classificationError = classificationError(sortIdx);
+
+[~, maxAccurIdx] = max([classificationError.Accuracy]);
+figTitle = strcat('ROC for [', classificationError(maxAccurIdx).Input,'+', classificationError(maxAccurIdx).Projection ,'] dataset.',...
+    'Accuracy:', num2str(classificationError(maxAccurIdx).Accuracy), '\pm', num2str(classificationError(maxAccurIdx).AccuracySD));
+options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_MaxAccuracyRoc'));
+plots('roc', 1, [], '', 'Performance', classificationError(maxAccurIdx).Performance , 'FoldPerformance', classificationError(maxAccurIdx).FoldPerformance, 'SaveOptions', options.saveOptions, 'Title', figTitle);
+
+[~, maxAUCIdx] = max([classificationError.AUC]);
+figTitle = strcat('ROC for [', classificationError(maxAUCIdx).Input,'+', classificationError(maxAUCIdx).Projection ,'] dataset.',...
+    'Accuracy:', num2str(classificationError(maxAUCIdx).Accuracy), '\pm', num2str(classificationError(maxAUCIdx).AccuracySD));
+options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_MaxAUCRoc'));
+plots('roc', 2, [], '', 'Performance', classificationError(maxAUCIdx).Performance , 'FoldPerformance', classificationError(maxAUCIdx).FoldPerformance, 'SaveOptions', options.saveOptions, 'Title', figTitle);
+%options.saveOptions.plotName = generateName(options, ['Classification error of ', version, ' spectra with ', validation]);
+%plots('classificationErrors', 2, [], '', 'Errors', classificationError, 'SaveOptions', options.saveOptions)
     
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [performance] = getPerformanceStatistics(predictions, labels, scores)
+function [performance] = getPerformanceStatistics(predictions, labels, scores, testIdxs)
 %%Returns accuracy statistics for binary classification predictions
 %Predictions: an 1D vector of prediction labels 
 %Labels: an 1D vector of test labels 
 
+    categories = {'Benign', 'Malignant'};
     if length(predictions) ~= length(labels) 
         error('Incompatible length of input data.')
     end
-    % true = cancer condition is true
+    
+    if iscell(predictions) || iscell(labels)
+        textLabels = labels; 
+        textPredictions = predictions;
+        labels = strcmp(labels, 'Malignant');
+        predictions = strcmp(predictions, 'Malignant');
+    else
+        textLabels = categories(1 + labels);
+        textPredictions = categories(1 + predictions);
+    end
+    % true = cancer condition is true OR the positive class is Malignant
 	truePredictionIdxs = (predictions == labels);
 	falsePredictionIdxs = (predictions ~= labels);
 	
@@ -103,8 +127,11 @@ function [performance] = getPerformanceStatistics(predictions, labels, scores)
 	total = length(predictions);
 	if (sum([a,b,c,d]) ~= total)
 		error('Incorrect performance statistics.');
-	end
+    end
 	
+    performance.TestIndexes = testIdxs;
+    performance.Labels = textLabels;
+    performance.Predictions = textPredictions;
 	performance.ConfusionMatrix = [a, c ; b, d]; 
 	performance.FalsePositiveRate = b / total * 100;
 	performance.FalseNegativeRate = c / total * 100;
@@ -113,17 +140,17 @@ function [performance] = getPerformanceStatistics(predictions, labels, scores)
 	performance.Precision = a / (a + b) * 100; %or positive predictive value
 	performance.NegativePredictiveValue = d / (c + d) * 100;
 	performance.Accuracy = (a + d) / total * 100;
-    categories = {'Benign', 'Malignant'};
-    textLabels = categories(1 + labels);
+    [~,n] = size(scores);
+    performance.Scores = scores(:,n);
     if any(labels == 0) && any(labels == 1)
-        [performance.ROCX, performance.ROCY, performance.ROCT, performance.AUC] = perfcurve(textLabels, scores, 'Malignant');
+        [performance.ROCX, performance.ROCY, performance.ROCT, performance.AUC] = perfcurve(textLabels, scores(:,n), 'Malignant'); % mark positive class
     else 
         performance.ROCX = [];
         performance.ROCY = [];
         performance.ROCT = [];
         performance.AUC = [];
     end
-
+    performance = orderfields(performance);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,47 +173,50 @@ function [predictions, scores] = knn(testdata, database, databaselabels, k, dist
         rule = 'majority';
     end
     
-    [m, n] = size(testdata);
-    predictions = zeros(m,1);
+    [m, ~] = size(testdata);
+    predictions = cell(m,1);
     scores = zeros(m,1);
+    categories = {'Benign', 'Malignant'};
     for i = 1:m
         [knnIdx, D] = knnsearch(database, testdata(i,:), 'K', k, 'Distance', distance);
-        nnrLabels = databaselabels(knnIdx);
-        trueNeighbors = D(nnrLabels);
-        falseNeighbors = D(~nnrLabels);
-
-        if sum(nnrLabels) == 0
-            predictions(i) = 0;
-            scores(i) = 0;
-            
-        elseif sum(nnrLabels) == k
-            predictions(i) = 1;
-            scores(i) = 1;
-            
-        elseif strcmp(rule, 'complex vote')
-            predictions(i) = (4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prod(falseNeighbors))) > ...
-                (4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prod(trueNeighbors)));
-            scores(i) =  mean(nnrLabels);
+        malignantIdx = strcmp(databaselabels(knnIdx), 'Malignant'); % binary labels 
+        nnrLabels = malignantIdx; % numerical labels as -1(benign) an +1 (malignant)
+        nnrLabels(malignantIdx == 0) = -1;
+        trueNeighbors = D(malignantIdx);
+        falseNeighbors = D(~malignantIdx);
+        
+        if isempty(trueNeighbors) || isempty(falseNeighbors)
+            rule = 'majority';
+        end
+        if strcmp(rule, 'complex vote')
+            binaryLabel = -(4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prod(falseNeighbors))) < ...
+                -(4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prod(trueNeighbors)));
+            scores(i) = (4*log(min(falseNeighbors)) + log(mean(falseNeighbors)) + log(prod(falseNeighbors))) ...
+                + (4*log(min(trueNeighbors)) + log(mean(trueNeighbors)) + log(prod(trueNeighbors))) * (-1);
             
         elseif strcmp(rule, 'weighted majority')
-            predictions(i) = sum(1./falseNeighbors) < sum(1 ./ trueNeighbors);
-            scores(i) =  mean(nnrLabels);
+            binaryLabel = sum(1./falseNeighbors) < sum(1 ./ trueNeighbors);
+            scores(i) =  sum(1./falseNeighbors) * (-1) + sum(1 ./ trueNeighbors) * 1;
             
         else %majority vote
-            predictions(i) = round(mean(nnrLabels));
+            binaryLabel = round(mean(malignantIdx));
             scores(i) = mean(nnrLabels);
         end
-
+        predictions(i) = categories(binaryLabel + 1);
     end
     
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel)
+function [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel, testIndexes)
 %%Classify returns the class predictions using 'classifier'
 %test, train: rows = samples, columns = features
 
+    if (nargin < 10)
+        testIndexes = [];
+    end
+    
     if strcmp(classifier, 'knn')
         [predictions, scores] = knn(test, train, trainLabels, k, distance, rule); 
         
@@ -199,39 +229,39 @@ function [predictions, scores, performance] = classify(classifier, train, trainL
        error('Unsupported classification method');
     end
     
-    performance = getPerformanceStatistics(predictions, testLabels, scores);
+    performance = getPerformanceStatistics(predictions, testLabels, scores, testIndexes);
     
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate, cvPerformance] = crossValidation(validation, data, labels, classifier, k, distance, rule, kernel)
+function [avgPerformance, cvPerformance] = crossValidation(validation, data, labels, classifier, k, distance, rule, kernel)
 %%CrossValidation returns crossvalidated accuracy statistics for
 %%classification using 'classifier'
     if (nargin < 3)
         validation = 'Kfold';
     end
-    
-    avgAccuracyRate = 0;
-    avgFalsePositiveRate = 0;
-    avgFalseNegativeRate = 0;
         
-    [m, n] = size(data);
+    [m, ~] = size(data);
     if strcmp(validation, 'Kfold')
         folds = 10;
-        indices = crossvalind('Kfold', n, folds);
+        indices = crossvalind('Kfold', m, folds);
         
     elseif strcmp(validation, 'LeaveMOut')
-        folds = n;
-        indices = crossvalind('LeaveMOut', n, 1); 
+        folds = m;
+        indices = crossvalind('LeaveMOut', m, 1); 
         
     else
         error('Unsupported validation method.');
     end
     
-    cvPerformance = struct('Fold', [],'testIdx', [], 'Predictions', [], 'Scores', [], 'ConfusionMatrix', [], ...
+    correctPredictions = zeros(m,1);
+    totalScores = zeros(m,1);
+    
+    cvPerformance = struct('TestIndexes', [], 'Predictions', [], 'Labels', [],'Scores', [], 'ConfusionMatrix', [], ...
         'FalsePositiveRate', [], 'FalseNegativeRate', [], 'Sensitivity', [], 'Specificity', [], ...
         'Precision', [], 'NegativePredictiveValue', [], 'Accuracy', [], 'ROCX', [], 'ROCY', [], 'ROCT', [], 'AUC', []);
+    
     for i = 1:folds
         
         if strcmp(validation, 'Kfold')
@@ -241,25 +271,34 @@ function [avgAccuracyRate, avgFalsePositiveRate, avgFalseNegativeRate, cvPerform
         elseif strcmp(validation, 'LeaveMOut')
             trainIdx = true(size(labels));
             testIdx = false(size(labels));
-            trainIdx(n) = false;
-            testIdx(n) = true;
+            trainIdx(m) = false;
+            testIdx(m) = true;
         end
+        
         testLabels = labels(testIdx);
         trainLabels = labels(trainIdx);
         train = data(trainIdx, :);
         test = data(testIdx, :);
         
-        [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel);
-        cvPerformance(i) = struct('Fold', i,'testIdx', testIdx, 'Predictions', predictions, 'Scores', scores, 'ConfusionMatrix', performance.ConfusionMatrix, ...
-            'FalsePositiveRate', performance.FalsePositiveRate, 'FalseNegativeRate', performance.FalseNegativeRate, 'Sensitivity', performance.Sensitivity, ...
-            'Specificity', performance.Specificity, 'Precision', performance.Precision, 'NegativePredictiveValue', performance.NegativePredictiveValue,...
-            'Accuracy', performance.Accuracy, 'ROCX', performance.ROCX, 'ROCY', performance.ROCY, 'ROCT', performance.ROCT, 'AUC', performance.AUC);
-        
-        avgAccuracyRate = avgAccuracyRate + performance.Accuracy / folds;
-        avgFalseNegativeRate = avgFalseNegativeRate + performance.FalseNegativeRate / folds;
-        avgFalsePositiveRate = avgFalsePositiveRate + performance.FalsePositiveRate / folds;
+        [predictions, scores, performance] = classify(classifier, train, trainLabels, test, testLabels, k, distance, rule, kernel, find(testIdx == 1));
+        cvPerformance(i) = performance;        
+        correctPredictions(testIdx) = strcmp(predictions, testLabels);
+        totalScores(testIdx) = cvPerformance(i).Scores;  
     end
     
+    %% avarage data 
+    avgPerformance.Labels = {labels};
+    avgPerformance.Scores = totalScores;
+    avgPerformance.IsTruePrediction = correctPredictions;
+    avgPerformance.FalsePositiveRate =  mean([cvPerformance.FalsePositiveRate]);
+    avgPerformance.FalseNegativeRate =  mean([cvPerformance.FalseNegativeRate]);
+    avgPerformance.Sensitivity =  mean([cvPerformance.Sensitivity]);
+    avgPerformance.Specificity =  mean([cvPerformance.Specificity]);
+    avgPerformance.Precision =  mean([cvPerformance.Precision]);
+    avgPerformance.Accuracy =  mean([cvPerformance.Accuracy]);
+    avgPerformance.AccuracySD =  std([cvPerformance.Accuracy]);
+    [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, auc] = perfcurve({cvPerformance.Labels}, {cvPerformance.Scores}, 'Malignant', 'XVals', 'all');
+    avgPerformance.AUC = auc(1);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -281,16 +320,25 @@ function [G, labels] = classifierInput(version, group, features, name, labelsAsT
     end
 
     if contains(features, 'lbp')
-        e = matfile(fullfile('..', '..', 'output', name, 'LBP', 'lbp.mat'));
-        lbpFeatures = e.lbpFeatures;
-        G = [G lbpFeatures(subIdx,:)];
+        e =  matfile(fullfile('..', '..', 'output', name, 'reflectanceestimationpreset', 'out.mat'));
+        multiScaleLbpFeatures = e.multiScaleLbpFeatures;
+        scales = length(multiScaleLbpFeatures);
+        lbps = size(multiScaleLbpFeatures{1},2);
+        Gplus = zeros(length(labelsfx), length(G) + scales * lbps);
+        Gplus(:,1:size(G, 2)) = G;
+        for i = 1:scales
+            lbpFeatures = multiScaleLbpFeatures{i};
+            rangeIdx = length(G) + (i-1)*lbps + (1:lbps);
+            Gplus(:,rangeIdx) = lbpFeatures(subIdx,:);
+        end
+        G = Gplus;
     end
 
     labels = ~labelsfx';
 
     if (labelsAsText)
         X = {'Benign', 'Malignant'};
-        labels = X(1+labels);
+        labels = X(1+labels)';
     end
 
 end

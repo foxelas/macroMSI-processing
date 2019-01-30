@@ -85,7 +85,7 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
             
             if hasWhiteReference
                 segments(roi).whiteReference = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
-                if (options.showImages)
+                if isfield(options, 'showImages') && (options.showImages)
                     currentOptions = options.saveOptions;
                     currentOptions.plotName = options.saveOptions.plotName{roi};
                     plots('cropped', 1, 'Image', whiteReference + maskI, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
