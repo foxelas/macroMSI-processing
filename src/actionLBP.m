@@ -24,7 +24,7 @@ for scale = 1:maxScale
         end
     end
     
-    multiScaleLbpFeatures{scale} = lbpFeatures;
+    multiScaleLbpFeatures{scale} = lbpFeatures / max(lbpFeatures(:));
 
 end
 out = matfile( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'), 'Writable', true);

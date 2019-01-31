@@ -7,7 +7,7 @@ else
      error('Unsupported classification method.Aborting...');
 end
 
-version = 'estimated';
+version = 'measured';
 
 fprintf('Classifying %s data with %s classifier...\n', version, classifier);
 
@@ -15,8 +15,8 @@ validations = {'LeaveMOut', 'Kfold'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
 frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
 distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
-groups = {'unique', 'fixed', 'unfixed', 'good'};
-projections = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp'};
+groups = {'unique', 'fixed', 'unfixed'};
+projections = {'spectrum'};%, 'pca', 'lda', 'pcalda', 'spectrumlbp'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
@@ -74,7 +74,7 @@ if ~exist(dirr, 'dir')
     mkdir(dirr);
     addpath(dirr);
 end
-save( fullfile(dirr, strcat(classifier, 'Error.mat')),'classificationError');
+save( fullfile(dirr, strcat(classifier,'_', version, '_', 'Error.mat')),'classificationError');
 
 [~, sortIdx] = sort([classificationError.Accuracy], 'descend'); % or classificationError.AvgAUC
 classificationError = classificationError(sortIdx);
@@ -82,13 +82,13 @@ classificationError = classificationError(sortIdx);
 [~, maxAccurIdx] = max([classificationError.Accuracy]);
 figTitle = strcat('ROC for [', classificationError(maxAccurIdx).Input,'+', classificationError(maxAccurIdx).Projection ,'] dataset.',...
     'Accuracy:', num2str(classificationError(maxAccurIdx).Accuracy), '\pm', num2str(classificationError(maxAccurIdx).AccuracySD));
-options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_MaxAccuracyRoc'));
+options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier,'_', version, '_MaxAccuracyRoc'));
 plots('roc', 1, [], '', 'Performance', classificationError(maxAccurIdx).Performance , 'FoldPerformance', classificationError(maxAccurIdx).FoldPerformance, 'SaveOptions', options.saveOptions, 'Title', figTitle);
 
 [~, maxAUCIdx] = max([classificationError.AUC]);
 figTitle = strcat('ROC for [', classificationError(maxAUCIdx).Input,'+', classificationError(maxAUCIdx).Projection ,'] dataset.',...
     'Accuracy:', num2str(classificationError(maxAUCIdx).Accuracy), '\pm', num2str(classificationError(maxAUCIdx).AccuracySD));
-options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_MaxAUCRoc'));
+options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_', version, '_MaxAUCRoc'));
 plots('roc', 2, [], '', 'Performance', classificationError(maxAUCIdx).Performance , 'FoldPerformance', classificationError(maxAUCIdx).FoldPerformance, 'SaveOptions', options.saveOptions, 'Title', figTitle);
 %options.saveOptions.plotName = generateName(options, ['Classification error of ', version, ' spectra with ', validation]);
 %plots('classificationErrors', 2, [], '', 'Errors', classificationError, 'SaveOptions', options.saveOptions)
@@ -297,7 +297,8 @@ function [avgPerformance, cvPerformance] = crossValidation(validation, data, lab
     avgPerformance.Precision =  mean([cvPerformance.Precision]);
     avgPerformance.Accuracy =  mean([cvPerformance.Accuracy]);
     avgPerformance.AccuracySD =  std([cvPerformance.Accuracy]);
-    [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, auc] = perfcurve({cvPerformance.Labels}, {cvPerformance.Scores}, 'Malignant', 'XVals', 'all');
+    nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
+    [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, auc] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
     avgPerformance.AUC = auc(1);
 end
 
