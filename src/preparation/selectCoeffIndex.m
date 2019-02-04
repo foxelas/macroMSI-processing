@@ -14,7 +14,7 @@ options.tryReadData = false;
 options.pixelValueSelectionMethod = 'adjusted';
 options.smoothingMatrixMethod = 'Cor_Sample';
 options.noiseType = 'givenSNR';
-options.noiseParam = 26;
+options.noiseParam = 20;
 
 load(fullfile(options.systemdir, 'system.mat'), 'wavelength'); % camera system parameters
 vv = matfile(fullfile(options.systemdir, 'ID.mat'));

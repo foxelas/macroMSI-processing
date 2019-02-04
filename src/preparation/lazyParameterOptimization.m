@@ -29,7 +29,7 @@ readData;
  minSnr = errSNR(errSNR(:,2) == min(errSNR(:,2)),1)
 
  %% For samesigma
- sigmaRange = 0.0001:0.0005:0.2;
+ sigmaRange = [10^(-8), 5*10^(-8),10^(-7), 5*10^(-7), 10^(-6), 5*10^(-6), 10^(-5), 5*10^(-5), 10^(-4), 5*10^(-4), 10^(-3),5*10^(-3), 10^(-2), 5*10^(-2), 10^(-1)];
  errSigma = zeros(length(sigmaRange), 2);
  for i = 1:length(sigmaRange)
      sigma = sigmaRange(i);

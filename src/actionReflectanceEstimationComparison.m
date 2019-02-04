@@ -42,10 +42,10 @@ elseif contains(lower(options.action), 'simple')
         plotType = '';
 
 elseif contains(lower(options.action), 'preset')
-        pvsms = {'adjusted'}; %{'extended'};
+        pvsms = {'extended'}; %{'extended'};
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
         nms = {'sameForChannel'};
-        options.noiseParam = 0.000001;
+        options.noiseParam = 0.00001;
         plotType = '';
 
 else 
@@ -91,7 +91,7 @@ isSingleMethod = contains(lower(options.action), 'preset') || contains(lower(opt
 
 tic;
 estimatedSpectra = zeros(size(Spectra));
-for k = 161:180 % 1:msiN
+for k = 1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot', ID(k));   
     % Retrieve MSI data
@@ -156,7 +156,7 @@ for k = 161:180 % 1:msiN
         hold on 
         scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(msi(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
         hold off
-        if (isSingleMethod)
+        if false %(isSingleMethod)
             [~, whiteReference] = readMSI({data(ID(k).Data).File});
             coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
             plots('cropped', 2, 'Image', whiteReference + cat(3, 0.1*maskI, 0.05*maskI, 0.1*maskI), 'Coordinates', coordinates );

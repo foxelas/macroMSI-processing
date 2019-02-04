@@ -70,7 +70,7 @@ else
     c = matfile(fullfile(options.systemdir, 'coeff.mat'));
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
     pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
-    coeff = squeeze(c.coeff(id.CoeffIndex, pvmIdx, 1:7))';
+    coeff = squeeze(c.coeff(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
 end
 
 
@@ -288,21 +288,23 @@ else
 end  
 
 %% Show all estimates in the region
-figure(3);
-clf(3);
-[rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
-bb = estimatedReflectance(:,rmseIdx);
-[mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
-minIdx = [mini, minj];
-hold on
-for kkk = 1:size(estimatedReflectance,2)
-plot(estimatedReflectance(:,kkk));
+if (false)
+    figure(3);
+    clf(3);
+    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
+    bb = estimatedReflectance(:,rmseIdx);
+    [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
+    minIdx = [mini, minj];
+    hold on
+    for kkk = 1:size(estimatedReflectance,2)
+    plot(estimatedReflectance(:,kkk));
+    end
+    plot(spectrum, 'm*')
+    plot(bb, 'g*')
+    scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
+    hold off
+    pause(0.2)
 end
-plot(spectrum, 'm*')
-plot(bb, 'g*')
-scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
-hold off
-pause(0.2)
 
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)

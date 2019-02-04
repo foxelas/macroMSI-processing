@@ -33,7 +33,7 @@ if ~options.skipLoading
             if abs(rawSpectrum-referenceSpectrum) < 0.000001
                 error('Measurement is same as white.')
             end
-            completeUniqueSpectra(i,:) = rawSpectrum ./ referenceSpectrum;            
+            completeUniqueSpectra(i,:) = rawSpectrum ./ referenceSpectrum;  
         end
         uniqueSpectra = completeUniqueSpectra(:,wavelengthIdxs);
         clear('idd');
@@ -107,14 +107,11 @@ if ~options.skipLoading
         warning(w);
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+        
         %% Precompute correlation smoothing Matrices 
         fprintf('Pre-computing smoothing matrices.\n');
         param = matfile(fullfile(options.systemdir, 'precomputedParams.mat'), 'Writable', true);
         samples = unique([ID.Sample]);
-        
-        %% Support function for computing the smoothing matrix from counts
-        smoothingMatrix = @(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
 
         %% Smoothing matrix from recorded spectra
         rAll = zeros(81, specN);
@@ -247,6 +244,9 @@ if ~options.skipLoading
         param.(matlab.lang.makeValidName('Cor_Sample')) = Cor_Sample;
         param.(matlab.lang.makeValidName('Cor_SampleMalignant')) = Cor_SampleMalignant;
         param.(matlab.lang.makeValidName('Cor_SampleBenign')) = Cor_SampleBenign;
+        
+        %% Count dataset
+        datasetBreakdown(ID);
 
         %% Smoothing matrix based on markovian process 
         if isfield(options, 'rho')
@@ -322,6 +322,15 @@ fprintf('Finished initialization.\n\n')
 fprintf('Let''s get down to business :muscle:\n\n');
 % LOAD DATA & INITIALIZE ends   
     
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Support function for computing the smoothing matrix from counts
+function M = smoothingMatrix(s)
+%smoothingMatrix = @(s) 1 / (size(s, 2) - 1) * s * s';  %@(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
+    sTrue = s(:,~all(s == 0, 1));
+    M = 1 / size(sTrue, 2) * (sTrue * sTrue');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
