@@ -171,7 +171,20 @@ end
 rmse = rmse(:, rmse(1, :) ~= 0);
 nmse = nmse(:, nmse(1, :) ~= 0);
 errorData = [mean(rmse, 2), max(rmse, [], 2), min(rmse, [], 2), mean(nmse, 2), max(nmse, [], 2), min(nmse, [], 2)];
-errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse', max(rmse, [], 2), 'stdrmse', std(rmse, [], 2), 'avgnmse', mean(nmse, 2), 'minnmse', min(nmse, [], 2), 'maxnmse', max(nmse, [], 2), 'stdnmse', std(nmse, [], 2), 'options', optionsSelection);
+
+pixelValueSelectionMethods = cell(methodsN,1);
+smoothingMatrixMethods = cell(methodsN,1);
+noiseTypes = cell(methodsN,1);
+
+for j = 1:methodsN
+    [l,n,m] = ind2sub([ pvsmsN , smmsN, nmsN], j);
+    pixelValueSelectionMethods{j} = pvsms{l};
+    smoothingMatrixMethods{j} = smms{n};
+    noiseTypes{j} = nms{m};   
+end
+errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse', max(rmse, [], 2), 'stdrmse', std(rmse, [], 2), 'avgnmse', mean(nmse, 2), ...
+                'minnmse', min(nmse, [], 2), 'maxnmse', max(nmse, [], 2), 'stdnmse', std(nmse, [], 2), 'pixelValueSelectionMethod', pixelValueSelectionMethods, ...
+                'smoothingMatrixMethod', smoothingMatrixMethods, 'noiseType', noiseTypes);
 
 minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
