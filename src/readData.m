@@ -5,7 +5,6 @@ if ~options.skipLoading
     load(fullfile(options.systemdir, 'system.mat')); % camera system parameters
     load(fullfile(options.systemdir, 'data.mat')); % image data
     load(fullfile(options.systemdir, 'ID.mat')); % image data id and info struct
-    in = matfile(generateName(options, 'matfilein'), 'Writable', true);
 
     wavelengthN = size(sensitivity, 1);
     wavelength = linspace(380, 780, wavelengthN);
@@ -14,17 +13,17 @@ if ~options.skipLoading
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
-    if false %(options.tryReadData)
+    if (options.tryReadData)
         
-        w = warning('off', 'all');
-        
+        in = matfile(generateName(options, 'matfilein'), 'Writable', true);
+        w = warning('off', 'all');   
         fprintf('Reading spectral data according to ID file.\n');
 
         %% Read raw spectra 
         [uniqueSpectraNames, uniqueSpectraIdxs, uniqueSpectraIdxsInID] = unique(strcat({ID.Csvid}, {ID.T}));
         idd = ID(uniqueSpectraIdxs);
         specN = length(uniqueSpectraIdxs);
-        uniqueSpectra = zeros(wavelengthN, specN);
+        completeUniqueSpectra = zeros(401, specN);
 
         for i = 1:specN
             % read raw measured spectrum
@@ -35,22 +34,34 @@ if ~options.skipLoading
             if abs(rawSpectrum-referenceSpectrum) < 0.000001
                 error('Measurement is same as white.')
             end
-            r = rawSpectrum ./ referenceSpectrum;
-            uniqueSpectra(:,i) = r(wavelengthIdxs);
-
+            completeUniqueSpectra(:,i) = rawSpectrum ./ referenceSpectrum;            
         end
-        clear('idd', 'r');
-        
-        for i = 1:msiN
-            
+        uniqueSpectra = completeUniqueSpectra(wavelengthIdxs,:);
+        clear('idd');
+
         %% Save Spectra Struct
-            if ~isempty(uniqueSpectra(:, uniqueSpectraIdxsInID))
-                [~, csv] =  generateName(options, 'csv', ID(i));
-                in.MeasuredSpectrumStruct(i,1) = struct( 'Index', i, 'Name', csv, 'Spectrum', uniqueSpectra(:, uniqueSpectraIdxsInID(i)), 'T', ID(i).T);
-            end
+        Spectra = zeros(wavelengthN, msiN);
+        CompleteSpectra = zeros(401, msiN);
+        SpectraNames = zeros(1, msiN);
+        for i = 1:msiN            
+            [~, csv] =  generateName(options, 'csv', ID(i));
+            Spectra(:,i) = uniqueSpectra(:, uniqueSpectraIdxsInID(i));
+            CompleteSpectra(:,i) = completeUniqueSpectra(:, uniqueSpectraIdxsInID(i));
+            SpectraNames(i) = strcat(csv, ', ', ID(i).T);
         end 
+        in.Spectra = Spectra;
+        in.CompleteSpectra = CompleteSpectra;
+        in.SpectraNames = SpectraNames;
+
         
         fprintf('Reading MSI data according to ID file.\n');
+        MSIs = cell(msiN,1);
+        Masks = cell(msiN,1);
+        MaskIs = cell(msiN,1);
+        MSINames = cell(msiN,1);
+        WhiteIs = cell(msiN,1);
+        DarkIs = cell(msiN,1);
+        
         groups = findgroups([ID.UniqueCount]);
         for g = 1:max(groups)
         %% Read MSI
@@ -75,14 +86,24 @@ if ~options.skipLoading
                 segment = readMSI(files, coordinates, 5, 5, currentOptions); 
             end  
 
-        %% Save MSI   
+        %% Save MSI 
             for j = 1:length(gMembers)
                 jj = gIdxs(j);
-                in.MSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).MSI, 'Mask', segment(j).patchMask, 'MaskI', segment(j).maskI);
-                in.WhiteMSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).whiteReference);
-                in.DarkMSIStruct(jj,1) = struct('Name', names{j}, 'Index', jj, 'MSI', segment(j).darkReference);
+                MSIs{jj} = segment(j).MSI;
+                Masks{jj} = segment(j).patchMask;
+                MaskIs{jj} = segment(j).maskI;
+                MSINames{jj} = names{j};
+                WhiteIs{jj} = segment(j).whiteReference;
+                DarkIs{jj} = segment(j).darkReference;
             end
         end
+        
+        in.MSIs = MSIs;
+        in.Masks = Masks;
+        in.MaskIs = MaskIs;
+        in.MSINames = MSINames;
+        in.WhiteIs = WhiteIs;
+        in.DarkIs = DarkIs;
         
         warning(w);
         
@@ -142,46 +163,46 @@ if ~options.skipLoading
                 total = total + 1;
                 jj = sampleSpectraIdx(j);
                 id = ID(uniqueSpectraIdxs(jj));
-                ref = uniqueSpectra(:, jj); % interp1(380:780, uniqueSpectra(:, jj), wavelength, 'nearest')';
+                ref = uniqueSpectra(:, jj); 
 
-                rAll(:, total) =  ref; %[rAll, ref];
-                rSample(:, j) =  ref; %[rSample, ref];
+                rAll(:, total) =  ref;
+                rSample(:, j) =  ref;
 
                 if (id.IsNormal)
                     %% Benign case
-                    rBenign(:, total) =  ref; %[rBenign, ref];
-                    rSampleBenign(:, j) =  ref; %[rSampleBenign, ref];
+                    rBenign(:, total) =  ref; 
+                    rSampleBenign(:, j) =  ref; 
 
                     if (id.IsCut)
-                        rCut(:, total) = ref; %[rCut, ref];
-                        rBenignCut(:, total) = ref; %[rBenignCut, ref];
-                        rSampleBenignCut(:, j) = ref; %[rSampleBenignCut, ref];
+                        rCut(:, total) = ref; 
+                        rBenignCut(:, total) = ref; 
+                        rSampleBenignCut(:, j) = ref; 
                     elseif (id.IsFixed)
-                        rFixed(:, total) = ref; %[rFixed, ref];
-                        rBenignFixed(:, total) = ref; %[rBenignFixed, ref];
-                        rSampleBenignFixed(:, j) = ref; %[rSampleBenignFixed, ref];
+                        rFixed(:, total) = ref; 
+                        rBenignFixed(:, total) = ref; 
+                        rSampleBenignFixed(:, j) = ref; 
                     else
-                        rUnfixed(:, total) = ref; %[rUnfixed, ref];
-                        rBenignUnfixed(:, total) = ref; %[rBenignUnfixed, ref];
-                        rSampleBenignUnfixed(:, j) = ref; %[rSampleBenignUnfixed, ref];
+                        rUnfixed(:, total) = ref; 
+                        rBenignUnfixed(:, total) = ref; 
+                        rSampleBenignUnfixed(:, j) = ref; 
                     end
                 else
                     %% Malignant case 
-                    rMalignant(:, total) = ref; %[rMalignant, ref];
-                    rSampleMalignant(:, j) = ref; %[rSampleMalignant, ref];
+                    rMalignant(:, total) = ref; 
+                    rSampleMalignant(:, j) = ref;
 
                     if (id.IsCut)
-                        rCut(:, total) = ref; %[rCut, ref];
-                        rMalignantCut(:, total) = ref; %[rMalignantCut, ref];
-                        rSampleMalignantCut(:, j) = ref; %[rSampleMalignantCut, ref];
+                        rCut(:, total) = ref; 
+                        rMalignantCut(:, total) = ref; 
+                        rSampleMalignantCut(:, j) = ref; 
                     elseif (id.IsFixed)
-                        rFixed(:, total) = ref; %[rFixed, ref];
-                        rMalignantFixed(:, total) = ref; %[rMalignantFixed, ref];
-                        rSampleMalignantFixed(:, j) = ref; %[rSampleMalignantFixed, ref];
+                        rFixed(:, total) = ref; 
+                        rMalignantFixed(:, total) = ref;
+                        rSampleMalignantFixed(:, j) = ref; 
                     else
-                        rUnfixed(:, total) = ref; %[rUnfixed, ref];
-                        rMalignantUnfixed(:, total) = ref; %[rMalignantUnfixed, ref];
-                        rSampleMalignantUnfixed(:, j) = ref; %[rSampleMalignantUnfixed, ref];
+                        rUnfixed(:, total) = ref; 
+                        rMalignantUnfixed(:, total) = ref; 
+                        rSampleMalignantUnfixed(:, j) = ref; 
                     end
                 end
             end  
@@ -262,46 +283,39 @@ if ~options.skipLoading
         param.Hrms = illumXsensitivity(illumination, sensitivity, 'rms');
         param.Hextended = illumXsensitivity(illumination, sensitivity, 'extended');
 
-    end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Create coefficient table
+        disp('Reading coefficients from excel file...')
+        pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
+        coeff = ones(length(ID), 3, 7);
+        src = '../../input/others/coeff.xlsx';
+        for k = 1:msiN
+            % Retrieve MSI data
+            g = MSIs{k};
 
-    %% Read newly created files 
-    MSIStruct = in.MSIStruct;
-    whiteStruct = in.WhiteMSIStruct;
-    darkStruct = in.DarkMSIStruct;
-    measuredSpectrumStruct = in.MeasuredSpectrumStruct;
-    name = options.dataset;
+            % Retrieve spectrum data
+            refmeasured = CompleteSpectra(:,uniqueSpectraIdxsInID(k)); 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %% Create coefficient table
-    if (options.tryReadData)
-%         disp('Reading coefficients from excel file...')
-%         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
-%         coeff = ones(length(ID), 3, 7);
-%         src = '../../input/others/coeff.xlsx';
-%         for k = 1:msiN
-%             % Retrieve MSI data
-%             g = MSIStruct(k).MSI;
-% 
-%             % Retrieve spectrum data
-%             refmeasured = measuredSpectrumStruct(k).Spectrum;
-% 
-%             for m = 1:length(pixelValueSelectionMethods)
-%                 gg = raw2msi(g, pixelValueSelectionMethods{m});
-%                 [r, c] = find(MSIStruct(k).MaskI);
-%                 x = ID(k).Originx - min(c) + 1;
-%                 y = ID(k).Originy - min(r) + 1;
-%                 refmsi = im2uint16(squeeze(gg(:,y,x)))';
-%                 xlswrite2(src, refmeasured, 4, 'B3');
-%                 xlswrite2(src, refmsi, 4, 'D407:J407');
-%                 ctemp = xlsread(src, 4, 'D414:J414');
-%                 coeff(k, m, :) = ctemp;
-%             end
-%         end
-%        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
+            for m = 1:length(pixelValueSelectionMethods)
+                gg = raw2msi(g, pixelValueSelectionMethods{m});
+                [r, c] = find(MSIStruct(k).MaskI);
+                x = ID(k).Originx - min(c) + 1;
+                y = ID(k).Originy - min(r) + 1;
+                refmsi = im2uint16(squeeze(gg(:,y,x)))';
+                xlswrite2(src, refmeasured, 4, 'B3');
+                xlswrite2(src, refmsi, 4, 'D407:J407');
+                ctemp = xlsread(src, 4, 'D414:J414');
+                coeff(k, m, :) = ctemp;
+            end
+        end
+        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
         disp('Searching for reference coefficient...')
         ID = selectCoeffIndex(options);  
+    
+    else   
+        %% Read newly created files 
+        
+        load(generateName(options, 'matfilein'));
+        name = options.dataset;
     end
     
 end
