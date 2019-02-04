@@ -1,6 +1,6 @@
 -------------------------------------------
- Run on  26-Jan-2019 20:18:23 
- 270.2161 s elapsed. 
+ Run on  04-Feb-2019 12:56:00 
+ 19.113 s elapsed. 
      tryReadData     false     
      dataset     saitama_v3_min_region     
      action     ReflectanceEstimationPreset     
@@ -13,157 +13,6 @@
      luminanceCorrection     1     
      outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
      saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  26-Jan-2019 20:26:29 
- 281.2832 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     false     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     single     true     
-     saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  26-Jan-2019 22:52:04 
- 319.46 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     false     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  27-Jan-2019 00:51:00 
- 0.94885 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     false     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  27-Jan-2019 01:10:43 
- 0.9804 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     false     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  27-Jan-2019 01:58:11 
- 1.7638 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     false     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     false     
-     saveInHQ     false     
-     savedir       output saitama_v3_min_region     
-     plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(138)     
- -------------------------------------------
-
-
-
-
-
-
--------------------------------------------
- Run on  03-Feb-2019 21:29:25 
- 91.6264 s elapsed. 
-     tryReadData     false     
-     dataset     saitama_v3_min_region     
-     action     ReflectanceEstimationPreset     
-     pixelValueSelectionMethod     extended     
-     noiseType     sameForChannel     
-     skipLoading     false     
-     showImages     true     
-     datadir          mspi saitama_v3_min_region     
-     systemdir       input saitama_v3_min_region     
-     luminanceCorrection     1     
-     outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     true     
      saveInHQ     false     
      savedir       output saitama_v3_min_region     
      plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9940_cut_cut_notnormal_16 46 05,395_right_(100)     
@@ -175,8 +24,8 @@
 
 
 -------------------------------------------
- Run on  03-Feb-2019 23:11:27 
- 75.5742 s elapsed. 
+ Run on  04-Feb-2019 13:01:41 
+ 22.8973 s elapsed. 
      tryReadData     false     
      dataset     saitama_v3_min_region     
      action     ReflectanceEstimationPreset     
@@ -188,7 +37,7 @@
      systemdir       input saitama_v3_min_region     
      luminanceCorrection     1     
      outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     true     
+     saveImages     false     
      saveInHQ     false     
      savedir       output saitama_v3_min_region     
      plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9940_cut_cut_notnormal_16 46 05,395_right_(100)     
@@ -200,8 +49,8 @@
 
 
 -------------------------------------------
- Run on  04-Feb-2019 00:32:14 
- 95.2222 s elapsed. 
+ Run on  04-Feb-2019 13:50:16 
+ 78.6694 s elapsed. 
      tryReadData     false     
      dataset     saitama_v3_min_region     
      action     ReflectanceEstimationPreset     
@@ -213,7 +62,7 @@
      systemdir       input saitama_v3_min_region     
      luminanceCorrection     1     
      outName       output saitama_v3_min_region ReflectanceEstimationPreset out.mat     
-     saveImages     true     
+     saveImages     false     
      saveInHQ     false     
      savedir       output saitama_v3_min_region     
      plotName       output saitama_v3_min_region ReflectanceEstimationPreset 9940_cut_cut_notnormal_16 46 05,395_right_(100)     

@@ -6,12 +6,13 @@ estimatedSpectrumStruct = struct('Name', {}, 'Index', [], 'Spectrum', []);
 rmse = zeros(methodsN, msiN);
 nmse = zeros(methodsN, msiN);
 newCoordinates = zeros(msiN, 2);
+isSingleMethod = contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple');
 
 %% Comparison
 measured = {measuredSpectrumStruct.Spectrum}; 
 
 tic;
-for k = 161:180% 1:msiN
+for k = 161:180 % 1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot', ID(k));
     
@@ -28,40 +29,54 @@ for k = 161:180% 1:msiN
         
     %% Estimation
     est = zeros(length(wavelength), methodsN);
+    
     for j = 1:methodsN
 
+        %% In the case of 3channel RGB image
         if strcmp(optionsSelection(j).pixelValueSelectionMethod, 'rgb')
             tempRGB = whiteStruct(k).MSI;
             g.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
         end
-
-        [est(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(g.MSI, g.Mask, measured{k}, ID(k), optionsSelection(j));
-
-        if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
-%             optionsRgb = optionsSelection(j);
-%             optionsRgb.pixelValueSelectionMethod = 'rgb';
-%             gRbg = g;
-%             tempRGB = whiteStruct(k).MSI;
-%             gRbg.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
-%             estRgb = reflectanceEstimation(gRbg.MSI, gRgb.Mask, measured{k}, ID(k), optionsRgb); 
-        
-            estimatedSpectrumStruct(k) = struct('Name', sampleName, 'Index', MSIStruct(k).Index, 'Spectrum', est(:, j));
             
+        [est(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(g.MSI, g.Mask, measured{k}, ID(k), optionsSelection(j));
+        
+        if (isSingleMethod)
+            estimatedSpectrumStruct(k) = struct('Name', sampleName, 'Index', MSIStruct(k).Index, 'Spectrum', est(:, j));            
             [r, c] = find(g.MaskI);
-            newCoordinates(k, 1:2) = [min(c) + minIdx(2) - 1, min(r)+ minIdx(1) - 1];
-            if (options.showImages)
-                seg = readMSI({data(ID(k).Data).File});
-                coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
-                plots('cropped', 2, 'Image', seg.whiteReference + cat(3, 0.1*g.MaskI, 0.05*g.MaskI, 0.1*g.MaskI), 'Coordinates', coordinates );
-            end            
+            newCoordinates(k, 1:2) = [min(c) + minIdx(2) - 1, min(r)+ minIdx(1) - 1];          
         end    
         
     end
     
     if (options.showImages)
-        plots('estimationComparison', 1, [measured{k}, est], sampleName, 'Wavelength', wavelength, 'Method', ... %[measured{k}, est, estRgb]
+        
+        lines = [measured{k}, est];
+        
+        %% For comparison with RGB estimation
+        if contains(lower(options.action), 'rgb')
+            optionsRgb = optionsSelection(j);
+            optionsRgb.pixelValueSelectionMethod = 'rgb';
+            gRbg = g;
+            tempRGB = whiteStruct(k).MSI;
+            gRbg.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
+            estRgb = reflectanceEstimation(gRbg.MSI, gRgb.Mask, measured{k}, ID(k), optionsRgb); 
+            lines = [measured{k}, est, gRbg];
+        end
+            
+        plots('estimationComparison', 1, lines, sampleName, 'Wavelength', wavelength, 'Method', ... 
             strcat(optionsSelection(j).smoothingMatrixMethod, ' +  ', optionsSelection(j).noiseType), ...
             'SaveOptions', options.saveOptions, 'LineNames', lineNames);
+        
+        [r, c] = find(g.MaskI);
+        hold on 
+        scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(g.MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
+        hold off
+%         if (isSingleMethod)
+%             seg = readMSI({data(ID(k).Data).File});
+%             coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
+%             plots('cropped', 2, 'Image', seg.whiteReference + cat(3, 0.1*g.MaskI, 0.05*g.MaskI, 0.1*g.MaskI), 'Coordinates', coordinates );
+%         end
+        
         pause(0.1)
     end
     
@@ -77,6 +92,7 @@ minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
+    out = matfile(options.outName, 'Writable', true);
     out.EstimatedSpectrumStruct = estimatedSpectrumStruct;
     out.newCoordinates = newCoordinates;
     
@@ -147,10 +163,10 @@ function [optionsSelection, lineNames, plotType] = getComparisons(options)
             plotType = '';
 
     elseif contains(lower(options.action), 'preset')
-            pvsms = {'extended'};
-            smms =  {'Cor_All'}; %{'Cor_Malignancy'}; 
+            pvsms = {'adjusted'}; %{'extended'};
+            smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
             nms = {'sameForChannel'};
-            options.noiseParam = 0.002;
+            options.noiseParam = 0.000001;
             plotType = '';
             
     else 
@@ -187,6 +203,9 @@ function [optionsSelection, lineNames, plotType] = getComparisons(options)
             end
         end
     end
-    lineNames{end + 1} = 'RGB Estimate';
+    
+    if contains(lower(options.action), 'rgb')
+        lineNames{end + 1} = 'RGB Estimate';
+    end
 
 end

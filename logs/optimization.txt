@@ -1,2 +1,0 @@
-Given SNR:: MinRMSE=0.06520, SNR=1.765845e+01
-sigma n SNR:: MinRMSE=0.06457, sigma=0.00175

@@ -197,11 +197,9 @@ switch plotType
             plotN = 3;
         end
         
-        % Set up figure properties:
-        % Enlarge figure to full screen.
-        set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
-        % Get rid of tool bar and pulldown menus that are along top of figure.
-        set(gcf, 'Toolbar', 'none', 'Menu', 'none');
+%         % Set up figure properties:
+%         % Enlarge figure to full screen.
+%         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
         
         figTitle = sprintf('Sample: %s | Method: %s',name, method);
         %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
@@ -221,7 +219,7 @@ switch plotType
         xlim([400, 700]);
         suptitle('Comparative plot of Wiener estimation results')
         title(figTitle);
-        legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'northwest', 'FontSize', 14); % 'Orientation','horizontal');
+        legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'bestoutside', 'FontSize', 14); % 'Orientation','horizontal');
         
         if (plotN > 2)
             subplot(1, plotN, 3);
@@ -560,6 +558,9 @@ switch plotType
 end
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Get rid of tool bar and pulldown menus that are along top of figure.
+set(gcf, 'Toolbar', 'none', 'Menu', 'none');
 
 if (savePlot && ~isempty(plotName))
     plotName = strrep(plotName, '.mat', '');

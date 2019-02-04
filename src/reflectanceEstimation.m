@@ -30,18 +30,6 @@ if isempty(mask)
      mask = ones(size(MSI, 2), size(MSI, 3));
 end
 
-% if isstruct(g)
-%     MSI = g.MSI; 
-%     if ~isfield(g, 'Mask')
-%         mask = ones(size(MSI, 2), size(MSI, 3));
-%     else
-%         mask = g.Mask;
-%     end
-% else 
-%     MSI = g;
-%     mask = ones(size(g, 2), size(g, 3));
-% end
-
 if size(spectrum,2) ~= 1 
     spectrum = spectrum';
 end
@@ -299,6 +287,23 @@ else
     estimatedReflectance = div * Gres(:, activeRegionIdx); % 401 x 100 
 end  
 
+%% Show all estimates in the region
+figure(2);
+clf(2);
+[rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
+bb = estimatedReflectance(:,rmseIdx);
+[mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
+minIdx = [mini, minj];
+hold on
+for kkk = 1:size(estimatedReflectance,2)
+plot(estimatedReflectance(:,kkk));
+end
+load('C:\Users\elena\Google Drive\titech\research\input\saitama_v3_min_region\in.mat')
+plot(MeasuredSpectrumStruct(id.Index).Spectrum, 'm*')
+plot(bb, 'g*')
+scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
+hold off
+
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = max(estimatedReflectance, 0);
@@ -364,10 +369,12 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function di = reflectanceDistance(ri, rhat, a)
-    di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
-        + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
-end
+% function di = reflectanceDistance(ri, rhat, a)
+%     di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
+%         + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
+% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function k = replicationTimes(d, dmax, gamma)
     if (nargin < 3)
@@ -375,6 +382,8 @@ function k = replicationTimes(d, dmax, gamma)
     end
     k = floor((dmax / d)^gamma + 0.5);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
 

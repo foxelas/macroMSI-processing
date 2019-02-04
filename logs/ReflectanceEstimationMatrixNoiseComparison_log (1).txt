@@ -1,9 +1,9 @@
 -------------------------------------------
- Run on  31-Jan-2019 01:02:24 
- 1021.118 s elapsed. 
+ Run on  04-Feb-2019 01:57:20 
+ 161.2434 s elapsed. 
      tryReadData     false     
      dataset     saitama_v3_min_region     
-     action     LBP     
+     action     ReflectanceEstimationMatrixNoiseComparison     
      pixelValueSelectionMethod     extended     
      noiseType     sameForChannel     
      skipLoading     false     
@@ -11,10 +11,11 @@
      datadir          mspi saitama_v3_min_region     
      systemdir       input saitama_v3_min_region     
      luminanceCorrection     1     
-     outName       output saitama_v3_min_region lbp out.mat     
+     outName       output saitama_v3_min_region ReflectanceEstimationMatrixNoiseComparison out.mat     
      saveImages     false     
      saveInHQ     false     
      savedir       output saitama_v3_min_region     
+     plotName       output saitama_v3_min_region ReflectanceEstimationMatrixNoiseComparison ComparisonNmseMatrixNoiseAvg     
  -------------------------------------------
 
 
@@ -23,22 +24,23 @@
 
 
 -------------------------------------------
- Run on  03-Feb-2019 18:02:59 
- 900.2711 s elapsed. 
+ Run on  04-Feb-2019 02:08:55 
+ 141.8178 s elapsed. 
      tryReadData     false     
      dataset     saitama_v3_min_region     
-     action     LBP     
+     action     ReflectanceEstimationMatrixNoiseComparison     
      pixelValueSelectionMethod     extended     
      noiseType     sameForChannel     
      skipLoading     false     
-     showImages     true     
+     showImages     false     
      datadir          mspi saitama_v3_min_region     
      systemdir       input saitama_v3_min_region     
      luminanceCorrection     1     
-     outName       output saitama_v3_min_region lbp out.mat     
-     saveImages     true     
+     outName       output saitama_v3_min_region ReflectanceEstimationMatrixNoiseComparison out.mat     
+     saveImages     false     
      saveInHQ     false     
      savedir       output saitama_v3_min_region     
+     plotName       output saitama_v3_min_region ReflectanceEstimationMatrixNoiseComparison ComparisonNmseMatrixNoiseAvg     
  -------------------------------------------
 
 

@@ -119,7 +119,6 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', actio
 for i = 1:numel(actions)
     
     options = setOpt(options);
-    out = matfile(options.outName, 'Writable', true);
     readData;
 
     %% main

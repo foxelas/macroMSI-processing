@@ -17,6 +17,7 @@ elseif contains(lower(options.action), 'knn')
 else 
      error('Unsupported classification method.Aborting...');
 end
+options.action = 'Classification';
 
 version = 'estimated';
 
@@ -47,12 +48,7 @@ for g = 1:length(groups)
     end
 end  
 classifiers = orderfields(classifiers);
-dirr = fullfile(options.saveOptions.savedir, 'Classification');
-if ~exist(dirr, 'dir')
-    mkdir(dirr);
-    addpath(dirr);
-end
-save( fullfile(dirr, strcat(classifier,'_', version, '_', 'Classifier.mat')), 'classifiers');
+save( generateName(options, strcat(classifier,'_', version, '_', 'Classifier.mat')) , 'classifiers');
 
 [~, sortIdx] = sort([classifiers.Accuracy], 'descend'); % or classificationError.AvgAUC
 classifiers = classifiers(sortIdx);
@@ -405,7 +401,7 @@ end
 function [] = plotROC(selectedClassifier, options, classifier, version, fig, name)
     figTitle = strcat('ROC for [', selectedClassifier.Input,'+', selectedClassifier.Features ,'] dataset.',...
         'Accuracy:', num2str(selectedClassifier.Accuracy), '\pm', num2str(selectedClassifier.AccuracySD));
-    options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strcat(classifier, '_', version, '_', name));
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, name}, '_')); 
     plots('roc', fig, [], '', 'Performance', selectedClassifier.Performance , 'FoldPerformance', selectedClassifier.FoldPerformance, ...
         'SaveOptions', options.saveOptions, 'Title', figTitle);
 end
@@ -455,10 +451,12 @@ function [] = compareInputs(groups, classifiers, classifier, options, validation
     end
     
     figTitle = sprintf('%s Classifier Performance for Different Input Datasets', upper(classifier));
-    options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strjoin({classifier, version, validation, 'compareInput'}, '_'));
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, validation, 'compareInput'}, '_'));
     plots('performanceComparison', fig, [], '', 'LineNames', groups, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [] = compareFeatures(features, classifiers, classifier, options, validation, fig)
 
@@ -482,7 +480,7 @@ function [] = compareFeatures(features, classifiers, classifier, options, valida
     end
     
     figTitle = sprintf('%s Classifier Performance for Different Feature Sets', upper(classifier));
-    options.saveOptions.plotName = fullfile( options.saveOptions.savedir, 'Classification', strjoin({classifier, version, validation, 'compareFeatures'}, '_'));
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, validation, 'compareFeatures'}, '_'));
     plots('performanceComparison', fig, [], '', 'LineNames', features, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end
