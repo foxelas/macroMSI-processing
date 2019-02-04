@@ -361,7 +361,7 @@ function G = classifierInput(version, inputIdx, labels, features, name)
         error('Not acceptable input. Choose "measured" or "estimated".')
     end
     
-    Gall = [spectrumStruct.Spectrum]'; % G rows are observations and columns are variables
+    Gall = Spectra'; % G rows are observations and columns are variables
     Ginput = Gall(inputIdx, :);
 
     if contains(features, 'pca' ) || contains(features, 'lda')

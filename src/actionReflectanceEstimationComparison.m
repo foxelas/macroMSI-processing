@@ -52,6 +52,11 @@ else
         error('Not implemented yet.')
 end
 
+smmsN = numel(smms);
+pvsmsN = numel(pvsms);
+nmsN = length(nms);
+methodsN = smmsN * pvsmsN * nmsN;
+
 lineNames = {'Center \lambda', 'Measured'};
 for l = 1:pvsmsN
     for n = 1:smmsN
@@ -76,12 +81,6 @@ end
 if contains(lower(options.action), 'rgb')
     lineNames{end + 1} = 'RGB Estimate';
 end
-    
-    
-smmsN = numel(smms);
-pvsmsN = numel(pvsms);
-nmsN = length(nms);
-methodsN = smmsN * pvsmsN * nmsN;
 
 rmse = zeros(methodsN, msiN);
 nmse = zeros(methodsN, msiN);
@@ -89,7 +88,6 @@ newCoordinates = zeros(msiN, 2);
 isSingleMethod = contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple');
 
 %% Comparison
-measured = {measuredSpectrumStruct.Spectrum}; 
 
 tic;
 estimatedSpectra = zeros(size(Spectra));
@@ -99,7 +97,7 @@ for k = 161:180 % 1:msiN
     % Retrieve MSI data
     msi = MSIs{k};
     mask = Masks{k};
-    measured = Spectra(:,k);
+    measured = Spectra(k,:);
     maskI = MaskIs{k};
     
     % In the case of 3channel RGB image

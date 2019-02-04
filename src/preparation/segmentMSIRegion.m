@@ -1,4 +1,4 @@
-function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, regionRadius, fc)
+function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion( files, coordinates, options, accTheta, regionRadius, fc)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
 %%seed position coordinates = [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
@@ -38,15 +38,15 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
     bandWeight = 1 / bands;       
 
     % Retrieve whole MSI
-    seg = readMSI(files); %     I = squeeze(MSI(1,:,:,:));
-    MSI = seg.MSI;
-    whiteReference = seg.whiteReference;
-    darkReference = seg.darkReference;
-    
+    [MSI, whiteReference, darkReference] = readMSI(files); %     I = squeeze(MSI(1,:,:,:));    
     g = permute(valueSelect(MSI, 'adjusted'), [2, 3, 1]);
     
-    segments = struct('MSI', [], 'whiteReference', [], 'darkReference', [], 'patchMask', [], 'maskI', []);
-    
+    segmentWhite = cell(ROIs,1);
+    segmentDark = cell(ROIs,1);
+    segmentMSI = cell(ROIs,1);
+    segmentMask = cell(ROIs,1);
+    segmentMaskI = cell(ROIs,1);
+
     for roi = 1:ROIs
         
         [m, n, ~] = size(g);
@@ -67,12 +67,12 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
             patchY = (y-2):(y+2);
             mask(patchY, patchX) = 1;
         end
-        segments(roi).maskI = mask;
+        segmentMaskI{roi}.maskI = mask;
         [r, c] = find(mask);
         patchY = min(r):max(r);
         patchX = min(c):max(c);
-        segments(roi).MSI = MSI(:, patchY, patchX, :);
-        segments(roi).patchMask = mask(patchY, patchX);
+        segmentMSI{roi} = MSI(:, patchY, patchX, :);
+        segmentMask{roi} = mask(patchY, patchX);
 
         if (options.showImages)
             currentOptions = options.saveOptions;
@@ -82,10 +82,10 @@ function [segments] = segmentMSIRegion( files, coordinates, options, accTheta, r
         end
 
         if ~isempty(whiteReference)
-            segments(roi).whiteReference = whiteReference(patchY, patchX,:);
+            segmentWhite{roi} = whiteReference(patchY, patchX,:);
         end
         if ~isempty(darkReference)
-            segments(roi).darkReference = darkReference(patchY, patchX,:);
+            segmentDark{roi} = darkReference(patchY, patchX,:);
         end
         
     end

@@ -14,7 +14,6 @@ if ~options.skipLoading
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
     if (options.tryReadData)
-        
         in = matfile(generateName(options, 'matfilein'), 'Writable', true);
         w = warning('off', 'all');   
         fprintf('Reading spectral data according to ID file.\n');
@@ -23,7 +22,7 @@ if ~options.skipLoading
         [uniqueSpectraNames, uniqueSpectraIdxs, uniqueSpectraIdxsInID] = unique(strcat({ID.Csvid}, {ID.T}));
         idd = ID(uniqueSpectraIdxs);
         specN = length(uniqueSpectraIdxs);
-        completeUniqueSpectra = zeros(401, specN);
+        completeUniqueSpectra = zeros(specN, 401);
 
         for i = 1:specN
             % read raw measured spectrum
@@ -34,20 +33,20 @@ if ~options.skipLoading
             if abs(rawSpectrum-referenceSpectrum) < 0.000001
                 error('Measurement is same as white.')
             end
-            completeUniqueSpectra(:,i) = rawSpectrum ./ referenceSpectrum;            
+            completeUniqueSpectra(i,:) = rawSpectrum ./ referenceSpectrum;            
         end
-        uniqueSpectra = completeUniqueSpectra(wavelengthIdxs,:);
+        uniqueSpectra = completeUniqueSpectra(:,wavelengthIdxs);
         clear('idd');
 
         %% Save Spectra Struct
-        Spectra = zeros(wavelengthN, msiN);
-        CompleteSpectra = zeros(401, msiN);
-        SpectraNames = zeros(1, msiN);
+        Spectra = zeros(msiN, wavelengthN);
+        CompleteSpectra = zeros(msiN, 401);
+        SpectraNames = cell(msiN, 1);
         for i = 1:msiN            
             [~, csv] =  generateName(options, 'csv', ID(i));
-            Spectra(:,i) = uniqueSpectra(:, uniqueSpectraIdxsInID(i));
-            CompleteSpectra(:,i) = completeUniqueSpectra(:, uniqueSpectraIdxsInID(i));
-            SpectraNames(i) = strcat(csv, ', ', ID(i).T);
+            Spectra(i,:) = uniqueSpectra(uniqueSpectraIdxsInID(i),:);
+            CompleteSpectra(i,:) = completeUniqueSpectra(uniqueSpectraIdxsInID(i),:);
+            SpectraNames{i} = strcat(csv, ', ', ID(i).T);
         end 
         in.Spectra = Spectra;
         in.CompleteSpectra = CompleteSpectra;
@@ -80,21 +79,21 @@ if ~options.skipLoading
             idd = ID(gIdxs(1));
             files = {data(idd.Data).File};    
             if contains(options.dataset, 'region')
-                segment = segmentMSIRegion(files, coordinates, currentOptions);
+                [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion(files, coordinates, currentOptions);
 
             else % (square case)
-                segment = readMSI(files, coordinates, 5, 5, currentOptions); 
+                [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = readMSI(files, coordinates, 5, 5, currentOptions); 
             end  
 
         %% Save MSI 
             for j = 1:length(gMembers)
                 jj = gIdxs(j);
-                MSIs{jj} = segment(j).MSI;
-                Masks{jj} = segment(j).patchMask;
-                MaskIs{jj} = segment(j).maskI;
+                MSIs{jj} = segmentMSI{j};
+                Masks{jj} = segmentMask{j};
+                MaskIs{jj} = segmentMaskI{j};
                 MSINames{jj} = names{j};
-                WhiteIs{jj} = segment(j).whiteReference;
-                DarkIs{jj} = segment(j).darkReference;
+                WhiteIs{jj} = segmentWhite{j};
+                DarkIs{jj} = segmentDark{j};
             end
         end
         
@@ -107,7 +106,7 @@ if ~options.skipLoading
         
         warning(w);
         
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         %% Precompute correlation smoothing Matrices 
         fprintf('Pre-computing smoothing matrices.\n');
@@ -115,7 +114,7 @@ if ~options.skipLoading
         samples = unique([ID.Sample]);
         
         %% Support function for computing the smoothing matrix from counts
-        smoothingMatrix =  @(s) s * s'; % @(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
+        smoothingMatrix = @(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
 
         %% Smoothing matrix from recorded spectra
         rAll = zeros(81, specN);
@@ -163,7 +162,7 @@ if ~options.skipLoading
                 total = total + 1;
                 jj = sampleSpectraIdx(j);
                 id = ID(uniqueSpectraIdxs(jj));
-                ref = uniqueSpectra(:, jj); 
+                ref = uniqueSpectra(jj, :)'; 
 
                 rAll(:, total) =  ref;
                 rSample(:, j) =  ref;
@@ -291,13 +290,12 @@ if ~options.skipLoading
         for k = 1:msiN
             % Retrieve MSI data
             g = MSIs{k};
-
             % Retrieve spectrum data
-            refmeasured = CompleteSpectra(:,uniqueSpectraIdxsInID(k)); 
+            refmeasured = CompleteSpectra(uniqueSpectraIdxsInID(k),:); 
 
             for m = 1:length(pixelValueSelectionMethods)
                 gg = raw2msi(g, pixelValueSelectionMethods{m});
-                [r, c] = find(MSIStruct(k).MaskI);
+                [r, c] = find(MaskIs{k});
                 x = ID(k).Originx - min(c) + 1;
                 y = ID(k).Originy - min(r) + 1;
                 refmsi = im2uint16(squeeze(gg(:,y,x)))';

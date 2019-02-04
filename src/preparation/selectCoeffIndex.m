@@ -22,8 +22,9 @@ ID = vv.ID;
 % load( fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
 in = matfile(generateName(options, 'matfilein'));
     
-MSIStruct = in.MSIStruct;
-measuredSpectrumStruct = in.MeasuredSpectrumStruct;
+MSIs = in.MSIs;
+Masks = in.Masks;
+Spectra = in.Spectra;
     
 G = findgroups([ID.Sample], [ID.Type]);
 for i = 1:max(G)
@@ -32,14 +33,14 @@ for i = 1:max(G)
     groupID = ID(idxs);
     [~,coeffIdxs] = unique({groupID.IMG}); %1...N
     coeffIdxs = [groupID(coeffIdxs).Index];
+    
     for coeffIndex = coeffIdxs
         avgRmse = 0;
         for k = idxs
-            g = MSIStruct(k);
-            measured = measuredSpectrumStruct(k).Spectrum; 
+
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
-            [est, rmse] = reflectanceEstimation(g.MSI, g.Mask, measured, idk, options);
+            [est, rmse] = reflectanceEstimation(MSIs{k}, Masks{k}, Spectra(k,:), idk, options);
             avgRmse = avgRmse + rmse;
         end
         if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0 ) || any(est(:) > 1 ))

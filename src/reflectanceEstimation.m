@@ -288,21 +288,21 @@ else
 end  
 
 %% Show all estimates in the region
-figure(2);
-clf(2);
-[rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
-bb = estimatedReflectance(:,rmseIdx);
-[mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
-minIdx = [mini, minj];
-hold on
-for kkk = 1:size(estimatedReflectance,2)
-plot(estimatedReflectance(:,kkk));
-end
-load( fullfile(options.systemdir, 'in.mat'));
-plot(MeasuredSpectrumStruct(id.Index).Spectrum, 'm*')
-plot(bb, 'g*')
-scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
-hold off
+% figure(2);
+% clf(2);
+% [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
+% bb = estimatedReflectance(:,rmseIdx);
+% [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
+% minIdx = [mini, minj];
+% hold on
+% for kkk = 1:size(estimatedReflectance,2)
+% plot(estimatedReflectance(:,kkk));
+% end
+% plot(spectrum, 'm*')
+% plot(bb, 'g*')
+% scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
+% hold off
+% pause(0.2)
 
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
@@ -388,10 +388,9 @@ end
 function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
 
     ff = matfile(fullfile(systemdir, 'in.mat'));
-    measuredSpectra = ff.MeasuredSpectrumStruct;
-    [~, idxs] = unique(strcat({measuredSpectra.Name}, {measuredSpectra.T}));
-    measuredSpectra = measuredSpectra(idxs);
-    r = {measuredSpectra.Spectrum}; 
+    measuredSpectra = ff.Spectra;
+    [~, idxs] = unique(ff.SpectraNames);
+    r = num2cell( measuredSpectra(idxs,:));
     d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));

@@ -1,4 +1,4 @@
-function [segments] = readMSI(files, coordinates, width, height, options, fc)
+function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = readMSI(files, coordinates, width, height, options, fc)
 %Reads the MSI image file and contains it in a matrix g
 % files: the subimages related to the MSI
 % coordinates: [x,y] origin to read image box
@@ -45,8 +45,6 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
         fc = [1, 450, 465, 505, 525, 575, 605, 630];
     end   
     
-    segments = struct('MSI', [], 'whiteReference', [], 'darkReference', [], 'patchMask', [], 'maskI', []);
-
     extraImages = 0;
     [hasWhiteReference, idx] = ismember(1, fc);
     whiteReference = [];
@@ -70,12 +68,18 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
     end
     
     if (modeAll)
-        segments(1).whiteReference = whiteReference;
-        segments(1).darkReference = darkReference;
-        segments(1).MSI = MSI;
-        segments(1).maskI = ones(imHeight, imWidth);
+        segmentWhite{1} = whiteReference;
+        segmentDark{1} = darkReference;
+        segmentMSI{1} = MSI;
+        segmentMaskI{1} = ones(imHeight, imWidth);
+        segmentMask{1} = ones(imHeight, imWidth);
         
     else
+        segmentWhite = cell(ROIs,1);
+        segmentDark = cell(ROIs,1);
+        segmentMSI = cell(ROIs,1);
+        segmentMask = cell(ROIs,1);
+        segmentMaskI = cell(ROIs,1);
         
         for roi = 1:ROIs
             
@@ -84,7 +88,7 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
             [patchMask, maskI] = makeMasks(imHeight, imWidth, x, y, width, height);
             
             if hasWhiteReference
-                segments(roi).whiteReference = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
+                segmentWhite{roi} = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
                 if isfield(options, 'showImages') && (options.showImages)
                     currentOptions = options.saveOptions;
                     currentOptions.plotName = options.saveOptions.plotName{roi};
@@ -93,12 +97,12 @@ function [segments] = readMSI(files, coordinates, width, height, options, fc)
             end
             
             if hasDarkReference
-                segments(roi).darkReference = darkReference(y:(y + height - 1), x:(x + width - 1), :);
+                segmentDark{roi} = darkReference(y:(y + height - 1), x:(x + width - 1), :);
             end
             
-            segments(roi).MSI = MSI(:, y:(y + height - 1), x:(x + width - 1), :);
-            segments(roi).patchMask = patchMask;
-            segments(roi).maskI = maskI;
+            segmentMSI{roi} = MSI(:, y:(y + height - 1), x:(x + width - 1), :);
+            segmentMask{roi} = patchMask;
+            segmentMaskI{roi} = maskI;
 
         end  
         
