@@ -6,14 +6,24 @@ function [ID] = selectCoeffIndex(options)
 %Usage:
 % selectCoeffIndex('saitama_v2');
 
-options.action = 'ReflectanceEstimationPreset';
+% options.action = 'ReflectanceEstimationPreset';
 options.skipLoading = false;
 options.showImages = false;
 options.saveImages = false;
 options.tryReadData = false;
+options.pixelValueSelectionMethod = 'extended';
+options.smoothingMatrixMethod = 'Cor_Sample';
 
-out = matfile(options.outName, 'Writable', true);
-readData;
+% out = matfile(options.outName, 'Writable', true);
+% readData;
+load(fullfile(options.systemdir, 'system.mat'), 'wavelength'); % camera system parameters
+% load(fullfile(options.systemdir, 'data.mat')); % image data
+load( fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
+in = matfile(generateName(options, 'matfilein'));
+    
+MSIStruct = in.MSIStruct;
+measuredSpectrumStruct = in.MeasuredSpectrumStruct;
+    
     
 G = findgroups([ID.Sample], [ID.Type]);
 for i = 1:max(G)
@@ -26,7 +36,7 @@ for i = 1:max(G)
         avgRmse = 0;
         for k = idxs
             g = MSIStruct(k);
-            measured = interp1(380:780, measuredSpectrumStruct(k).Spectrum, wavelength, 'nearest');
+            measured = measuredSpectrumStruct(k).Spectrum; 
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
             [est, rmse] = reflectanceEstimation(g, measured, idk, options);

@@ -19,7 +19,7 @@ p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
-    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc'})));
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'name', '', @(x) ischar(x));
@@ -211,13 +211,13 @@ switch plotType
         subplot(1, plotN, [1, 2]);
         hold on
         for i = 1:curveN
-            plot(wavelength, curves(:, i), 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', 1.3, 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
+            plot(wavelength, curves(:, i) .* 100, 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', 1.3, 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
         end
-        plot(wavelength(peakIdx), curves(peakIdx, 1), 'rx', 'DisplayName', lineNames{1}, 'LineWidth', 1.3); % plot measured reflectance
+        plot(wavelength(peakIdx), curves(peakIdx, 1) .* 100, 'rx', 'DisplayName', lineNames{1}, 'LineWidth', 1.3); % plot measured reflectance
         hold off
         
         xlabel('Wavelength \lambda (nm)');
-        ylabel('Reflectance Spectrum');
+        ylabel('Reflectance %');
         xlim([400, 700]);
         suptitle('Comparative plot of Wiener estimation results')
         title(figTitle);
@@ -294,22 +294,19 @@ switch plotType
             labely = 'RMSE';
         end
         
-        if contains(name, 'System') || contains(name, 'Matrix')
-            smms = unique({errors.options.smoothingMatrixMethod}, 'stable');
+        if contains(name, 'System') 
             pvsms = unique({errors.options.pixelValueSelectionMethod}, 'stable');
-            if (length(smms) == 1)
-                [pvsms, smms] = deal(smms, pvsms);
-                labelx = 'Pixel value selection method';
-            else
-                labelx = 'Wiener estimation variation';
-            end
-            
-        elseif contains(name, 'Noise')
-            smms = unique({errors.options.noiseType}, 'stable');
-            pvsms = unique({errors.options.pixelValueSelectionMethod}, 'stable');
-            labelx = 'Noise model';
-            
         end
+        
+        if contains(name, 'Noise') 
+            pvsms = unique({errors.options.noiseType}, 'stable');
+        end
+        
+        if contains(name, 'Matrix')
+            smms = unique({errors.options.smoothingMatrixMethod}, 'stable');
+        end 
+        labelx = 'Wiener estimation variation';
+
         
         marker = ['o', 's', 'd', '^', '*', 'h', 'p', 'v', '<', '+', '>'];
         if ((length(smms) > 1) && (length(pvsms) > 1))
@@ -362,7 +359,7 @@ switch plotType
         xtickangle(45);
         ylabel(labely);
         legend(h, 'Location', 'best');
-        title('Comparison of estimation results for the various method variations')
+        title('Comparison of estimation results for the various configurations')
         %end  plot method errors
                
     case 'classificationErrors'       
@@ -520,7 +517,7 @@ switch plotType
         end
         plot(0:0.1:1, 0:0.1:1, 'k--', 'DisplayName', 'Chance');
         plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
-        shadedErrorBar(performance.ROCX(:,1), performance.ROCY(:,1), abs(performance.ROCY(:,1) - performance.ROCY(:,2:3)),'lineprops','m-*');
+%         shadedErrorBar(performance.ROCX(:,1), performance.ROCY(:,1), abs(performance.ROCY(:,1) - performance.ROCY(:,2:3)),'lineprops','m-*');
         hold off 
         xlim([-0.1, 1.1]);
         ylim([-0.1, 1.1]);
@@ -531,8 +528,36 @@ switch plotType
         legend(hh, 'Location', 'eastoutside');
         title(figTitle);
         set(gcf, 'Position', get(0, 'Screensize'));
+        
+    case 'performanceComparison'
+        
+        N = length(lineNames);
+        x = 1:N;
+        auc = performance(1,:)';
+        accur = performance(2,:)';
+        hold on 
+
+        if isnan(auc)
+            yyaxis left
+            scatter(x, auc, 'b*');
+            xlim([0, N+1]); ylim([0.5, 1]);
+            ylabel('Area Under Curve')
+            text(x-0.2,auc,num2str(auc, '%.2f'));
+        end
+
+        yyaxis right
+        scatter(x, accur, 'ro');
+        ylim([50, 100]);
+        ylabel('Accuracy %')
+        text(x+0.1,accur,num2str(accur, '%.2f'));
+
+        hold off
+        title(figTitle)
+        xlabel('Input Dataset')
+        xticklabels(lineNames); xtickangle(45);
+        set(gcf, 'Position', get(0, 'Screensize'));
+
 end
-warning(w);
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -557,6 +582,7 @@ if (savePlot && ~isempty(plotName))
         %print(fig, strcat(plotName, '.jpg'), '-djpeg');
     end
 end
+warning(w);
 
 end
 

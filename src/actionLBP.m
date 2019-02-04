@@ -1,5 +1,5 @@
 %code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
-
+out = matfile( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'), 'Writable', true);
 
 maxScale = 3;
 neighbors = 8;
@@ -14,7 +14,8 @@ for scale = 1:maxScale
         
         files = {data(ID(k).Data).File};   
         coordinates = [ID(k).Originx; ID(k).Originy];
-        segment = readMSI(files, coordinates, scale * 5, scale * 5, []); 
+        % coordinates = out.newCoordinates(k,:);
+        segment = readMSI(files, coordinates, 5 + scale, 5 + scale, []); 
 
         g = segment.MSI;
         gg = raw2msi(g, 'adjusted');
@@ -27,5 +28,4 @@ for scale = 1:maxScale
     multiScaleLbpFeatures{scale} = lbpFeatures / max(lbpFeatures(:));
 
 end
-out = matfile( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'), 'Writable', true);
 out.multiScaleLbpFeatures = multiScaleLbpFeatures;

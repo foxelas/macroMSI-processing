@@ -44,16 +44,24 @@ if contains(method, 'lda')
     if (n ~= length(labels))
         error('Inconsistent number of observation values and labels');
     end
-
+    
     % Available classes
     classes = unique(labels);
     C = numel(classes);
 
+    if iscell(labels)
+        textLabels = labels;
+        textClasses = classes;
+        labels = zeros(size(labels));
+        classes = 1:C;
+        for i = 1:C
+            labels(strcmp(textLabels, textClasses{i})) = i;
+        end
+    end
     % Class element counts
     nGroup = zeros(C, 1); 
     for i = 1:C
-        group = (labels == classes(i));
-        nGroup(i) = sum(double(group));
+        nGroup(i) = sum(double(labels == classes(i)));
     end
 
     if isempty(priors)
@@ -67,17 +75,17 @@ end
 
 
 switch method
-    case 'pca'
-        [W, score, latent, ~, explained] = pca(input, 'Centered', true); %PCA(input);
-
     case 'pca b'
-        mu = mean(X);
-        Xcent = bsxfun(@minus, X ,mu);
-        [coeff,latent] = svd(cov(Xcent));
+        [W, score, latent, ~, explained] = pca(input, 'Centered', true);
+    
+    case 'pca'
+        mu = mean(input);
+        Xcent = bsxfun(@minus, input ,mu);
+        [W,latent] = svd(cov(Xcent));
         latent = diag(latent); 
         explained=100*latent/sum(latent);
-        score = Xcent * coeff;
-
+        score = Xcent * W;
+        
     case 'lda'
         classIdx = cell(C, 1);
 
@@ -106,13 +114,8 @@ switch method
 
         % eigenvalues
         invSwSb = Sw \ Sb;
-        [V, latent] = svd(invSwSb);
-
-        % the projection vector
-        W = V(:, :); %eigenvector of the maximum eigenvalue 
-        % W2 = inv(Sw) * (mu(:,1) - mu(:,2));
+        [W, latent] = svd(invSwSb); %eigenvector of the maximum eigenvalue 
         score = input * W;
-        %         transMean = W' * mu;
         
     case 'lda b'
         mu = zeros(C, m); % Group sample means
@@ -120,6 +123,8 @@ switch method
         W = zeros(C, m+1);
 
         for i = 1:C
+            group = (labels == classes(i));
+            
             % Calculate group mean vectors
             mu(i, :) = mean(input(group, :));
 

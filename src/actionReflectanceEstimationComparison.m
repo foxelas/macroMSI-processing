@@ -8,10 +8,10 @@ nmse = zeros(methodsN, msiN);
 newCoordinates = zeros(msiN, 2);
 
 %% Comparison
-measured = cellfun(@(x) interp1(380:780, x, wavelength, 'nearest'), {measuredSpectrumStruct.Spectrum}, 'un', 0);
+measured = {measuredSpectrumStruct.Spectrum}; 
 
 tic;
-for k = 1:msiN
+for k = 161:180% 1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot', ID(k));
     
@@ -29,16 +29,22 @@ for k = 1:msiN
     %% Estimation
     est = zeros(length(wavelength), methodsN);
     for j = 1:methodsN
-            
+
         if strcmp(optionsSelection(j).pixelValueSelectionMethod, 'rgb')
             tempRGB = whiteStruct(k).MSI;
             g.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
         end
 
-        [est(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(g, measured{k}, ID(k), optionsSelection(j));
+        [est(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(g.MSI, g.Mask, measured{k}, ID(k), optionsSelection(j));
 
         if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
-            
+%             optionsRgb = optionsSelection(j);
+%             optionsRgb.pixelValueSelectionMethod = 'rgb';
+%             gRbg = g;
+%             tempRGB = whiteStruct(k).MSI;
+%             gRbg.MSI = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
+%             estRgb = reflectanceEstimation(gRbg.MSI, gRgb.Mask, measured{k}, ID(k), optionsRgb); 
+        
             estimatedSpectrumStruct(k) = struct('Name', sampleName, 'Index', MSIStruct(k).Index, 'Spectrum', est(:, j));
             
             [r, c] = find(g.MaskI);
@@ -53,7 +59,7 @@ for k = 1:msiN
     end
     
     if (options.showImages)
-        plots('estimationComparison', 1, [measured{k}, est], sampleName, 'Wavelength', wavelength, 'Method', ...
+        plots('estimationComparison', 1, [measured{k}, est], sampleName, 'Wavelength', wavelength, 'Method', ... %[measured{k}, est, estRgb]
             strcat(optionsSelection(j).smoothingMatrixMethod, ' +  ', optionsSelection(j).noiseType), ...
             'SaveOptions', options.saveOptions, 'LineNames', lineNames);
         pause(0.1)
@@ -97,11 +103,11 @@ fprintf('Run time time %.5f\n', t2);
 function [optionsSelection, lineNames, plotType] = getComparisons(options)
 
 %Start of reflectance estimation comparison
-    smmsFull = { 'Cor_All', ... 'Cor_Malignancy', 'Cor_Fixing', 'Cor_Sample', ...
+    smmsFull = { 'Cor_All', 'Cor_Malignancy', 'Cor_Fixing', 'Cor_Sample', ...
          'adaptive'}; %, 'Cor_SampleMalignancy', 'Cor_SampleMalignancyFixing', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing', 'markovian', 'Cor_Macbeth',};
-    pvsmsFull = {'green', 'rms', 'adjusted', 'extended'};
-    nmsFull = {'sameForChannel 0.001', 'diffForChannel [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024]', ...
-        'givenSNR 17.5dB', 'spatial 0.02 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
+    pvsmsFull = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
+    nmsFull = {'sameForChannel 0.001', 'diffForChannel 0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024', ...
+        'givenSNR 17.5', 'spatial 0.02 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
 
     %% Comparison settings
     if contains(lower(options.action), 'matrixsystem')
@@ -142,8 +148,9 @@ function [optionsSelection, lineNames, plotType] = getComparisons(options)
 
     elseif contains(lower(options.action), 'preset')
             pvsms = {'extended'};
-            smms =  {'Cor_Malignancy'}; %{'Cor_Malignancy'}; 
-            nms = {'givenSNR'};
+            smms =  {'Cor_All'}; %{'Cor_Malignancy'}; 
+            nms = {'sameForChannel'};
+            options.noiseParam = 0.002;
             plotType = '';
             
     else 
@@ -165,18 +172,21 @@ function [optionsSelection, lineNames, plotType] = getComparisons(options)
                 optionsSelection((m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l).noiseType = nms{m};
                 
                 j = (m - 1) * pvsmsN * smmsN + (n - 1) * pvsmsN + l ;    
-                if (pvsmsN < 2)
-                    lineNames{j+2} = strcat('Est-', smms{n});
+                if (pvsmsN == 1) && (smmsN == 1) && (nmsN == 1) 
+                    lineNames{j+2} = strcat('MSI Estimate');
+                elseif (pvsmsN < 2)
+                    lineNames{j+2} = strcat('MSI Estimate -', smms{n});
                 elseif (smmsN < 2)
-                    lineNames{j+2} = strcat('Est-', pvsms{l});
+                    lineNames{j+2} = strcat('MSI Estimate -', pvsms{l});
                 else 
-                    lineNames{j+2} = strcat('Est-', pvsms{l}, '|', smms{n});
+                    lineNames{j+2} = strcat('MSI Estimate -', pvsms{l}, '|', smms{n});
                 end
                 if (nmsN > 1)
-                    lineNames{j+2} = strcat('Est-', nms{m});
+                    lineNames{j+2} = strcat('MSI Estimate -', nms{m});
                 end
             end
         end
     end
+    lineNames{end + 1} = 'RGB Estimate';
 
 end

@@ -1,4 +1,4 @@
-function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(g, spectrum, id, options)
+function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(MSI, mask, spectrum, id, options)
 
 %% wienerEstimation Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %Input arguments
@@ -26,17 +26,21 @@ function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(g, s
 
 %% Argument parsing
 
-if isstruct(g)
-    MSI = g.MSI; 
-    if ~isfield(g, 'Mask')
-        mask = ones(size(MSI, 2), size(MSI, 3));
-    else
-        mask = g.Mask;
-    end
-else 
-    MSI = g;
-    mask = ones(size(g, 2), size(g, 3));
+if isempty(mask)
+     mask = ones(size(MSI, 2), size(MSI, 3));
 end
+
+% if isstruct(g)
+%     MSI = g.MSI; 
+%     if ~isfield(g, 'Mask')
+%         mask = ones(size(MSI, 2), size(MSI, 3));
+%     else
+%         mask = g.Mask;
+%     end
+% else 
+%     MSI = g;
+%     mask = ones(size(g, 2), size(g, 3));
+% end
 
 if size(spectrum,2) ~= 1 
     spectrum = spectrum';
@@ -73,7 +77,7 @@ if strcmp(smoothingMatrixMethod, 'adaptive')
 end 
 
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
-    coeff = ones(3, 1) / 10^3;
+    coeff = ones(1,3) / 10^3;
 else
     c = matfile(fullfile(options.systemdir, 'coeff.mat'));
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
@@ -93,9 +97,11 @@ elseif strcmp(pixelValueSelectionMethod, 'green')
 elseif strcmp(pixelValueSelectionMethod, 'rms')
     H = m.Hrms;
 
-elseif strcmp(pixelValueSelectionMethod, 'adjusted')
+elseif strcmp(pixelValueSelectionMethod, 'adjusted') 
     H = m.Hadjusted;
     
+elseif strcmp(pixelValueSelectionMethod, 'rgb') 
+    H = m.Hrgb;
 else
     error('Unsupported "pixelValueSelectionMethod".');
 end
@@ -206,7 +212,7 @@ switch smoothingMatrixMethod
     case 'adaptive'
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
         options.smoothingMatrixMethod = 'Cor_Sample';
-        rhat = reflectanceEstimation(MSI, spectrum, id, options);
+        rhat = reflectanceEstimation(MSI, mask, spectrum, id, options);
         M = adaptiveSmoothingMatrix(rhat, options.systemdir, alpha, gamma);
        
     otherwise
@@ -231,12 +237,12 @@ elseif contains(noiseType, 'diffForChannel')
     
 elseif contains(noiseType, 'givenSNR')
     if (hasNoiseParam); variance = (trace(HMH) / (msibands * 10^(options.noiseParam / 10))) * ones(msibands, 1); else; variance = (trace(HMH) / (msibands * 10^( 17 / 10))) * ones(msibands, 1); end
-    
+
 elseif contains(noiseType, 'white gaussian')
     if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
 elseif strcmp(noiseType, 'fromOlympus')
-    variance = (m.noiseparam').^2;
+    variance =  (m.noiseparam').^2 ;
     
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
@@ -252,6 +258,8 @@ end
 
 if (length(variance) < msibands)
     variance = [variance(1:2), variance(2), variance(3:5), variance(6), variance(6:7)];
+elseif (length(variance) > msibands)
+    variance = [variance(1), variance(4), variance(7)];    
 end
 Kn = diag(variance); %different at every channel
 % Covariance matrix of the additive noise ends
@@ -374,7 +382,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
     measuredSpectra = ff.MeasuredSpectrumStruct;
     [~, idxs] = unique(strcat({measuredSpectra.Name}, {measuredSpectra.T}));
     measuredSpectra = measuredSpectra(idxs);
-    r = cellfun(@(x) interp1(380:780, x, linspace(380, 780, 81)', 'nearest'), {measuredSpectra.Spectrum}, 'un', 0);
+    r = {measuredSpectra.Spectrum}; 
     d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
