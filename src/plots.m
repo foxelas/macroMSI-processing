@@ -293,15 +293,15 @@ switch plotType
         end
         
         if contains(name, 'System') 
-            pvsms = unique({errors.options.pixelValueSelectionMethod}, 'stable');
+            pvsms = unique({errors.pixelValueSelectionMethod}, 'stable');
         end
         
         if contains(name, 'Noise') 
-            pvsms = unique({errors.options.noiseType}, 'stable');
+            pvsms = unique({errors.noiseType}, 'stable');
         end
         
         if contains(name, 'Matrix')
-            smms = unique({errors.options.smoothingMatrixMethod}, 'stable');
+            smms = unique({errors.smoothingMatrixMethod}, 'stable');
         end 
         labelx = 'Wiener estimation variation';
 
