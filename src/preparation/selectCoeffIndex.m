@@ -11,19 +11,19 @@ options.skipLoading = false;
 options.showImages = false;
 options.saveImages = false;
 options.tryReadData = false;
-options.pixelValueSelectionMethod = 'extended';
+options.pixelValueSelectionMethod = 'adjusted';
 options.smoothingMatrixMethod = 'Cor_Sample';
+options.noiseType = 'givenSNR';
+options.noiseParam = 26;
 
-% out = matfile(options.outName, 'Writable', true);
-% readData;
 load(fullfile(options.systemdir, 'system.mat'), 'wavelength'); % camera system parameters
-% load(fullfile(options.systemdir, 'data.mat')); % image data
-load( fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
+vv = matfile(fullfile(options.systemdir, 'ID.mat'));
+ID = vv.ID;
+% load( fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
 in = matfile(generateName(options, 'matfilein'));
     
 MSIStruct = in.MSIStruct;
 measuredSpectrumStruct = in.MeasuredSpectrumStruct;
-    
     
 G = findgroups([ID.Sample], [ID.Type]);
 for i = 1:max(G)

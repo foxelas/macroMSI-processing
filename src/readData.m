@@ -14,7 +14,7 @@ if ~options.skipLoading
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
-    if (options.tryReadData)
+    if false %(options.tryReadData)
         
         w = warning('off', 'all');
         
@@ -276,30 +276,30 @@ if ~options.skipLoading
 
     %% Create coefficient table
     if (options.tryReadData)
-        disp('Reading coefficients from excel file...')
-        pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
-        coeff = ones(length(ID), 3, 7);
-        src = '../../input/others/coeff.xlsx';
-        for k = 1:msiN
-            % Retrieve MSI data
-            g = MSIStruct(k).MSI;
-
-            % Retrieve spectrum data
-            refmeasured = measuredSpectrumStruct(k).Spectrum;
-
-            for m = 1:length(pixelValueSelectionMethods)
-                gg = raw2msi(g, pixelValueSelectionMethods{m});
-                [r, c] = find(MSIStruct(k).MaskI);
-                x = ID(k).Originx - min(c) + 1;
-                y = ID(k).Originy - min(r) + 1;
-                refmsi = im2uint16(squeeze(gg(:,y,x)))';
-                xlswrite2(src, refmeasured, 4, 'B3');
-                xlswrite2(src, refmsi, 4, 'D407:J407');
-                ctemp = xlsread(src, 4, 'D414:J414');
-                coeff(k, m, :) = ctemp;
-            end
-        end
-        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
+%         disp('Reading coefficients from excel file...')
+%         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
+%         coeff = ones(length(ID), 3, 7);
+%         src = '../../input/others/coeff.xlsx';
+%         for k = 1:msiN
+%             % Retrieve MSI data
+%             g = MSIStruct(k).MSI;
+% 
+%             % Retrieve spectrum data
+%             refmeasured = measuredSpectrumStruct(k).Spectrum;
+% 
+%             for m = 1:length(pixelValueSelectionMethods)
+%                 gg = raw2msi(g, pixelValueSelectionMethods{m});
+%                 [r, c] = find(MSIStruct(k).MaskI);
+%                 x = ID(k).Originx - min(c) + 1;
+%                 y = ID(k).Originy - min(r) + 1;
+%                 refmsi = im2uint16(squeeze(gg(:,y,x)))';
+%                 xlswrite2(src, refmeasured, 4, 'B3');
+%                 xlswrite2(src, refmsi, 4, 'D407:J407');
+%                 ctemp = xlsread(src, 4, 'D414:J414');
+%                 coeff(k, m, :) = ctemp;
+%             end
+%         end
+%        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
         disp('Searching for reference coefficient...')
         ID = selectCoeffIndex(options);  
     end

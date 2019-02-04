@@ -298,7 +298,7 @@ hold on
 for kkk = 1:size(estimatedReflectance,2)
 plot(estimatedReflectance(:,kkk));
 end
-load('C:\Users\elena\Google Drive\titech\research\input\saitama_v3_min_region\in.mat')
+load( fullfile(options.systemdir, 'in.mat'));
 plot(MeasuredSpectrumStruct(id.Index).Spectrum, 'm*')
 plot(bb, 'g*')
 scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
