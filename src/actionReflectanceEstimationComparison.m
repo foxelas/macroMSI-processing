@@ -177,8 +177,8 @@ fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
     out = matfile(options.outName, 'Writable', true);
-    out.estimatedSpectra = estimatedSpectra;
-    out.newCoordinates = newCoordinates;
+    out.EstimatedSpectra = estimatedSpectra;
+    out.NewCoordinates = newCoordinates;
     
 else
     options.saveOptions.plotName = generateName(options, ['ComparisonRmse', plotType]);

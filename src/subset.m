@@ -2,25 +2,18 @@ function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
 
     if strcmp(input, 'measured')
         e = matfile(fullfile('..', '..', 'input', name, 'in.mat'));
-        wavelengthN = 401;
-        spectrumStruct = e.MeasuredSpectrumStruct;
+        G = e.Spectra; % G rows are observations and columns are variables
 
     elseif strcmp(input, 'estimated')
-        e = matfile(fullfile('..', '..', 'output', name, 'reflectanceestimationpreset', 'out.mat'));
-        wavelengthN = 81;
-        spectrumStruct = e.EstimatedSpectrumStruct;
+        e = matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
+        G = e.EstimatedSpectra;
 
     else
         error('Not acceptable input. Choose "measured" or "estimated".')
     end
 
-    load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
+    load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID'); 
 
-    msiN = length(spectrumStruct);
-    G = zeros(msiN, wavelengthN); % G rows are observations and columns are variables
-    for k = 1:msiN
-        G(k, :) = spectrumStruct(k).Spectrum;
-    end
     A = [ID.IsNormal];
     X = {'Malignant', 'Benign'};
     B = X(1+A);

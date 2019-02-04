@@ -15,10 +15,8 @@ for scale = 1:maxScale
         files = {data(ID(k).Data).File};   
         coordinates = [ID(k).Originx; ID(k).Originy];
         % coordinates = out.newCoordinates(k,:);
-        segment = readMSI(files, coordinates, 5 + scale, 5 + scale, []); 
-
-        g = segment.MSI;
-        gg = raw2msi(g, 'adjusted');
+        msi = readMSI(files, coordinates, 5 + scale, 5 + scale, []); 
+        gg = raw2msi(msi, 'adjusted');
 
         for i = 1:7
             lbpFeatures(k, (i-1)*10 + (1:10)) = lbp(squeeze(gg(i,:,:)),scale,neighbors,mapping);

@@ -351,18 +351,17 @@ function G = classifierInput(version, inputIdx, labels, features, name)
 
     if strcmp(version, 'measured')
         e = matfile(fullfile('..', '..', 'input', name, 'in.mat'));
-        spectrumStruct = e.MeasuredSpectrumStruct;
+        Gall = e.Spectra;
 
     elseif strcmp(version, 'estimated')
-        e = matfile(fullfile('..', '..', 'output', name, 'reflectanceestimationpreset', 'out.mat'));
-        spectrumStruct = e.EstimatedSpectrumStruct;
+        e = matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
+        Gall = e.EstimatedSpectra;
 
     else
         error('Not acceptable input. Choose "measured" or "estimated".')
     end
     
-    Gall = Spectra'; % G rows are observations and columns are variables
-    Ginput = Gall(inputIdx, :);
+    Ginput = Gall(inputIdx, :);  % G rows are observations and columns are variables
 
     if contains(features, 'pca' ) || contains(features, 'lda')
         [~, scores] = dimensionReduction(features, Ginput, labels);
@@ -373,8 +372,8 @@ function G = classifierInput(version, inputIdx, labels, features, name)
     end
 
     if contains(features, 'lbp')
-        e =  matfile(fullfile('..', '..', 'output', name, 'reflectanceestimationpreset', 'out.mat'));
-        multiScaleLbpFeatures = e.multiScaleLbpFeatures;
+        e =  matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
+        multiScaleLbpFeatures = e.MultiScaleLbpFeatures;
         if contains(features, 'lbp1')
             scales = 1;
         elseif contains(features, 'lbp2')
