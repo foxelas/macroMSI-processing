@@ -288,8 +288,8 @@ else
 end  
 
 %% Show all estimates in the region
-figure(2);
-clf(2);
+figure(3);
+clf(3);
 [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
 bb = estimatedReflectance(:,rmseIdx);
 [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
