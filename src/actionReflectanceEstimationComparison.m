@@ -99,34 +99,35 @@ for k = 161:180 % 1:msiN
     mask = Masks{k};
     measured = Spectra(k,:);
     maskI = MaskIs{k};
-    
-    % In the case of 3channel RGB image
-    if strcmp(optionsSelection(j).pixelValueSelectionMethod, 'rgb')
-        tempRGB = whiteIs{k};
-        msi = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
-    end
-    
-    if isfield(options,'SinglePixel')
-        [r, c] = find(maskI);
-        x = ID(k).Originx - min(c) + 1;
-        y = ID(k).Originy - min(r) + 1;
-        msi = msi(:,y, x,:);
-        mask = 1;
-    end
+
         
     % Estimation
-    estimated = zeros(length(wavelength), methodsN);
+    estimated = zeros(methodsN, length(wavelength));
     
     for j = 1:methodsN
         [l,n,m] = ind2sub([ pvsmsN , smmsN, nmsN], j);
         options.pixelValueSelectionMethod = pvsms{l};
         options.smoothingMatrixMethod = smms{n};
-        options.noiseType = nms{m};     
+        options.noiseType = nms{m};   
         
-        [estimated(:, j), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(msi, mask, measured, ID(k), options);
+        % In the case of 3channel RGB image
+        if strcmp(options.pixelValueSelectionMethod, 'rgb')
+            tempRGB = whiteIs{k};
+            msi = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
+        end
+
+        if isfield(options,'SinglePixel')
+            [r, c] = find(maskI);
+            x = ID(k).Originx - min(c) + 1;
+            y = ID(k).Originy - min(r) + 1;
+            msi = msi(:,y, x,:);
+            mask = 1;
+        end
+        
+        [estimated(j,:), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(msi, mask, measured, ID(k), options);
         
         if (isSingleMethod)
-            estimatedSpectra(:,k) = estimated(:, j);            
+            estimatedSpectra(k,:) = estimated(j,:);            
             [r, c] = find(maskI);
             newCoordinates(k, 1:2) = [min(c) + minIdx(2) - 1, min(r)+ minIdx(1) - 1];          
         end    
@@ -135,7 +136,7 @@ for k = 161:180 % 1:msiN
     
     if (options.showImages)
         
-        lines = [measured, estimated];
+        lines = [measured; estimated];
         
         % For comparison with RGB estimation
         if contains(lower(options.action), 'rgb')
@@ -144,11 +145,11 @@ for k = 161:180 % 1:msiN
             tempRGB = whiteIs{k};
             rgb = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
             estRgb = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb); 
-            lines = [measured, estimated, estRgb];
+            lines = [measured; estimated; estRgb];
         end
             
-        plots('estimationComparison', 1, lines, sampleName, 'Wavelength', wavelength, 'Method', ... 
-            strcat(optionsSelection(j).smoothingMatrixMethod, ' +  ', optionsSelection(j).noiseType), ...
+        plots('estimationComparison', 1, lines', sampleName, 'Wavelength', wavelength, 'Method', ... 
+            strcat(options.smoothingMatrixMethod, ' +  ', options.noiseType), ...
             'SaveOptions', options.saveOptions, 'LineNames', lineNames);
         
         [r, c] = find(maskI);
@@ -156,9 +157,9 @@ for k = 161:180 % 1:msiN
         scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(msi(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
         hold off
         if (isSingleMethod)
-            seg = readMSI({data(ID(k).Data).File});
+            [~, whiteReference] = readMSI({data(ID(k).Data).File});
             coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
-            plots('cropped', 2, 'Image', seg.whiteReference + cat(3, 0.1*maskI, 0.05*maskI, 0.1*maskI), 'Coordinates', coordinates );
+            plots('cropped', 2, 'Image', whiteReference + cat(3, 0.1*maskI, 0.05*maskI, 0.1*maskI), 'Coordinates', coordinates );
         end
         
         pause(0.1)

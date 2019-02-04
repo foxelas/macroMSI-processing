@@ -68,11 +68,11 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
     end
     
     if (modeAll)
-        segmentWhite{1} = whiteReference;
-        segmentDark{1} = darkReference;
-        segmentMSI{1} = MSI;
-        segmentMaskI{1} = ones(imHeight, imWidth);
-        segmentMask{1} = ones(imHeight, imWidth);
+        segmentWhite = whiteReference;
+        segmentDark = darkReference;
+        segmentMSI = MSI;
+        segmentMaskI = ones(imHeight, imWidth);
+        segmentMask = ones(imHeight, imWidth);
         
     else
         segmentWhite = cell(ROIs,1);
