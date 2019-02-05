@@ -42,10 +42,10 @@ elseif contains(lower(options.action), 'simple')
         plotType = '';
 
 elseif contains(lower(options.action), 'preset')
-        pvsms = {'adjusted'}; %{'extended'};
+        pvsms = {'extended'}; %{'extended'};
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
         nms = {'sameForChannel'};
-        options.noiseParam = 0.000001;
+        options.noiseParam = 0.00001;
         plotType = '';
 
 else 
@@ -90,16 +90,14 @@ isSingleMethod = contains(lower(options.action), 'preset') || contains(lower(opt
 %% Comparison
 
 tic;
-estimatedSpectra = zeros(size(Spectra));
-for k = 161:180 % 1:msiN
+EstimatedSpectra = zeros(size(Spectra));
+for k = 1:msiN
     % Give a name
     [options.saveOptions.plotName, sampleName] = generateName(options, 'plot', ID(k));   
     % Retrieve MSI data
     msi = MSIs{k};
     mask = Masks{k};
     measured = Spectra(k,:);
-    maskI = MaskIs{k};
-
         
     % Estimation
     estimated = zeros(methodsN, length(wavelength));
@@ -116,20 +114,22 @@ for k = 161:180 % 1:msiN
             msi = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
         end
 
-        if isfield(options,'SinglePixel')
-            [r, c] = find(maskI);
-            x = ID(k).Originx - min(c) + 1;
-            y = ID(k).Originy - min(r) + 1;
-            msi = msi(:,y, x,:);
-            mask = 1;
-        end
+%         if isfield(options,'SinglePixel')
+%             maskI = MaskIs{k};
+%             [r, c] = find(maskI);
+%             x = ID(k).Originx - min(c) + 1;
+%             y = ID(k).Originy - min(r) + 1;
+%             msi = msi(:,y, x,:);
+%             mask = 1;
+%         end
         
         [estimated(j,:), rmse(j, k), nmse(j, k), minIdx] = reflectanceEstimation(msi, mask, measured, ID(k), options);
         
         if (isSingleMethod)
-            estimatedSpectra(k,:) = estimated(j,:);            
-            [r, c] = find(maskI);
-            newCoordinates(k, 1:2) = [min(c) + minIdx(2) - 1, min(r)+ minIdx(1) - 1];          
+            EstimatedSpectra(k,:) = estimated(j,:); 
+%             maskI = MaskIs{k};
+%             [r, c] = find(maskI);
+%             newCoordinates(k, 1:2) = [min(c) + minIdx(2) - 1, min(r)+ minIdx(1) - 1];          
         end    
         
     end
@@ -152,11 +152,11 @@ for k = 161:180 % 1:msiN
             strcat(options.smoothingMatrixMethod, ' +  ', options.noiseType), ...
             'SaveOptions', options.saveOptions, 'LineNames', lineNames);
         
-        [r, c] = find(maskI);
-        hold on 
-        scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(msi(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
-        hold off
-        if (isSingleMethod)
+%         [r, c] = find(maskI);
+%         hold on 
+%         scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(msi(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
+%         hold off
+        if false %(isSingleMethod)
             [~, whiteReference] = readMSI({data(ID(k).Data).File});
             coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
             plots('cropped', 2, 'Image', whiteReference + cat(3, 0.1*maskI, 0.05*maskI, 0.1*maskI), 'Coordinates', coordinates );
@@ -190,9 +190,8 @@ minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
-    out = matfile(options.outName, 'Writable', true);
-    out.EstimatedSpectra = estimatedSpectra;
-    out.NewCoordinates = newCoordinates;
+    save(options.outName, 'EstimatedSpectra', '-append');
+%     out.NewCoordinates = newCoordinates;
     
 else
     options.saveOptions.plotName = generateName(options, ['ComparisonRmse', plotType]);

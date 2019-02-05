@@ -350,12 +350,12 @@ end
 function G = classifierInput(version, inputIdx, labels, features, name)
 
     if strcmp(version, 'measured')
-        e = matfile(fullfile('..', '..', 'input', name, 'in.mat'));
-        Gall = e.Spectra;
+        load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
+        Gall = Spectra;
 
     elseif strcmp(version, 'estimated')
-        e = matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
-        Gall = e.EstimatedSpectra;
+        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
+        Gall = EstimatedSpectra;
 
     else
         error('Not acceptable input. Choose "measured" or "estimated".')
@@ -372,8 +372,7 @@ function G = classifierInput(version, inputIdx, labels, features, name)
     end
 
     if contains(features, 'lbp')
-        e =  matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
-        multiScaleLbpFeatures = e.MultiScaleLbpFeatures;
+        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'MultiScaleLbpFeatures');
         if contains(features, 'lbp1')
             scales = 1;
         elseif contains(features, 'lbp2')
@@ -381,13 +380,13 @@ function G = classifierInput(version, inputIdx, labels, features, name)
         elseif contains(features, 'lbp3')
             scales = 3;
         else
-            scales = length(multiScaleLbpFeatures);
+            scales = length(MultiScaleLbpFeatures);
         end      
-        lbps = size(multiScaleLbpFeatures{1},2);
+        lbps = size(MultiScaleLbpFeatures{1},2);
         Gplus = zeros(length(labels), length(G) + scales * lbps);
         Gplus(:,1:size(G, 2)) = G;        
         for i = 1:scales
-            lbpFeatures = multiScaleLbpFeatures{i};
+            lbpFeatures = MultiScaleLbpFeatures{i};
             rangeIdx = length(G) + (i-1)*lbps + (1:lbps);
             Gplus(:,rangeIdx) = lbpFeatures(inputIdx,:);
         end

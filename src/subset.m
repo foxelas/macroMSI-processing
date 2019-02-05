@@ -1,12 +1,12 @@
 function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
 
     if strcmp(input, 'measured')
-        e = matfile(fullfile('..', '..', 'input', name, 'in.mat'));
-        G = e.Spectra; % G rows are observations and columns are variables
+        load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
+        G = Spectra; % G rows are observations and columns are variables
 
     elseif strcmp(input, 'estimated')
-        e = matfile(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'));
-        G = e.EstimatedSpectra;
+        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
+        G = EstimatedSpectra;
 
     else
         error('Not acceptable input. Choose "measured" or "estimated".')

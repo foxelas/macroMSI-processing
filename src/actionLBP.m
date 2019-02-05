@@ -1,12 +1,11 @@
 %code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
-out = matfile( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'), 'Writable', true);
 
 maxScale = 3;
 neighbors = 8;
 mapping=getmapping(neighbors,'riu2');
 
 msibands = 7;
-multiScaleLbpFeatures = cell(maxScale, 1);
+MultiScaleLbpFeatures = cell(maxScale, 1);
 for scale = 1:maxScale
     
     lbpFeatures = zeros(msiN, msibands * 10);
@@ -23,7 +22,7 @@ for scale = 1:maxScale
         end
     end
     
-    multiScaleLbpFeatures{scale} = lbpFeatures / max(lbpFeatures(:));
+    MultiScaleLbpFeatures{scale} = lbpFeatures / max(lbpFeatures(:));
 
 end
-out.multiScaleLbpFeatures = multiScaleLbpFeatures;
+save( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'),'MultiScaleLbpFeatures', '-append');

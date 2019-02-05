@@ -14,7 +14,6 @@ if ~options.skipLoading
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     msiN = length(ID);
     if (options.tryReadData)
-        in = matfile(generateName(options, 'matfilein'), 'Writable', true);
         w = warning('off', 'all');   
         fprintf('Reading spectral data according to ID file.\n');
 
@@ -33,7 +32,7 @@ if ~options.skipLoading
             if abs(rawSpectrum-referenceSpectrum) < 0.000001
                 error('Measurement is same as white.')
             end
-            completeUniqueSpectra(i,:) = rawSpectrum ./ referenceSpectrum;            
+            completeUniqueSpectra(i,:) = rawSpectrum ./ referenceSpectrum;  
         end
         uniqueSpectra = completeUniqueSpectra(:,wavelengthIdxs);
         clear('idd');
@@ -48,10 +47,7 @@ if ~options.skipLoading
             CompleteSpectra(i,:) = completeUniqueSpectra(uniqueSpectraIdxsInID(i),:);
             SpectraNames{i} = strcat(csv, ', ', ID(i).T);
         end 
-        in.Spectra = Spectra;
-        in.CompleteSpectra = CompleteSpectra;
-        in.SpectraNames = SpectraNames;
-
+        save(generateName(options, 'matfilein'), 'Spectra', 'CompleteSpectra', 'SpectraNames', '-append');
         
         fprintf('Reading MSI data according to ID file.\n');
         MSIs = cell(msiN,1);
@@ -96,25 +92,16 @@ if ~options.skipLoading
                 DarkIs{jj} = segmentDark{j};
             end
         end
-        
-        in.MSIs = MSIs;
-        in.Masks = Masks;
-        in.MaskIs = MaskIs;
-        in.MSINames = MSINames;
-        in.WhiteIs = WhiteIs;
-        in.DarkIs = DarkIs;
-        
+        save(generateName(options, 'matfilein'), 'MSIs', 'Masks', 'MSINames', 'WhiteIs', 'DarkIs', '-append');
+        save(generateName(options, 'matfilein-v7.3'), 'MaskIs', '-v7.3');        
         warning(w);
         
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+        
         %% Precompute correlation smoothing Matrices 
         fprintf('Pre-computing smoothing matrices.\n');
-        param = matfile(fullfile(options.systemdir, 'precomputedParams.mat'), 'Writable', true);
+        precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
         samples = unique([ID.Sample]);
-        
-        %% Support function for computing the smoothing matrix from counts
-        smoothingMatrix = @(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
 
         %% Smoothing matrix from recorded spectra
         rAll = zeros(81, specN);
@@ -225,28 +212,27 @@ if ~options.skipLoading
 
         end
 
-        param.(matlab.lang.makeValidName('Cor_All')) = smoothingMatrix(rAll);
-        param.(matlab.lang.makeValidName('Cor_Benign')) = smoothingMatrix(rBenign);
-        param.(matlab.lang.makeValidName('Cor_Malignant')) = smoothingMatrix(rMalignant);
-        param.(matlab.lang.makeValidName('Cor_Unfixed')) = smoothingMatrix(rUnfixed);
-        param.(matlab.lang.makeValidName('Cor_Fixed')) = smoothingMatrix(rFixed);
-        param.(matlab.lang.makeValidName('Cor_Cut')) = smoothingMatrix(rCut);
-        param.(matlab.lang.makeValidName('Cor_BenignCut')) = smoothingMatrix(rBenignCut);
-        param.(matlab.lang.makeValidName('Cor_BenignUnfixed')) = smoothingMatrix(rBenignUnfixed);
-        param.(matlab.lang.makeValidName('Cor_BenignFixed')) = smoothingMatrix(rBenignFixed);
-        param.(matlab.lang.makeValidName('Cor_MalignantCut')) = smoothingMatrix(rMalignantCut);
-        param.(matlab.lang.makeValidName('Cor_MalignantUnfixed')) = smoothingMatrix(rMalignantUnfixed);
-        param.(matlab.lang.makeValidName('Cor_MalignantFixed')) = smoothingMatrix(rMalignantFixed);
-
-        param.(matlab.lang.makeValidName('Cor_SampleBenignCut')) = Cor_SampleBenignCut;
-        param.(matlab.lang.makeValidName('Cor_SampleBenignFixed')) = Cor_SampleBenignFixed;
-        param.(matlab.lang.makeValidName('Cor_SampleBenignUnfixed')) = Cor_SampleBenignUnfixed;
-        param.(matlab.lang.makeValidName('Cor_SampleMalignantCut')) = Cor_SampleMalignantCut;
-        param.(matlab.lang.makeValidName('Cor_SampleMalignantFixed')) = Cor_SampleMalignantFixed;
-        param.(matlab.lang.makeValidName('Cor_SampleMalignantUnfixed')) = Cor_SampleMalignantUnfixed;
-        param.(matlab.lang.makeValidName('Cor_Sample')) = Cor_Sample;
-        param.(matlab.lang.makeValidName('Cor_SampleMalignant')) = Cor_SampleMalignant;
-        param.(matlab.lang.makeValidName('Cor_SampleBenign')) = Cor_SampleBenign;
+        Cor_All = smoothingMatrix(rAll);
+        Cor_Benign= smoothingMatrix(rBenign);
+        Cor_Malignant = smoothingMatrix(rMalignant);
+        Cor_Unfixed = smoothingMatrix(rUnfixed);
+        Cor_Fixed = smoothingMatrix(rFixed);
+        Cor_Cut = smoothingMatrix(rCut);
+        Cor_BenignCut = smoothingMatrix(rBenignCut);
+        Cor_BenignUnfixed = smoothingMatrix(rBenignUnfixed);
+        Cor_BenignFixed = smoothingMatrix(rBenignFixed);
+        Cor_MalignantCut = smoothingMatrix(rMalignantCut);
+        Cor_MalignantUnfixed = smoothingMatrix(rMalignantUnfixed);
+        Cor_MalignantFixed = smoothingMatrix(rMalignantFixed);
+        
+        save(precomputedFile, 'Cor_All', 'Cor_Benign', 'Cor_Malignant', 'Cor_Unfixed', 'Cor_Fixed',...
+            'Cor_Cut', 'Cor_BenignCut', 'Cor_BenignUnfixed', 'Cor_BenignFixed', 'Cor_MalignantCut', ...
+            'Cor_MalignantUnfixed', 'Cor_MalignantFixed', 'Cor_SampleBenignCut', 'Cor_SampleBenignFixed', ...
+            'Cor_SampleBenignUnfixed', 'Cor_SampleMalignantCut', 'Cor_SampleMalignantFixed', ...
+            'Cor_SampleMalignantUnfixed', 'Cor_Sample', 'Cor_SampleMalignant', 'Cor_SampleBenign', '-append');
+        
+        %% Count dataset
+        datasetBreakdown(ID);
 
         %% Smoothing matrix based on markovian process 
         if isfield(options, 'rho')
@@ -267,25 +253,28 @@ if ~options.skipLoading
             M(i,:) = [ fliplr(M_row(1: i)) , M_row(2:wavelengthN-i+1)];
             D(i,:) = circshift( select', (i-1)*wavelengthN); %diagonal with 1 in the position of components
         end
-        param.(matlab.lang.makeValidName('Cor_Markovian')) = M;
-
+        Cor_Markovian = M;
+        save(precomputedFile, 'Cor_Markovian', '-append');
+        
         %% Smoothing matrix based on macbeth chart spectra
         macbeths = param.avgMeasuredMacbeth(wavelengthIdxs,:);
 
         z=xcorr(macbeths, macbeths, 'coeff');
         r = z(wavelengthN:end);
-        param.(matlab.lang.makeValidName('Cor_Macbeth')) = toeplitz(r);
+        Cor_Macbeth = toeplitz(r);
+        save(precomputedFile, 'Cor_Macbeth', '-append');
 
         %% IlluminationXSensitivity
-        param.Hgreen = illumXsensitivity(illumination, sensitivity, 'green');
-        param.Hadjusted = illumXsensitivity(illumination, sensitivity, 'adjusted');
-        param.Hrms = illumXsensitivity(illumination, sensitivity, 'rms');
-        param.Hextended = illumXsensitivity(illumination, sensitivity, 'extended');
+        Hgreen = illumXsensitivity(illumination, sensitivity, 'green');
+        Hadjusted = illumXsensitivity(illumination, sensitivity, 'adjusted');
+        Hrms = illumXsensitivity(illumination, sensitivity, 'rms');
+        Hextended = illumXsensitivity(illumination, sensitivity, 'extended');
+        save(precomputedFile, 'Hgreen', 'Hadjusted', 'Hrms', 'Hextended', '-append');
 
         %% Create coefficient table
         disp('Reading coefficients from excel file...')
         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
-        coeff = ones(length(ID), 3, 7);
+        Coefficients = ones(length(ID), 3, 7);
         src = '../../input/others/coeff.xlsx';
         for k = 1:msiN
             % Retrieve MSI data
@@ -302,10 +291,10 @@ if ~options.skipLoading
                 xlswrite2(src, refmeasured, 4, 'B3');
                 xlswrite2(src, refmsi, 4, 'D407:J407');
                 ctemp = xlsread(src, 4, 'D414:J414');
-                coeff(k, m, :) = ctemp;
+                Coefficients(k, m, :) = ctemp;
             end
         end
-        save(fullfile(options.systemdir, 'coeff.mat'), 'coeff', '-v7.3');
+        save(fullfile(options.systemdir, 'precomputedParams.mat'), 'Coefficients', '-append');
         disp('Searching for reference coefficient...')
         ID = selectCoeffIndex(options);  
     
@@ -322,6 +311,15 @@ fprintf('Finished initialization.\n\n')
 fprintf('Let''s get down to business :muscle:\n\n');
 % LOAD DATA & INITIALIZE ends   
     
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Support function for computing the smoothing matrix from counts
+function M = smoothingMatrix(s)
+%smoothingMatrix = @(s) 1 / (size(s, 2) - 1) * s * s';  %@(s) 1 / (size(s, 2) - 1) * (s -  mean(s,2)) * (s -  mean(s,2))';
+    sTrue = s(:,~all(s == 0, 1));
+    M = 1 / size(sTrue, 2) * (sTrue * sTrue');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

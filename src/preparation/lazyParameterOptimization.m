@@ -1,6 +1,6 @@
 close all; clc;
 
-dataset = 'saitama_v3_min_region';
+dataset = 'saitama_v5_min_square';
 action = lower('ReflectanceEstimationSimple');
 skipLoading = false;
 showImages = false;
@@ -15,31 +15,31 @@ options = setOpt(options);
 out = matfile(options.outName, 'Writable', true);
 readData;
 
-%% For givenSNR
- snrRange = 5:30;
- errSNR = zeros(length(snrRange), 2);
- for i = 1:length(snrRange)
-     snr = snrRange(i);
-     options.noiseType = 'givenSNR';
-     options.smoothingMatrixMethod = 'Cor_Sample';
-     options.noiseParam = snr;
-     actionReflectanceEstimationComparison;
-     errSNR(i,:) = [snr, minError];
- end
- minSnr = errSNR(errSNR(:,2) == min(errSNR(:,2)),1)
-
- %% For samesigma
- sigmaRange = 0.0001:0.0005:0.2;
- errSigma = zeros(length(sigmaRange), 2);
- for i = 1:length(sigmaRange)
-     sigma = sigmaRange(i);
-     options.noiseType = 'sameForChannel';
-     options.smoothingMatrixMethod = 'Cor_Sample';
-     options.noiseParam = sigma;
-     actionReflectanceEstimationComparison;
-     errSigma(i,:) = [sigma, minError];
- end
- minSigma = errSigma(errSigma(:,2) == min(errSigma(:,2)),1)
+% %% For givenSNR
+%  snrRange = 5:5:30;
+%  errSNR = zeros(length(snrRange), 2);
+%  for i = 1:length(snrRange)
+%      snr = snrRange(i);
+%      options.noiseType = 'givenSNR';
+%      options.smoothingMatrixMethod = 'Cor_Sample';
+%      options.noiseParam = snr;
+%      actionReflectanceEstimationComparison;
+%      errSNR(i,:) = [snr, minError];
+%  end
+%  minSnr = errSNR(errSNR(:,2) == min(errSNR(:,2)),1)
+% 
+%  %% For samesigma
+%  sigmaRange = [10^(-8),10^(-7),  10^(-6),  10^(-5), 10^(-4),  10^(-3), 10^(-2), 10^(-1)];
+%  errSigma = zeros(length(sigmaRange), 2);
+%  for i = 1:length(sigmaRange)
+%      sigma = sigmaRange(i);
+%      options.noiseType = 'sameForChannel';
+%      options.smoothingMatrixMethod = 'Cor_Sample';
+%      options.noiseParam = sigma;
+%      actionReflectanceEstimationComparison;
+%      errSigma(i,:) = [sigma, minError];
+%  end
+%  minSigma = errSigma(errSigma(:,2) == min(errSigma(:,2)),1)
  
  
 %% For Adaptive
