@@ -1,8 +1,8 @@
 %Start of reflectance estimation comparison
 
-smmsFull = { 'Cor_All', 'Cor_Malignancy', 'Cor_Fixing', 'Cor_Sample', 'adaptive'}; %, 'Cor_SampleMalignancy', 'Cor_SampleMalignancyFixing', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing', 'markovian', 'Cor_Macbeth',};
+smmsFull = { 'Cor_All', 'Cor_Fixing', 'Cor_Sample', 'adaptive'}; %, 'Cor_SampleMalignancy', 'Cor_SampleMalignancyFixing', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing', 'markovian', 'Cor_Macbeth',};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
-nmsFull = {'sameForChannel 0.001', 'diffForChannel 0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024', 'givenSNR 17.5', 'spatial 0.02 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
+nmsFull = {'sameForChannel 0.0001', 'diffForChannel 0.0016, 0.0016, 0.0008, 0.0005, 0.0008, 0.0148, 0.0015', 'givenSNR 25', 'spatial 0.002 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
 
 %% Comparison settings
 if contains(lower(options.action), 'matrixsystem')
@@ -44,8 +44,8 @@ elseif contains(lower(options.action), 'simple')
 elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
-        nms = {'sameForChannel'};
-        options.noiseParam = 0.00001;
+        nms = {'fromOlympus'};
+        options.noiseParam = 0.0001;
         plotType = '';
 
 else 
@@ -110,7 +110,7 @@ for k = 1:msiN
         
         % In the case of 3channel RGB image
         if strcmp(options.pixelValueSelectionMethod, 'rgb')
-            tempRGB = whiteIs{k};
+            tempRGB = WhiteIs{k};
             msi = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
         end
 
@@ -140,12 +140,14 @@ for k = 1:msiN
         
         % For comparison with RGB estimation
         if contains(lower(options.action), 'rgb')
+            w = warning('off', 'all');
             optionsRgb = options;
             optionsRgb.pixelValueSelectionMethod = 'rgb';
-            tempRGB = whiteIs{k};
+            tempRGB = WhiteIs{k};
             rgb = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
-            estRgb = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb); 
+            estRgb = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb)'; 
             lines = [measured; estimated; estRgb];
+            warning(w);
         end
             
         plots('estimationComparison', 1, lines', sampleName, 'Wavelength', wavelength, 'Method', ... 

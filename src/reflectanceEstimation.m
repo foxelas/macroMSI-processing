@@ -67,9 +67,11 @@ end
 signalCov = [0.0290584774952317;0.0355809665018991;0.0254338785693633;0.0278002826809506;0.00535859811159383;0.0263030884980115;0.0198921193827871];
 
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
-    coeff = ones(1,3) / 10^3;
+    load(precomputedFile, 'Coefficients');
+    coeff = squeeze(Coefficients(id.Index, 3, 1:7))'; %id.CoeffIndex
+    coeff = [sum(coeff(1:2)), sum(coeff(3:5)), sum(coeff(6:7))];
 else
-    load(precomputedFile, 'coeff');
+    load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
     pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
     coeff = squeeze(Coefficients(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
@@ -259,7 +261,7 @@ elseif contains(noiseType, 'white gaussian')
     if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
 elseif strcmp(noiseType, 'fromOlympus')
-    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05];
+    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05] * 100;
     variance =  (noiseparam').^2 ;
     
 elseif strcmp(noiseType, 'none')
