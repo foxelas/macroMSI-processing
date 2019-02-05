@@ -67,9 +67,11 @@ end
 signalCov = [0.0290584774952317;0.0355809665018991;0.0254338785693633;0.0278002826809506;0.00535859811159383;0.0263030884980115;0.0198921193827871];
 
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
-    coeff = ones(1,3) / 10^3;
+    load(precomputedFile, 'Coefficients');
+    coeff = squeeze(Coefficients(id.Index, 3, 1:7))'; %id.CoeffIndex
+    coeff = [sum(coeff(1:2)), sum(coeff(3:5)), sum(coeff(6:7))];
 else
-    load(precomputedFile, 'coeff');
+    load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
     pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
     coeff = squeeze(Coefficients(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
@@ -228,9 +230,11 @@ switch smoothingMatrixMethod
         
     case 'adaptive'
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
-        options.smoothingMatrixMethod = 'Cor_Sample';
-        rhat = reflectanceEstimation(MSI, mask, spectrum, id, options);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir, alpha, gamma);
+        adaptiveOptions = options;
+        adaptiveOptions.showImages = false;
+        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
+        rhat = reflectanceEstimation(MSI, mask, spectrum, id, adaptiveOptions);
+        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma);
        
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
@@ -259,7 +263,7 @@ elseif contains(noiseType, 'white gaussian')
     if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
 elseif strcmp(noiseType, 'fromOlympus')
-    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05];
+    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05] * 100;
     variance =  (noiseparam').^2 ;
     
 elseif strcmp(noiseType, 'none')
@@ -401,10 +405,13 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% function di = reflectanceDistance(ri, rhat, a)
-%     di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
-%         + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
-% end
+function di = reflectanceDistance(ri, rhat, a)
+    if (nargin < 3)
+        a = 0.5;
+    end
+    di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
+        + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -412,17 +419,21 @@ function k = replicationTimes(d, dmax, gamma)
     if (nargin < 3)
         gamma = 1;
     end
-    k = floor((dmax / d)^gamma + 0.5);
+    k = floor((dmax / d)^1 + 0.5);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
+function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
 
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
-    r = num2cell( Spectra(idxs,:));
-    d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
+    r = num2cell( Spectra(idxs,:)',1);
+    if (false)
+        d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
+    else
+        d = cellfun(@(x) reflectanceDistance(x, rhat), r); % or reflectanceDistance
+    end
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;
@@ -433,7 +444,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
     end
 
     means = mean(spectra,2);
-    adaptedM = 1 / (size(spectra, 2) - 1) * (spectra - means) * (spectra - means)';
+    adaptedM = 1 / size(spectra, 2) * (spectra * spectra');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

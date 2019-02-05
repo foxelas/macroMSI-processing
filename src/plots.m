@@ -219,7 +219,7 @@ switch plotType
         xlim([400, 700]);
         suptitle('Comparative plot of Wiener estimation results')
         title(figTitle);
-        legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'bestoutside', 'FontSize', 14); % 'Orientation','horizontal');
+        legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'best', 'FontSize', 12); % 'Orientation','horizontal');
         
         if (plotN > 2)
             subplot(1, plotN, 3);
@@ -308,10 +308,12 @@ switch plotType
         
         marker = ['o', 's', 'd', '^', '*', 'h', 'p', 'v', '<', '+', '>'];
         if ((length(smms) > 1) && (length(pvsms) > 1))
-            pvsmColor = colorcube(length(pvsms)+10);
+            pvsmColor = parula(length(pvsms)+1);
+            pvsmColor = pvsmColor(1:length(pvsms),:);
         else
-            pvsmColor = jet(length(pvsms)+10);
+            pvsmColor = jet(length(pvsms));
         end
+%         pvsmColor = pvsmColor(2:9,:); % remove yellow and black color 
         
         hold on
         % Generate dummy info for plot handles "h"
@@ -560,7 +562,7 @@ end
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Get rid of tool bar and pulldown menus that are along top of figure.
-set(gcf, 'Toolbar', 'none', 'Menu', 'none');
+%set(gcf, 'Toolbar', 'none', 'Menu', 'none');
 
 if (savePlot && ~isempty(plotName))
     plotName = strrep(plotName, '.mat', '');
