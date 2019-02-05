@@ -44,8 +44,8 @@ elseif contains(lower(options.action), 'simple')
 elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
-        nms = {'fromOlympus'};
-        options.noiseParam = 0.0001;
+        nms = {'sameForChannel'};
+        options.noiseParam = 0.001;
         plotType = '';
 
 else 
@@ -192,7 +192,10 @@ minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
-    save(options.outName, 'EstimatedSpectra', '-append');
+    goodSampleIndexes_a = arrayfun(@(x) ~any(x == [233, 274, 310, 349, 378, 512]), (1:length(rmse))');
+    goodSampleIndexes_b = (rmse < mean(rmse))';
+    goodSampleIndexes = goodSampleIndexes_a & goodSampleIndexes_b;
+    save(options.outName, 'EstimatedSpectra', 'rmse', 'goodSampleIndexes', '-append');
 %     out.NewCoordinates = newCoordinates;
     
 else

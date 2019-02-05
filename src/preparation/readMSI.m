@@ -106,6 +106,14 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
 
         end  
         
+        if (ROIs == 1) %if it it reads only one ROI, there is no need for cell array
+            segmentMSI = cell2mat(segmentMSI);
+            segmentMask = cell2mat(segmentMask);
+            segmentMaskI = cell2mat(segmentMaskI);
+            segmentDark = cell2mat(segmentDark);
+            segmentWhite = cell2mat(segmentWhite);        
+        end
+        
     end
 
 end

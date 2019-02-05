@@ -295,7 +295,6 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         labelsAsText = false;
     end
     load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
-
     if strcmp(criterion, 'unique')
         [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         
@@ -334,6 +333,9 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         error('Not implemented yet.')
     end
     
+    load(fullfile('..', '..', 'output', name, ReflectanceEstimationPreset, 'out.mat'), 'goodSampleIndexes');
+    inputIdx = intersect(inputIdx, find(goodSampleIndexes));
+        
     A = [ID.IsNormal]';
     if (labelsAsText)
         X = {'Malignant', 'Benign'};
