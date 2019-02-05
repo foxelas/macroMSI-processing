@@ -230,9 +230,11 @@ switch smoothingMatrixMethod
         
     case 'adaptive'
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
-        options.smoothingMatrixMethod = 'Cor_Sample';
-        rhat = reflectanceEstimation(MSI, mask, spectrum, id, options);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir, alpha, gamma);
+        adaptiveOptions = options;
+        adaptiveOptions.showImages = false;
+        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
+        rhat = reflectanceEstimation(MSI, mask, spectrum, id, adaptiveOptions);
+        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma);
        
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
@@ -419,11 +421,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
+function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
 
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
-    r = num2cell( Spectra(idxs,:));
+    r = num2cell( Spectra(idxs,:)',1);
     d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
