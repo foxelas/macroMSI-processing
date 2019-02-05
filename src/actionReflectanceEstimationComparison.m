@@ -43,9 +43,15 @@ elseif contains(lower(options.action), 'simple')
 
 elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
+<<<<<<< HEAD
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
         nms = {'sameForChannel'};
         options.noiseParam = 0.001;
+=======
+        smms =  {'adaptive'}; %{'Cor_Malignancy'};  {'Cor_All'}
+        nms = {'sameForChannel 0.0001'};
+        options.noiseParam = 0.0001;
+>>>>>>> 05ad9965c3ee8b7c6e28edb82d41b65714351d33
         plotType = '';
 
 else 
@@ -88,6 +94,7 @@ newCoordinates = zeros(msiN, 2);
 isSingleMethod = contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple');
 
 %% Comparison
+w = warning('off', 'all');
 
 tic;
 EstimatedSpectra = zeros(size(Spectra));
@@ -140,14 +147,12 @@ for k = 1:msiN
         
         % For comparison with RGB estimation
         if contains(lower(options.action), 'rgb')
-            w = warning('off', 'all');
             optionsRgb = options;
             optionsRgb.pixelValueSelectionMethod = 'rgb';
             tempRGB = WhiteIs{k};
             rgb = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
             estRgb = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb)'; 
             lines = [measured; estimated; estRgb];
-            warning(w);
         end
             
         plots('estimationComparison', 1, lines', sampleName, 'Wavelength', wavelength, 'Method', ... 
@@ -168,6 +173,7 @@ for k = 1:msiN
     end
     
 end
+warning(w);
 
 %% Export results
 rmse = rmse(:, rmse(1, :) ~= 0);
