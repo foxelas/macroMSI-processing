@@ -338,7 +338,7 @@ switch plotType
         for i = 1:length(pvsms)
             for j = 1:length(smms)
                 if contains(name, 'avg', 'IgnoreCase', true)
-                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j), 'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
+                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j) ./ size(stde,2) , 'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
                 end
             end
             if contains(name, 'max', 'IgnoreCase', true)
@@ -357,9 +357,11 @@ switch plotType
         xticks(1:numel(smms));
         xticklabels(strrep(smms, '_', ' '));
         xtickangle(45);
-        ylabel(labely);
+        ylabel(labely); ytickformat('%.3f');
         legend(h, 'Location', 'best');
-        title('Comparison of estimation results for the various configurations')
+        title('Comparison of Mean and Standard Error Values for various Estimation Configurations')
+        set(gcf, 'Position', get(0, 'Screensize'));
+        saveInHQ = true;
         %end  plot method errors
                
     case 'classificationErrors'       
@@ -468,6 +470,7 @@ switch plotType
         legend(h, 'Location', 'best');
         set(gcf, 'Position', get(0, 'Screensize'));
         % End plot discriminant analysis results 
+        saveInHQ = true;
         
     case 'cropped'
         %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -578,8 +581,8 @@ if (savePlot && ~isempty(plotName))
     
     set(0, 'CurrentFigure', fig);
     if (saveInHQ)
-        export_fig(strcat(plotName, '.jpg') , '-jpg','-native');
-        %print(fig, strcat(plotName, '.jpg'), '-djpeg', '-r600');
+        %export_fig(strcat(plotName, '.png') , '-png','-native', '-nocrop');
+        print(fig, strcat(plotName, '.png'), '-dpng', '-r600');
     else
         export_fig(strcat(plotName, '.jpg') , '-jpg');
         %print(fig, strcat(plotName, '.jpg'), '-djpeg');
