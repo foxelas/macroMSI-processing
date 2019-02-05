@@ -34,7 +34,7 @@ if size(spectrum,2) ~= 1
     spectrum = spectrum';
 end
 
-m = matfile(fullfile(options.systemdir, 'precomputedParams.mat')); %pre-set parameters
+precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
 smoothingMatrixMethod = options.smoothingMatrixMethod;
 pixelValueSelectionMethod = options.pixelValueSelectionMethod;
 noiseType = options.noiseType;
@@ -64,32 +64,39 @@ if strcmp(smoothingMatrixMethod, 'adaptive')
     end
 end 
 
+signalCov = [0.0290584774952317;0.0355809665018991;0.0254338785693633;0.0278002826809506;0.00535859811159383;0.0263030884980115;0.0198921193827871];
+
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
     coeff = ones(1,3) / 10^3;
 else
-    c = matfile(fullfile(options.systemdir, 'coeff.mat'));
+    load(precomputedFile, 'coeff');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
     pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
-    coeff = squeeze(c.coeff(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
+    coeff = squeeze(Coefficients(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
 end
 
 
 if strcmp(pixelValueSelectionMethod, 'extended')
-    H = m.Hextended;
+    load(precomputedFile, 'Hextended');
+    H = Hextended;
     if ~isempty(coeff)
         coeff = [coeff(1:2), coeff(2), coeff(3:5), coeff(6), coeff(6:7)];
     end
 elseif strcmp(pixelValueSelectionMethod, 'green')
-    H = m.Hgreen;
+    load(precomputedFile, 'Hgreen');
+    H = Hgreen;
     
 elseif strcmp(pixelValueSelectionMethod, 'rms')
-    H = m.Hrms;
+    load(precomputedFile, 'Hrms');
+    H = Hrms;
 
 elseif strcmp(pixelValueSelectionMethod, 'adjusted') 
-    H = m.Hadjusted;
+    load(precomputedFile, 'Hadjusted');
+    H = Hadjusted; 
     
 elseif strcmp(pixelValueSelectionMethod, 'rgb') 
-    H = m.Hrgb;
+    load(precomputedFile, 'Hrgb');
+    H = Hrgb; 
 else
     error('Unsupported "pixelValueSelectionMethod".');
 end
@@ -127,72 +134,94 @@ switch smoothingMatrixMethod
     case {'Markovian 0.99', 'markovian'}
         if rho ~= defaultRho
             error('Invalid correlation parameter for the markovian process');
-        end
-        M = m.Cor_Markovian;
-        M = mean(m.signalCov) * M;
+        end      
+        load(precomputedFile, 'Cor_Markovian');
+        M = mean(signalCov) * Cor_Markovian;
         
     case 'Cor_All' % average xcorr of all measured data
-        M = m.Cor_All;
+        load(precomputedFile, 'Cor_All');
+        M = Cor_All; 
         
     case 'Cor_Macbeth' % average xcorr of all macbeth data
-        M = m.Cor_Macbeth;
+        load(precomputedFile, 'Cor_Macbeth');
+        M = Cor_Macbeth; 
         
     case 'Cor_Sample' % average xcorr of all measured data for each sample
-        M = squeeze(m.Cor_Sample(id.SampleId,:,:));
+        load(precomputedFile, 'Cor_Sample');
+        M = squeeze(Cor_Sample(id.SampleId,:,:));
         
     case 'Cor_Malignancy'
         if isBenign
-            M = m.Cor_Benign;  %m.Mn;            
+            load(precomputedFile, 'Cor_Benign');
+            M = Cor_Benign; %m.Mn; 
         else
-            M = m.Cor_Malignant; %m.Mc;
+            load(precomputedFile, 'Cor_Malignant');
+            M = Cor_Malignant; %m.Mc;
         end
         
     case 'Cor_Fixing'
         if strcmp(fixing, 'Cut')
-            M = m.Cor_Cut;
+            load(precomputedFile, 'Cor_Cut');
+            M = Cor_Cut;
         elseif strcmp(fixing, 'Fixed')
-            M = m.Cor_Fixed;
+            load(precomputedFile, 'Cor_Fixed');
+            M = Cor_Fixed;
         else
-            M = m.Cor_Unfixed;
+            load(precomputedFile, 'Cor_Unfixed');
+            M = Cor_Unfixed;
         end
         
     case 'Cor_SampleMalignancy' % average xcorr of all measured cancerous data for cancerous sample
         if isBenign
-            M = squeeze(m.Cor_SampleBenign(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleBenign');
+            M = squeeze(Cor_SampleBenign(id.SampleId,:,:));
         else
-            M = squeeze(m.Cor_SampleMalignant(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleMalignant');
+            M = squeeze(Cor_SampleMalignant(id.SampleId,:,:));
         end
         
     case 'Cor_SampleMalignancyFixing' % average xcorr of all fixed cancer measured data for fixed cancer sample
         if isBenign && strcmp(fixing, 'Cut')
-            M = squeeze(m.Cor_SampleBenignCut(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleBenignCut');
+            M = squeeze(Cor_SampleBenignCut(id.SampleId,:,:));
         elseif isBenign && strcmp(fixing, 'Fixed')
-            M = squeeze(m.Cor_SampleBenignFixed(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleBenignFixed');
+            M = squeeze(Cor_SampleBenignFixed(id.SampleId,:,:));
         elseif isBenign && strcmp(fixing, 'Unfixed')
-            M = squeeze(m.Cor_SampleBenignUnfixed(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleBenignUnfixed');
+            M = squeeze(Cor_SampleBenignUnfixed(id.SampleId,:,:));
         elseif ~isBenign && strcmp(fixing, 'Cut')
-            M = squeeze(m.Cor_SampleMalignantCut(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleMalignantCut');
+            M = squeeze(Cor_SampleMalignantCut(id.SampleId,:,:));
         elseif ~isBenign && strcmp(fixing, 'Fixed')
-            M = squeeze(m.Cor_SampleMalignantFixed(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleMalignantFixed');
+            M = squeeze(Cor_SampleMalignantFixed(id.SampleId,:,:));
         elseif ~isBenign && strcmp(fixing, 'Unfixed')
-            M = squeeze(m.Cor_SampleMalignantUnfixed(id.SampleId,:,:));
+            load(precomputedFile, 'Cor_SampleMalignantUnfixed');
+            M = squeeze(Cor_SampleMalignantUnfixed(id.SampleId,:,:));
         else 
             error('Unsupported type')
         end
         
     case 'Cor_MalignancyFixing'
         if isBenign && strcmp(fixing, 'Cut')
-            M = m.Cor_BenignCut;
+            load(precomputedFile, 'Cor_BenignCut');
+            M = Cor_BenignCut;
         elseif isBenign && strcmp(fixing, 'Fixed')
-            M = m.Cor_BenignFixed;
+            load(precomputedFile, 'Cor_BenignFixed');
+            M = Cor_BenignFixed;
         elseif isBenign && strcmp(fixing, 'Unfixed')
-            M = m.Cor_BenignUnfixed;
+            load(precomputedFile, 'Cor_BenignUnfixed');
+            M = Cor_BenignUnfixed;
         elseif ~isBenign && strcmp(fixing, 'Cut')
-            M = m.Cor_MalignantCut;
+            load(precomputedFile, 'Cor_MalignantCut');
+            M = Cor_MalignantCut;
         elseif ~isBenign && strcmp(fixing, 'Fixed')
-            M = m.Cor_MalignantFixed;
+            load(precomputedFile, 'Cor_MalignantFixed');
+            M = Cor_MalignantFixed;
         elseif ~isBenign && strcmp(fixing, 'Unfixed')
-            M = m.Cor_MalignantUnfixed;
+            load(precomputedFile, 'Cor_MalignantUnfixed');
+            M = Cor_MalignantUnfixed;
         else 
             error('Unsupported type')
         end
@@ -230,7 +259,8 @@ elseif contains(noiseType, 'white gaussian')
     if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
 elseif strcmp(noiseType, 'fromOlympus')
-    variance =  (m.noiseparam').^2 ;
+    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05];
+    variance =  (noiseparam').^2 ;
     
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
@@ -389,10 +419,9 @@ end
 
 function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, a, gamma)
 
-    ff = matfile(fullfile(systemdir, 'in.mat'));
-    measuredSpectra = ff.Spectra;
-    [~, idxs] = unique(ff.SpectraNames);
-    r = num2cell( measuredSpectra(idxs,:));
+    load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
+    [~, idxs] = unique(SpectraNames);
+    r = num2cell( Spectra(idxs,:));
     d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));

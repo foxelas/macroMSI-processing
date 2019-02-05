@@ -17,14 +17,8 @@ options.noiseType = 'givenSNR';
 options.noiseParam = 20;
 
 load(fullfile(options.systemdir, 'system.mat'), 'wavelength'); % camera system parameters
-vv = matfile(fullfile(options.systemdir, 'ID.mat'));
-ID = vv.ID;
-% load( fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
-in = matfile(generateName(options, 'matfilein'));
-    
-MSIs = in.MSIs;
-Masks = in.Masks;
-Spectra = in.Spectra;
+load(fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
+load(generateName(options, 'matfilein'), 'MSIs', 'Masks', 'Spectra');
     
 G = findgroups([ID.Sample], [ID.Type]);
 for i = 1:max(G)
@@ -52,7 +46,7 @@ for i = 1:max(G)
 end
 
 ID = orderfields(ID);
-save(fullfile(options.systemdir, 'ID.mat'), 'ID', '-v7.3');
+save(fullfile(options.systemdir, 'ID.mat'), 'ID');
 disp('Finished updating CoeffIndex values in the ID file.')
 
 end

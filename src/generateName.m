@@ -14,6 +14,9 @@ dirCurrentName = [];
 switch filename
     case 'matfilein'
         dirCurrentName = fullfile(options.systemdir, 'in.mat');
+        
+    case 'matfilein-v7.3'
+        dirCurrentName = fullfile(options.systemdir, 'in-v73.mat');
 
     case 'matfileout'
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
@@ -53,8 +56,8 @@ switch filename
         time = strrep(idx.T, ':', ' ');
         time = strrep(time, '.', ',');
         un = strcat('(', num2str(idx.UniqueCount) , ')');
-        datafile = matfile(fullfile(options.systemdir, 'data.mat'));
-        datax = datafile.data(:, idx.Representative);
+        load(fullfile(options.systemdir, 'data.mat'), 'data');
+        datax = data(:, idx.Representative);
         if (~isempty(datax) && isnumeric(datax.Sample))
             datax.Sample = num2str(datax.Sample);
         end
