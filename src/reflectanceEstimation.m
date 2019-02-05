@@ -405,10 +405,13 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% function di = reflectanceDistance(ri, rhat, a)
-%     di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
-%         + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
-% end
+function di = reflectanceDistance(ri, rhat, a)
+    if (nargin < 3)
+        a = 0.5;
+    end
+    di = a * mean(abs(ri / norm(ri) - rhat / norm(rhat)))...
+        + (1-a) * max(abs(ri / norm(ri) - rhat / norm(rhat)));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -416,7 +419,7 @@ function k = replicationTimes(d, dmax, gamma)
     if (nargin < 3)
         gamma = 1;
     end
-    k = floor((dmax / d)^gamma + 0.5);
+    k = floor((dmax / d)^1 + 0.5);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -426,7 +429,11 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
     r = num2cell( Spectra(idxs,:)',1);
-    d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
+    if (false)
+        d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
+    else
+        d = cellfun(@(x) reflectanceDistance(x, rhat), r); % or reflectanceDistance
+    end
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;
@@ -437,7 +444,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
     end
 
     means = mean(spectra,2);
-    adaptedM = 1 / (size(spectra, 2) - 1) * (spectra - means) * (spectra - means)';
+    adaptedM = 1 / size(spectra, 2) * (spectra * spectra');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
