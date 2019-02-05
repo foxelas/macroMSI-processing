@@ -43,15 +43,8 @@ elseif contains(lower(options.action), 'simple')
 
 elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
-<<<<<<< HEAD
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
-        nms = {'sameForChannel'};
-        options.noiseParam = 0.001;
-=======
-        smms =  {'adaptive'}; %{'Cor_Malignancy'};  {'Cor_All'}
         nms = {'sameForChannel 0.0001'};
-        options.noiseParam = 0.0001;
->>>>>>> 05ad9965c3ee8b7c6e28edb82d41b65714351d33
         plotType = '';
 
 else 

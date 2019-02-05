@@ -106,3 +106,29 @@
 
 
 
+-------------------------------------------
+ Run on  05-Feb-2019 15:58:03 
+ 34.5561 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     ReflectanceEstimationPreset     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel 0.0001     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square ReflectanceEstimationPreset out.mat     
+     smoothingMatrixMethod     Cor_Sample     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(139)     
+ -------------------------------------------
+
+
+
+
+
+

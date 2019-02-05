@@ -516,8 +516,10 @@ switch plotType
             end
         end
         plot(0:0.1:1, 0:0.1:1, 'k--', 'DisplayName', 'Chance');
-        plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
+        if ~isempty(performance.ROCX)
+            plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
 %         shadedErrorBar(performance.ROCX(:,1), performance.ROCY(:,1), abs(performance.ROCY(:,1) - performance.ROCY(:,2:3)),'lineprops','m-*');
+        end
         hold off 
         xlim([-0.1, 1.1]);
         ylim([-0.1, 1.1]);
@@ -531,7 +533,7 @@ switch plotType
         
     case 'performanceComparison'
         
-        N = length(lineNames);
+        N = length(lineNames)-1;
         x = 1:N;
         auc = performance(1,:)';
         accur = performance(2,:)';
