@@ -54,10 +54,10 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryRea
 %      pixelValueSelectionMethods = {'green', 'rms', 'adjusted',
 %      'extended'};
 % 'noiseModel' string, name of the node model to be used (default:
-% 'givenSNR')
+% 'SNR')
 %      noiseModels = {'independent', 'fromOlympus', 'dependent',
-%      'givenSNR', 'none'};
-% 'snr' double, noise Signal-To-Noise Ratio (default: 25) 'skipLoading'
+%      'SNR', 'none'};
+% 'SNR' double, noise Signal-To-Noise Ratio (default: 25) 'skipLoading'
 % boolean, disables re-loading of workspace input data to save time
 % (default: true) 'showImages' boolean, enables figure preview while
 % running (default: false) 'saveOptions' struct, manages output saving
@@ -139,8 +139,8 @@ for i = 1:numel(actions)
               'ReflectanceEstimationNoiseComparison', ...
               'ReflectanceEstimationMatrixNoiseComparison', ...
               'ReflectanceEstimationPreset', 'ReflectanceEstimationPreset_rgb',...
-              'ReflectanceEstimationSimple', 'ReflectanceEstimationSimple_rgb'
-              }
+              'ReflectanceEstimationSimple', 'ReflectanceEstimationSimple_rgb', ...
+              'ReflectanceEstimationExtra'}
             actionReflectanceEstimationComparison;
 
         case {'CreatesRGB', 'reconstructsrgb'} % from the MSI reflectances   

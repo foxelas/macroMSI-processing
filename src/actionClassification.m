@@ -3,12 +3,12 @@ validations = {'LeaveOut', 'Kfold'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
 frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
 distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
-groups = {'unique', 'fixed', 'notcut', 'unfixedright', 'unfixedleft'}; %, 'goodleft', 'goodright'};
+groups = {'fixed+unfixed', 'fixed', 'notcut', 'unfixed'}; %, 'unfixedleft' , 'goodleft', 'goodright'};
 features = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp1', 'spectrumlbp2'}; %, 'spectrumlbp3'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
- if contains(lower(options.action), 'svm')
+if contains(lower(options.action), 'svm')
     classifier = 'svm'; 
     classifierSettings = kernels;
 elseif contains(lower(options.action), 'knn')
@@ -59,10 +59,10 @@ compareClassifiers(classifiers, options, classifier, dataset, validation)
 %% Comparison between input datasets 
 compareInputs(groups, classifiers, classifier, options, validation, dataset, 4);
 
-%% Comparison between input datasets 
+%% Comparison between features 
 compareFeatures(features, classifiers, classifier, options, validation, dataset, 5);
 
-
+disp('Finished classification')
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -210,7 +210,7 @@ end
 function [trainIdx, testIdx] = createCVTestIndexes(validation, labels)
 
     if strcmp(validation, 'Kfold')
-        folds = 5;
+        folds = 10;
         CVO = cvpartition(labels,'k',folds);
         
     elseif strcmp(validation, 'LeaveOut')
@@ -271,19 +271,14 @@ function [avgPerformance, cvPerformance] = crossValidation(trainIndexes, testInd
     avgPerformance.Accuracy =  mean([cvPerformance.Accuracy]);
     avgPerformance.AccuracySD =  std([cvPerformance.Accuracy]);
     avgPerformance.Fmeasure = mean([cvPerformance.Fmeasure]);
-    if strcmp(classifier, 'svm')
-        nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
-        if sum(cellfun('isempty', {cvPerformance.ROCY})) > 0
-            sum(cellfun('isempty', {cvPerformance.ROCY}))
-        end
-        [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, AUC] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
-        avgPerformance.AUC = AUC(1);
-    else
-        avgPerformance.ROCX = [];
-        avgPerformance.ROCY = [];
-        avgPerformance.ROCT = [];
-        avgPerformance.AUC = [];
+    
+    nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
+    if sum(cellfun('isempty', {cvPerformance.ROCY})) > 0
+        sum(cellfun('isempty', {cvPerformance.ROCY}))
     end
+    [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, AUC] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
+    avgPerformance.AUC = AUC(1);
+
         
         
 end
@@ -295,7 +290,7 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         labelsAsText = false;
     end
     load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
-    if strcmp(criterion, 'unique')
+    if strcmp(criterion, 'unique') || strcmp(criterion, 'fixed+unfixed')
         [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         
     elseif strcmp(criterion, 'notcut')
@@ -310,9 +305,9 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
-    elseif strcmp(criterion, 'unfixedleft')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
-        inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
+%     elseif strcmp(criterion, 'unfixedleft')
+%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+%         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
 %     elseif strcmp(criterion, 'goodright') || strcmp(criterion, 'good')
 %         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
@@ -454,7 +449,7 @@ function [] = compareInputs(groups, classifiers, classifier, options, validation
     
     figTitle = sprintf('%s Classifier Performance for Different Input Datasets', upper(classifier));
     options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareInput'}, '_'));
-    plots('performanceComparison', fig, [], '', 'LineNames', [{''}; groups(:)], 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
+    plots('performanceComparison', fig, [], '', 'LineNames', groups, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end
 
@@ -483,6 +478,6 @@ function [] = compareFeatures(features, classifiers, classifier, options, valida
     
     figTitle = sprintf('%s Classifier Performance for Different Feature Sets', upper(classifier));
     options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareFeatures'}, '_'));
-    plots('performanceComparison', fig, [], '', 'LineNames', [{''}; features(:)], 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
+    plots('performanceComparison', fig, [], '', 'LineNames', features, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end

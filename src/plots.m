@@ -201,7 +201,7 @@ switch plotType
 %         % Enlarge figure to full screen.
 %         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
         
-        figTitle = sprintf('Sample: %s | Method: %s',name, method);
+        figTitle = sprintf('Sample: %s',name); % sprintf('Sample: %s | Method: %s',name, method);
         %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
         color = colorcube(curveN+10); %color = [ 'b', 'g' , 'k',  'c' , 'y' , 'm'];
         
@@ -246,7 +246,7 @@ switch plotType
         hold off
         
         figTitle = {sprintf('Comparative plot of Wiener estimation results for a pixel area '); ...
-            sprintf('Sample %s with %s smoothing matrix ', name, method)};
+                    sprintf('Sample %s', name)}; %sprintf('Sample %s with %s smoothing matrix ', name, method)};
         figTitle = strrepAll(figTitle);
         title(figTitle);
         xlabel('Wavelength \lambda (nm)');
@@ -357,7 +357,9 @@ switch plotType
         xticks(1:numel(smms));
         xticklabels(strrep(smms, '_', ' '));
         xtickangle(45);
-        ylabel(labely); ytickformat('%.3f');
+        ylabel(labely);
+        ax = gca;
+        ax.YRuler.Exponent = 0;
         legend(h, 'Location', 'best');
         title('Comparison of Mean and Standard Error Values for various Estimation Configurations')
         set(gcf, 'Position', get(0, 'Screensize'));
@@ -410,7 +412,7 @@ switch plotType
         
         marker = ['o', 'x', 'd', '^', '*', 'h', 'p', 'v', 's', '<', '+', '>'];
         observations = size(curves, 1);
-        attr = split(lineNames, '_');
+        attr = split(lineNames, ' ');
         sample = {attr{:, 1}}';
         type = {attr{:, 2}}';
         isNormal = {attr{:, 3}}';
@@ -421,8 +423,8 @@ switch plotType
         %dummy legends
         h = zeros(2, 1);
         hold on
-        h(1) = plot([NaN, NaN], 'Color', 'r', 'DisplayName', 'Cancer');
-        h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Normal');
+        h(1) = plot([NaN, NaN], 'Color', 'r', 'DisplayName', 'Malignant');
+        h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Benign');
         hold off
         
         if contains(name, 'Fix', 'IgnoreCase', true)
@@ -463,6 +465,9 @@ switch plotType
             xlabel('Lidear discriminant 1');
             ylabel('Linear Discriminant 2');
         end
+        ax = gca;
+        ax.XRuler.Exponent = 0;
+        ax.YRuler.Exponent = 0;
         titl = strsplit(plotName, '\');
         figTitle = strrepAll(titl{end});
         suptitle(figTitle);
@@ -536,13 +541,12 @@ switch plotType
         
     case 'performanceComparison'
         
-        N = length(lineNames)-1;
-        x = 1:N;
+        x = 1:length(lineNames);
         auc = performance(1,:)';
         accur = performance(2,:)';
         hold on 
 
-        if isnan(auc)
+        if ~isnan(auc)
             yyaxis left
             scatter(x, auc, 'b*');
             xlim([0, N+1]); ylim([0.5, 1]);
@@ -552,14 +556,14 @@ switch plotType
 
         yyaxis right
         scatter(x, accur, 'ro');
-        ylim([50, 100]);
         ylabel('Accuracy %')
         text(x+0.1,accur,num2str(accur, '%.2f'));
+        ylim([50, 100]);
 
         hold off
         title(figTitle)
         xlabel('Input Dataset')
-        xticklabels(lineNames); xtickangle(45);
+        xticks(x); xticklabels(lineNames); xtickangle(45); 
         set(gcf, 'Position', get(0, 'Screensize'));
 
 end

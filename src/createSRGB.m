@@ -28,7 +28,7 @@ if strcmp(method, 'original')
     
     options.smoothingMatrixMethod = 'KCor all specimen';
     options.pixelValueSelectionMethod = 'extended';
-    options.noiseType = 'givenSNR';
+    options.noiseType = 'SNR';
     options.snr = 20;
     
     reflectance = reflectanceEstimation(I, [], id, options);

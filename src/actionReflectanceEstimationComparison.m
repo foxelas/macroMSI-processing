@@ -2,14 +2,14 @@
 
 smmsFull = { 'Cor_All', 'Cor_Fixing', 'Cor_Sample', 'adaptive'}; %, 'Cor_SampleMalignancy', 'Cor_SampleMalignancyFixing', 'Cor_MalignancyFixing', 'Cor_SampleMalignancyFixing', 'markovian', 'Cor_Macbeth',};
 pvsmsFull = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
-nmsFull = {'sameForChannel 0.0001', 'diffForChannel 0.0016, 0.0016, 0.0008, 0.0005, 0.0008, 0.0148, 0.0015', 'givenSNR 25', 'spatial 0.002 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
+nmsFull = {'sameForChannel 0.0001', 'diffForChannel 0.0016, 0.0016, 0.0008, 0.0005, 0.0008, 0.0148, 0.0015', 'SNR 25', 'spatial 0.002 0.04'}; %, 'fromOlympus', 'spatial', 'spatial 0.015 0.015' 
 
 %% Comparison settings
 if contains(lower(options.action), 'matrixsystem')
         smms = smmsFull;
         pvsms = pvsmsFull;
         plotType = 'MatrixSystemAvg';        
-        nms = {'givenSNR'}; 
+        nms = {'SNR'}; 
 
 elseif contains(lower(options.action), 'matrixnoise')
         smms = smmsFull;
@@ -21,13 +21,13 @@ elseif contains(lower(options.action), 'smoothing matrix') || contains(lower(opt
         smms = smmsFull;
         pvsms = {'extended'};
         plotType = 'MatrixAvgMinMax';
-        nms = {'givenSNR'};
+        nms = {'SNR'};
 
 elseif contains(lower(options.action), 'color system') || contains(lower(options.action), 'system')   
         smms = {'Cor_Malignancy'};
         pvsms = pvsmsFull;
         plotType = 'SystemAvgMinMax';
-        nms = {'givenSNR'};
+        nms = {'SNR'};
 
 elseif contains(lower(options.action), 'noise model') || contains(lower(options.action), 'noise')   
         pvsms = {'extended'};
@@ -37,7 +37,7 @@ elseif contains(lower(options.action), 'noise model') || contains(lower(options.
 
 elseif contains(lower(options.action), 'simple') 
         pvsms = {'extended'};
-        smms =  {options.smoothingMatrixMethod};
+        smms = {options.smoothingMatrixMethod};
         nms = {options.noiseType};
         plotType = '';
 
@@ -45,6 +45,12 @@ elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
         smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
         nms = {'sameForChannel 0.0001'};
+        plotType = '';
+        
+elseif contains(lower(options.action), 'extra') 
+        pvsms = {'extended'};
+        smms = {'Cor_All', 'adaptive'};
+        nms = {'sameForChannel 0.0001', 'spatial 0.0004 0.002'};
         plotType = '';
 
 else 
@@ -56,7 +62,7 @@ pvsmsN = numel(pvsms);
 nmsN = length(nms);
 methodsN = smmsN * pvsmsN * nmsN;
 
-lineNames = {'Center \lambda', 'Measured'};
+lineNames = {'Channel \lambda', 'Measured'};
 for l = 1:pvsmsN
     for n = 1:smmsN
         for m = 1:nmsN
@@ -169,8 +175,8 @@ end
 warning(w);
 
 %% Export results
-rmse = rmse(:, rmse(1, :) ~= 0);
-nmse = nmse(:, nmse(1, :) ~= 0);
+% rmse = rmse(:, rmse(1, :) ~= 0);
+% nmse = nmse(:, nmse(1, :) ~= 0);
 errorData = [mean(rmse, 2), max(rmse, [], 2), min(rmse, [], 2), mean(nmse, 2), max(nmse, [], 2), min(nmse, [], 2)];
 
 pixelValueSelectionMethods = cell(methodsN,1);
@@ -183,8 +189,9 @@ for j = 1:methodsN
     smoothingMatrixMethods{j} = smms{n};
     noiseTypes{j} = nms{m};   
 end
-errors = struct('avgrmse', mean(rmse, 2), 'minrmse', min(rmse, [], 2), 'maxrmse', max(rmse, [], 2), 'stdrmse', std(rmse, [], 2), 'avgnmse', mean(nmse, 2), ...
-                'minnmse', min(nmse, [], 2), 'maxnmse', max(nmse, [], 2), 'stdnmse', std(nmse, [], 2), 'pixelValueSelectionMethod', pixelValueSelectionMethods, ...
+errors = struct('avgrmse', num2cell(mean(rmse, 2)), 'minrmse', num2cell(min(rmse, [], 2)), 'maxrmse', num2cell(max(rmse, [], 2)), ...
+                'stdrmse', num2cell(std(rmse, [], 2)), 'avgnmse', num2cell(mean(nmse, 2)), 'minnmse', num2cell(min(nmse, [], 2)), ...
+                'maxnmse', num2cell(max(nmse, [], 2)), 'stdnmse', num2cell(std(nmse, [], 2)), 'pixelValueSelectionMethod', pixelValueSelectionMethods, ...
                 'smoothingMatrixMethod', smoothingMatrixMethods, 'noiseType', noiseTypes);
 
 minError = min(mean(rmse, 2));
@@ -194,6 +201,10 @@ if contains(lower(options.action), 'preset') || contains(lower(options.action), 
     goodSampleIndexes_a = arrayfun(@(x) ~any(x == [233, 274, 310, 349, 378, 512]), (1:length(rmse))');
     goodSampleIndexes_b = (rmse < mean(rmse))';
     goodSampleIndexes = goodSampleIndexes_a & goodSampleIndexes_b;
+    if  ~isfile(options.outName)
+        dateCreated = datetime();
+        save(options.outName, 'dateCreated');
+    end
     save(options.outName, 'EstimatedSpectra', 'rmse', 'goodSampleIndexes', '-append');
 %     out.NewCoordinates = newCoordinates;
     
