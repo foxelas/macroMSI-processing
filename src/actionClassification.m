@@ -3,12 +3,12 @@ validations = {'LeaveOut', 'Kfold'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
 frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
 distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
-groups = {'unique', 'fixed', 'notcut', 'unfixedright', 'unfixedleft', 'goodleft', 'goodright'};
-features = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp1', 'spectrumlbp2', 'spectrumlbp3'};
+groups = {'fixed+unfixed', 'fixed', 'notcut', 'unfixed'}; %, 'unfixedleft' , 'goodleft', 'goodright'};
+features = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp1', 'spectrumlbp2'}; %, 'spectrumlbp3'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
- if contains(lower(options.action), 'svm')
+if contains(lower(options.action), 'svm')
     classifier = 'svm'; 
     classifierSettings = kernels;
 elseif contains(lower(options.action), 'knn')
@@ -19,12 +19,12 @@ else
 end
 options.action = 'Classification';
 
-version = 'estimated';
+dataset = 'estimated';
 
-fprintf('Classifying %s data with %s classifier...\n', version, classifier);
+fprintf('Classifying %s data with %s classifier...\n', dataset, classifier);
 
 m = 0;
-validation = validations{1};
+validation = validations{2};
 labelsAsText = true;
 
 classifiers = struct('Input', {}, 'Features', {}, 'Validation', {}, 'VoteRule', {}, 'Neighbours', [], 'Setting', {}, 'FoldPerformance', [], 'Performance', [],...
@@ -33,7 +33,7 @@ for g = 1:length(groups)
     [inputIdx, labels] = createClassifierInputIndexes(name, groups{g}, labelsAsText);
     [trainIdx, testIdx] = createCVTestIndexes(validation, labels);
     for p = 1:length(features)
-        observations = classifierInput(version, inputIdx, labels, features{p}, name);
+        observations = classifierInput(dataset, inputIdx, labels, features{p}, name);
         for i = 1:length(votingRules)
             for k = [1, 3, 5]
                 for d = 1:length(classifierSettings)
@@ -48,21 +48,21 @@ for g = 1:length(groups)
     end
 end  
 classifiers = orderfields(classifiers);
-save( generateName(options, strcat(classifier,'_', version, '_', 'Classifier.mat')) , 'classifiers');
+save( generateName(options, strcat(classifier,'_', dataset, '_', 'Classifier.mat')) , 'classifiers');
 
 [~, sortIdx] = sort([classifiers.Accuracy], 'descend'); % or classificationError.AvgAUC
 classifiers = classifiers(sortIdx);
 
 %% Comparison plots 
-compareClassifiers(classifiers, options, version, validation)
+compareClassifiers(classifiers, options, classifier, dataset, validation)
 
 %% Comparison between input datasets 
-compareInputs(groups, classifiers, classifier, options, validation, 4);
+compareInputs(groups, classifiers, classifier, options, validation, dataset, 4);
 
-%% Comparison between input datasets 
-compareFeatures(features, classifiers, classifier, options, validation, 5);
+%% Comparison between features 
+compareFeatures(features, classifiers, classifier, options, validation, dataset, 5);
 
-
+disp('Finished classification')
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -271,19 +271,15 @@ function [avgPerformance, cvPerformance] = crossValidation(trainIndexes, testInd
     avgPerformance.Accuracy =  mean([cvPerformance.Accuracy]);
     avgPerformance.AccuracySD =  std([cvPerformance.Accuracy]);
     avgPerformance.Fmeasure = mean([cvPerformance.Fmeasure]);
-    if strcmp(classifier, 'svm')
-        nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
-        if sum(cellfun('isempty', {cvPerformance.ROCY})) > 0
-            sum(cellfun('isempty', {cvPerformance.ROCY}))
-        end
-        [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, AUC] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
-        avgPerformance.AUC = AUC(1);
-    else
-        avgPerformance.ROCX = [];
-        avgPerformance.ROCY = [];
-        avgPerformance.ROCT = [];
-        avgPerformance.AUC = [];
+    
+    nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
+    if sum(cellfun('isempty', {cvPerformance.ROCY})) > 0
+        emptyClassifiers = sum(cellfun('isempty', {cvPerformance.ROCY}));
+        fprintf('Empty classifiers: %d\n', emptyClassifiers);
     end
+    [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, AUC] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
+    avgPerformance.AUC = AUC(1);
+
         
         
 end
@@ -295,8 +291,7 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         labelsAsText = false;
     end
     load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
-
-    if strcmp(criterion, 'unique')
+    if strcmp(criterion, 'unique') || strcmp(criterion, 'fixed+unfixed')
         [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         
     elseif strcmp(criterion, 'notcut')
@@ -311,21 +306,21 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
-    elseif strcmp(criterion, 'unfixedleft')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
-        inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
+%     elseif strcmp(criterion, 'unfixedleft')
+%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+%         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
-    elseif strcmp(criterion, 'goodright') || strcmp(criterion, 'good')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
-        goodIdx = intersect(unIdx , find([ID.IsGood]));
-        %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
-        inputIdx = intersect(unIdx, goodIdx);
-    
-    elseif strcmp(criterion, 'goodleft')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
-        goodIdx = intersect(unIdx , find([ID.IsGood]));
-        %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
-        inputIdx = intersect(unIdx, goodIdx);
+%     elseif strcmp(criterion, 'goodright') || strcmp(criterion, 'good')
+%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+%         goodIdx = intersect(unIdx , find([ID.IsGood]));
+%         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
+%         inputIdx = intersect(unIdx, goodIdx);
+%     
+%     elseif strcmp(criterion, 'goodleft')
+%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+%         goodIdx = intersect(unIdx , find([ID.IsGood]));
+%         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
+%         inputIdx = intersect(unIdx, goodIdx);
         
     elseif strcmp(criterion, 'all')
         inputIdx = 1:numel(ID);      
@@ -334,6 +329,11 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         error('Not implemented yet.')
     end
     
+    if ~ strcmp(criterion, 'all')
+        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'goodSampleIndexes');
+        inputIdx = intersect(inputIdx, find(goodSampleIndexes));
+    end
+        
     A = [ID.IsNormal]';
     if (labelsAsText)
         X = {'Malignant', 'Benign'};
@@ -347,13 +347,13 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function G = classifierInput(version, inputIdx, labels, features, name)
+function G = classifierInput(dataset, inputIdx, labels, features, name)
 
-    if strcmp(version, 'measured')
+    if strcmp(dataset, 'measured')
         load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
         Gall = Spectra;
 
-    elseif strcmp(version, 'estimated')
+    elseif strcmp(dataset, 'estimated')
         load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
         Gall = EstimatedSpectra;
 
@@ -396,17 +396,17 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = plotROC(selectedClassifier, options, classifier, version, fig, name)
+function [] = plotROC(selectedClassifier, options, classifier, dataset, fig, name)
     figTitle = strcat('ROC for [', selectedClassifier.Input,'+', selectedClassifier.Features ,'] dataset.',...
         'Accuracy:', num2str(selectedClassifier.Accuracy), '\pm', num2str(selectedClassifier.AccuracySD));
-    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, name}, '_')); 
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, name}, '_')); 
     plots('roc', fig, [], '', 'Performance', selectedClassifier.Performance , 'FoldPerformance', selectedClassifier.FoldPerformance, ...
         'SaveOptions', options.saveOptions, 'Title', figTitle);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = compareClassifiers(classifiers, options, version, validation)
+function [] = compareClassifiers(classifiers, options, classifier, dataset, validation)
 
     [~, maxAccurIdx] = max([classifiers.Accuracy]);
     classifiers(maxAccurIdx)
@@ -418,16 +418,16 @@ function [] = compareClassifiers(classifiers, options, version, validation)
         [~, maxF1Idx] = max([classifiers.Fmeasure]);
         classifiers(maxF1Idx)
 
-        plotROC( classifiers(maxAccurIdx), options, classifier, version, 1, 'MaxAccuracyRoc');
-        plotROC( classifiers(maxAUCIdx), options, classifier, version, 2, 'MaxAUCRoc');
-        plotROC( classifiers(maxF1Idx), options, classifier, version, 3, 'MaxF1Roc');
+        plotROC( classifiers(maxAccurIdx), options, classifier, dataset, 1, 'MaxAccuracyRoc');
+        plotROC( classifiers(maxAUCIdx), options, classifier, dataset, 2, 'MaxAUCRoc');
+        plotROC( classifiers(maxF1Idx), options, classifier, dataset, 3, 'MaxF1Roc');
     end
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = compareInputs(groups, classifiers, classifier, options, validation, fig)
+function [] = compareInputs(groups, classifiers, classifier, options, validation, dataset, fig)
 
     accur = zeros(1,length(groups));
     auc = zeros(1,length(groups));
@@ -449,14 +449,14 @@ function [] = compareInputs(groups, classifiers, classifier, options, validation
     end
     
     figTitle = sprintf('%s Classifier Performance for Different Input Datasets', upper(classifier));
-    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, validation, 'compareInput'}, '_'));
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareInput'}, '_'));
     plots('performanceComparison', fig, [], '', 'LineNames', groups, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [] = compareFeatures(features, classifiers, classifier, options, validation, fig)
+function [] = compareFeatures(features, classifiers, classifier, options, validation, dataset, fig)
 
     accur = zeros(1,length(features));
     auc = zeros(1,length(features));
@@ -478,7 +478,7 @@ function [] = compareFeatures(features, classifiers, classifier, options, valida
     end
     
     figTitle = sprintf('%s Classifier Performance for Different Feature Sets', upper(classifier));
-    options.saveOptions.plotName = generateName(options, strjoin({classifier, version, validation, 'compareFeatures'}, '_'));
+    options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareFeatures'}, '_'));
     plots('performanceComparison', fig, [], '', 'LineNames', features, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
     
 end

@@ -12,7 +12,7 @@ function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(MSI,
 %                'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'}; for selecting the smoothing matrix
 %'rho' =  parameter for markovian smoothing matrix , default: 0.99
 %'variance' =  parameter for noise covariance matrix , default: 1
-%'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'givenSNR', 'white gaussian', 'fromOlympus'}
+%'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'SNR', 'white gaussian', 'fromOlympus'}
 %'reference' = the reference white image values
 %'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
 %'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false 
@@ -232,7 +232,7 @@ switch smoothingMatrixMethod
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
         adaptiveOptions = options;
         adaptiveOptions.showImages = false;
-        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
+        adaptiveOptions.smoothingMatrixMethod = 'Cor_All';
         rhat = reflectanceEstimation(MSI, mask, spectrum, id, adaptiveOptions);
         M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma);
        
@@ -256,7 +256,7 @@ if contains(noiseType, 'sameForChannel')
 elseif contains(noiseType, 'diffForChannel')
     if (hasNoiseParam); variance = options.noiseParam; else; variance = [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024]; end
     
-elseif contains(noiseType, 'givenSNR')
+elseif contains(noiseType, 'SNR')
     if (hasNoiseParam); variance = (trace(HMH) / (msibands * 10^(options.noiseParam / 10))) * ones(msibands, 1); else; variance = (trace(HMH) / (msibands * 10^( 17 / 10))) * ones(msibands, 1); end
 
 elseif contains(noiseType, 'white gaussian')

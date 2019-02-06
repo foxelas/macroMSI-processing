@@ -201,7 +201,7 @@ switch plotType
 %         % Enlarge figure to full screen.
 %         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
         
-        figTitle = sprintf('Sample: %s | Method: %s',name, method);
+        figTitle = sprintf('Sample: %s',name); % sprintf('Sample: %s | Method: %s',name, method);
         %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
         color = colorcube(curveN+10); %color = [ 'b', 'g' , 'k',  'c' , 'y' , 'm'];
         
@@ -246,7 +246,7 @@ switch plotType
         hold off
         
         figTitle = {sprintf('Comparative plot of Wiener estimation results for a pixel area '); ...
-            sprintf('Sample %s with %s smoothing matrix ', name, method)};
+                    sprintf('Sample %s', name)}; %sprintf('Sample %s with %s smoothing matrix ', name, method)};
         figTitle = strrepAll(figTitle);
         title(figTitle);
         xlabel('Wavelength \lambda (nm)');
@@ -338,7 +338,7 @@ switch plotType
         for i = 1:length(pvsms)
             for j = 1:length(smms)
                 if contains(name, 'avg', 'IgnoreCase', true)
-                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j), 'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
+                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j) ./ size(stde,2) , 'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
                 end
             end
             if contains(name, 'max', 'IgnoreCase', true)
@@ -358,8 +358,12 @@ switch plotType
         xticklabels(strrep(smms, '_', ' '));
         xtickangle(45);
         ylabel(labely);
+        ax = gca;
+        ax.YRuler.Exponent = 0;
         legend(h, 'Location', 'best');
-        title('Comparison of estimation results for the various configurations')
+        title('Comparison of Mean and Standard Error Values for various Estimation Configurations')
+        set(gcf, 'Position', get(0, 'Screensize'));
+        saveInHQ = true;
         %end  plot method errors
                
     case 'classificationErrors'       
@@ -408,7 +412,7 @@ switch plotType
         
         marker = ['o', 'x', 'd', '^', '*', 'h', 'p', 'v', 's', '<', '+', '>'];
         observations = size(curves, 1);
-        attr = split(lineNames, '_');
+        attr = split(lineNames, ' ');
         sample = {attr{:, 1}}';
         type = {attr{:, 2}}';
         isNormal = {attr{:, 3}}';
@@ -419,8 +423,8 @@ switch plotType
         %dummy legends
         h = zeros(2, 1);
         hold on
-        h(1) = plot([NaN, NaN], 'Color', 'r', 'DisplayName', 'Cancer');
-        h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Normal');
+        h(1) = plot([NaN, NaN], 'Color', 'r', 'DisplayName', 'Malignant');
+        h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Benign');
         hold off
         
         if contains(name, 'Fix', 'IgnoreCase', true)
@@ -461,6 +465,9 @@ switch plotType
             xlabel('Lidear discriminant 1');
             ylabel('Linear Discriminant 2');
         end
+        ax = gca;
+        ax.XRuler.Exponent = 0;
+        ax.YRuler.Exponent = 0;
         titl = strsplit(plotName, '\');
         figTitle = strrepAll(titl{end});
         suptitle(figTitle);
@@ -468,6 +475,7 @@ switch plotType
         legend(h, 'Location', 'best');
         set(gcf, 'Position', get(0, 'Screensize'));
         % End plot discriminant analysis results 
+        saveInHQ = true;
         
     case 'cropped'
         %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -516,8 +524,10 @@ switch plotType
             end
         end
         plot(0:0.1:1, 0:0.1:1, 'k--', 'DisplayName', 'Chance');
-        plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
+        if ~isempty(performance.ROCX)
+            plot(performance.ROCX(:,1), performance.ROCY(:,1), 'm-*',  'DisplayName', sprintf('Average (AUC = %.3f)', performance.AUC(1)), 'LineWidth', 2);
 %         shadedErrorBar(performance.ROCX(:,1), performance.ROCY(:,1), abs(performance.ROCY(:,1) - performance.ROCY(:,2:3)),'lineprops','m-*');
+        end
         hold off 
         xlim([-0.1, 1.1]);
         ylim([-0.1, 1.1]);
@@ -537,7 +547,7 @@ switch plotType
         accur = performance(2,:)';
         hold on 
 
-        if isnan(auc)
+        if ~isnan(auc)
             yyaxis left
             scatter(x, auc, 'b*');
             xlim([0, N+1]); ylim([0.5, 1]);
@@ -547,14 +557,14 @@ switch plotType
 
         yyaxis right
         scatter(x, accur, 'ro');
-        ylim([50, 100]);
         ylabel('Accuracy %')
         text(x+0.1,accur,num2str(accur, '%.2f'));
+        ylim([50, 100]);
 
         hold off
         title(figTitle)
         xlabel('Input Dataset')
-        xticklabels(lineNames); xtickangle(45);
+        xticks(x); xticklabels(lineNames); xtickangle(45); 
         set(gcf, 'Position', get(0, 'Screensize'));
 
 end
@@ -578,8 +588,8 @@ if (savePlot && ~isempty(plotName))
     
     set(0, 'CurrentFigure', fig);
     if (saveInHQ)
-        export_fig(strcat(plotName, '.jpg') , '-jpg','-native');
-        %print(fig, strcat(plotName, '.jpg'), '-djpeg', '-r600');
+        %export_fig(strcat(plotName, '.png') , '-png','-native', '-nocrop');
+        print(fig, strcat(plotName, '.png'), '-dpng', '-r600');
     else
         export_fig(strcat(plotName, '.jpg') , '-jpg');
         %print(fig, strcat(plotName, '.jpg'), '-djpeg');

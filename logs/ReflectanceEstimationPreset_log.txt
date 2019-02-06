@@ -52,3 +52,109 @@
 
 
 
+-------------------------------------------
+ Run on  05-Feb-2019 13:55:39 
+ 33.993 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     ReflectanceEstimationPreset     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square ReflectanceEstimationPreset out.mat     
+     noiseParam     0.001     
+     smoothingMatrixMethod     Cor_Sample     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(139)     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  05-Feb-2019 13:58:13 
+ 32.5786 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     ReflectanceEstimationPreset     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square ReflectanceEstimationPreset out.mat     
+     noiseParam     0.001     
+     smoothingMatrixMethod     Cor_Sample     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(139)     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  05-Feb-2019 15:58:03 
+ 34.5561 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     ReflectanceEstimationPreset     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel 0.0001     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square ReflectanceEstimationPreset out.mat     
+     smoothingMatrixMethod     Cor_Sample     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(139)     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  06-Feb-2019 01:37:08 
+ 91.3696 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_region     
+     action     ReflectanceEstimationPreset     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel 0.0001     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_region     
+     systemdir       input saitama_v5_min_region     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_region ReflectanceEstimationPreset out.mat     
+     smoothingMatrixMethod     Cor_Sample     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_region     
+     plotName       output saitama_v5_min_region ReflectanceEstimationPreset 9956_unfixed_005_normal_right_01_13 11 28_right_(139)     
+ -------------------------------------------
+
+
+
+
+
+

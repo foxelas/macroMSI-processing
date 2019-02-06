@@ -1,6 +1,6 @@
 %code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
 
-maxScale = 3;
+maxScale = 2;
 neighbors = 8;
 mapping=getmapping(neighbors,'riu2');
 

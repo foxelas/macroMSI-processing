@@ -17,6 +17,11 @@ if ~options.skipLoading
         w = warning('off', 'all');   
         fprintf('Reading spectral data according to ID file.\n');
 
+        if  ~isfile(generateName(options, 'matfilein'))
+            dateCreated = datetime();
+            save(generateName(options, 'matfilein'), 'dateCreated');
+        end
+        
         %% Read raw spectra 
         [uniqueSpectraNames, uniqueSpectraIdxs, uniqueSpectraIdxsInID] = unique(strcat({ID.Csvid}, {ID.T}));
         idd = ID(uniqueSpectraIdxs);
@@ -257,7 +262,8 @@ if ~options.skipLoading
         save(precomputedFile, 'Cor_Markovian', '-append');
         
         %% Smoothing matrix based on macbeth chart spectra
-        macbeths = param.avgMeasuredMacbeth(wavelengthIdxs,:);
+        load(precomputedFile, 'avgMeasuredMacbeth');
+        macbeths = avgMeasuredMacbeth(wavelengthIdxs,:);
 
         z=xcorr(macbeths, macbeths, 'coeff');
         r = z(wavelengthN:end);
@@ -295,6 +301,7 @@ if ~options.skipLoading
             end
         end
         save(fullfile(options.systemdir, 'precomputedParams.mat'), 'Coefficients', '-append');
+        load(fullfile(options.systemdir, 'precomputedParams.mat'), 'Coefficients');
         disp('Searching for reference coefficient...')
         ID = selectCoeffIndex(options);  
     
