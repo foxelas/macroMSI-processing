@@ -210,7 +210,7 @@ end
 function [trainIdx, testIdx] = createCVTestIndexes(validation, labels)
 
     if strcmp(validation, 'Kfold')
-        folds = 10;
+        folds = 5;
         CVO = cvpartition(labels,'k',folds);
         
     elseif strcmp(validation, 'LeaveOut')
@@ -274,7 +274,8 @@ function [avgPerformance, cvPerformance] = crossValidation(trainIndexes, testInd
     
     nonEmptyIdx = ~cellfun('isempty', {cvPerformance.ROCY});
     if sum(cellfun('isempty', {cvPerformance.ROCY})) > 0
-        sum(cellfun('isempty', {cvPerformance.ROCY}))
+        emptyClassifiers = sum(cellfun('isempty', {cvPerformance.ROCY}));
+        fprintf('Empty classifiers: %d\n', emptyClassifiers);
     end
     [avgPerformance.ROCX, avgPerformance.ROCY, avgPerformance.ROCT, AUC] = perfcurve({cvPerformance(nonEmptyIdx).Labels}, {cvPerformance(nonEmptyIdx).Scores}, 'Malignant', 'XVals', 'all');
     avgPerformance.AUC = AUC(1);

@@ -541,7 +541,8 @@ switch plotType
         
     case 'performanceComparison'
         
-        x = 1:length(lineNames);
+        N = length(lineNames);
+        x = 1:N;
         auc = performance(1,:)';
         accur = performance(2,:)';
         hold on 
