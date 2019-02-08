@@ -1,0 +1,24 @@
+-------------------------------------------
+ Run on  08-Feb-2019 16:14:56 
+ 0.0018197 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     actionClassification     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square actionClassification out.mat     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+ -------------------------------------------
+
+
+
+
+
+

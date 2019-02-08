@@ -1,0 +1,24 @@
+-------------------------------------------
+ Run on  05-Feb-2019 13:13:58 
+ 0.00034532 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     ReflectanceEstimationPreset_rgb     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     true     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square ReflectanceEstimationPreset_rgb out.mat     
+     saveImages     false     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+ -------------------------------------------
+
+
+
+
+
+

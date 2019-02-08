@@ -33,15 +33,15 @@ for g = 1:length(groups)
     [inputIdx, labels] = createClassifierInputIndexes(name, groups{g}, labelsAsText);
     [trainIdx, testIdx] = createCVTestIndexes(validation, labels);
     for p = 1:length(features)
-        observations = classifierInput(dataset, inputIdx, labels, features{p}, name);
+        observations = classifierInput(dataset, inputIdx, labels, features{p}, name, groups{g});
         for i = 1:length(votingRules)
             for k = [1, 3, 5]
                 for d = 1:length(classifierSettings)
-                    [performance, cvPerformance] = crossValidation(trainIdx, testIdx, observations, labels, classifier, k, classifierSettings{d}, votingRules{i});
-                    m = m + 1;
-                    classifiers(m) = struct('Input', groups{g}, 'Features', features{p}, ...
-                        'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Setting', classifierSettings{d}, 'FoldPerformance', cvPerformance,...
-                        'Performance', performance, 'Accuracy', performance.Accuracy, 'AccuracySD', performance.AccuracySD, 'AUC', performance.AUC, 'Fmeasure', performance.Fmeasure);
+%                     [performance, cvPerformance] = crossValidation(trainIdx, testIdx, observations, labels, classifier, k, classifierSettings{d}, votingRules{i});
+%                     m = m + 1;
+%                     classifiers(m) = struct('Input', groups{g}, 'Features', features{p}, ...
+%                         'Validation', validation, 'VoteRule', votingRules{i}, 'Neighbours', k, 'Setting', classifierSettings{d}, 'FoldPerformance', cvPerformance,...
+%                         'Performance', performance, 'Accuracy', performance.Accuracy, 'AccuracySD', performance.AccuracySD, 'AUC', performance.AUC, 'Fmeasure', performance.Fmeasure);
                 end
             end
         end
@@ -290,7 +290,9 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
     if (nargin < 3)
         labelsAsText = false;
     end
-    load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
+    
+    load( fullfile(generateName([], 'input'), name, 'ID.mat'), 'ID');
+    
     if strcmp(criterion, 'unique') || strcmp(criterion, 'fixed+unfixed')
         [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         
@@ -347,14 +349,18 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function G = classifierInput(dataset, inputIdx, labels, features, name)
+function observations = classifierInput(dataset, inputIdx, labels, features, name, inputgroup)
+
+    if (nargin < 6)
+        inputgroup = '';
+    end
 
     if strcmp(dataset, 'measured')
-        load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
+        load(fullfile(generateName([], 'input'), name, 'in.mat'), 'Spectra');
         Gall = Spectra;
 
     elseif strcmp(dataset, 'estimated')
-        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
+        load(fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
         Gall = EstimatedSpectra;
 
     else
@@ -365,14 +371,14 @@ function G = classifierInput(dataset, inputIdx, labels, features, name)
 
     if contains(features, 'pca' ) || contains(features, 'lda')
         [~, scores] = dimensionReduction(features, Ginput, labels);
-        G = scores(:, 1:10);
+        observations = scores(:, 1:10);
 
     else %contains(features, 'spectrum')
-        G = Ginput;
+        observations = Ginput;
     end
 
     if contains(features, 'lbp')
-        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'MultiScaleLbpFeatures');
+        load( fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'MultiScaleLbpFeatures');
         if contains(features, 'lbp1')
             scales = 1;
         elseif contains(features, 'lbp2')
@@ -383,14 +389,20 @@ function G = classifierInput(dataset, inputIdx, labels, features, name)
             scales = length(MultiScaleLbpFeatures);
         end      
         lbps = size(MultiScaleLbpFeatures{1},2);
-        Gplus = zeros(length(labels), length(G) + scales * lbps);
-        Gplus(:,1:size(G, 2)) = G;        
+        Gplus = zeros(length(labels), length(observations) + scales * lbps);
+        Gplus(:,1:size(observations, 2)) = observations;        
         for i = 1:scales
             lbpFeatures = MultiScaleLbpFeatures{i};
-            rangeIdx = length(G) + (i-1)*lbps + (1:lbps);
+            rangeIdx = length(observations) + (i-1)*lbps + (1:lbps);
             Gplus(:,rangeIdx) = lbpFeatures(inputIdx,:);
         end
-        G = Gplus;
+        observations = Gplus;
+    end
+    
+    %% Export feature set 
+    featuresFilename = fullfile(fullfile(generateName([], 'output'), name, 'Classification', strcat(strjoin({'FeatureVectors', inputgroup, features }, '_'), '.mat' ))
+    if ~exist( featuresFilename, 'file')
+        save(featuresFilename, 'observations', 'labels');
     end
 end
 

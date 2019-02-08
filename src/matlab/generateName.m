@@ -80,7 +80,12 @@ switch filename
             mkdir(directory);
             addpath(directory);
         end
-
+    case 'input'
+        dirCurrentName = fullfile('..', '..', '..', 'input');
+        
+    case 'output'
+        dirCurrentName = fullfile('..', '..', '..', 'output');
+        
     otherwise
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, filename);
         directory = fileparts(dirCurrentName);

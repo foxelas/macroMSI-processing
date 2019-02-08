@@ -63,4 +63,5 @@ options.saveOptions.plotName = generateName(options, [dimredMethodCap , ' of ', 
 plots(dimredMethod, 7, Gun * WMeasured, [dimredMethodCap,' Fix'], 'LineNames', lineNamesun, 'Latent', latent(1:10), 'Explained', explained(1:10), 'SaveOptions', options.saveOptions)
 options.saveOptions.plotName = generateName(options, [dimredMethodCap, ' of ', input, ' spectra by sample (only unfixed) [From measured base]']);
 plots(dimredMethod, 8, Gfx * WMeasuredUnfixed, [dimredMethodCap,' Sample'], 'LineNames', lineNamesfx, 'Latent', latent(1:10), 'Explained', explained(1:10),'SaveOptions', options.saveOptions)
+
 warning(w)

@@ -1,0 +1,50 @@
+-------------------------------------------
+ Run on  05-Feb-2019 17:33:15 
+ 83.2421 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     pca     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square pca out.mat     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square pca pca of measured spectra by sample (only unfixed)     
+ -------------------------------------------
+
+
+
+
+
+
+-------------------------------------------
+ Run on  05-Feb-2019 17:51:22 
+ 88.529 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     pca     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square pca out.mat     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square pca pca of measured spectra by sample (only unfixed)     
+ -------------------------------------------
+
+
+
+
+
+

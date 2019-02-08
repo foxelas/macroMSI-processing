@@ -1,0 +1,25 @@
+-------------------------------------------
+ Run on  05-Feb-2019 17:24:18 
+ 81.9648 s elapsed. 
+     tryReadData     false     
+     dataset     saitama_v5_min_square     
+     action     lda b     
+     pixelValueSelectionMethod     extended     
+     noiseType     sameForChannel     
+     skipLoading     false     
+     showImages     false     
+     datadir          mspi saitama_v5_min_square     
+     systemdir       input saitama_v5_min_square     
+     luminanceCorrection     1     
+     outName       output saitama_v5_min_square lda b out.mat     
+     saveImages     true     
+     saveInHQ     false     
+     savedir       output saitama_v5_min_square     
+     plotName       output saitama_v5_min_square lda b lda b of measured spectra by sample (only unfixed)     
+ -------------------------------------------
+
+
+
+
+
+
