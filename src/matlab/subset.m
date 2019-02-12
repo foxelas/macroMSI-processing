@@ -1,18 +1,18 @@
 function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
 
     if strcmp(input, 'measured')
-        load(fullfile(generateName([], 'input'), name, 'in.mat'), 'Spectra');
+        load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
         G = Spectra; % G rows are observations and columns are variables
 
     elseif strcmp(input, 'estimated')
-        load( fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
+        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
         G = EstimatedSpectra;
 
     else
         error('Not acceptable input. Choose "measured" or "estimated".')
     end
 
-    load(fullfile(generateName([], 'input'), name, 'ID.mat'), 'ID'); 
+    load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID'); 
 
     A = [ID.IsNormal];
     X = {'Malignant', 'Benign'};
