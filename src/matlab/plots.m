@@ -549,16 +549,16 @@ switch plotType
 
         if ~isnan(auc)
             yyaxis left
-            scatter(x, auc, 'b*');
+            scatter(x, auc, 50, 'b*');
             xlim([0, N+1]); ylim([0.5, 1]);
             ylabel('Area Under Curve')
-            text(x-0.2,auc,num2str(auc, '%.2f'));
+            text(x-0.3,auc,num2str(auc, '%.2f'), 'FontSize', 14);
         end
 
         yyaxis right
-        scatter(x, accur, 'ro');
+        scatter(x, accur, 50 ,'ro');
         ylabel('Accuracy %')
-        text(x+0.1,accur,num2str(accur, '%.2f'));
+        text(x+0.1,accur,num2str(accur, '%.2f'), 'FontSize', 14);
         ylim([50, 100]);
 
         hold off

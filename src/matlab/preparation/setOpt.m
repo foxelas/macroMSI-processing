@@ -5,11 +5,11 @@ if ~isfield(options, 'tryReadData')
 end
 
 if ~isfield(options, 'datadir')
-    options.datadir = fullfile('..', '..', '..', '..', '..', 'mspi', options.dataset);
+    options.datadir = fullfile('..', '..', '..', '..', '..', '..', 'mspi', options.dataset);
 end
 
 if ~isfield(options, 'systemdir')
-    options.systemdir = fullfile('..', '..', 'input', options.dataset);
+    options.systemdir = fullfile('..', '..', '..', 'input', options.dataset);
 end
 
 if ~isfield(options, 'pixelValueSelectionMethod')
@@ -18,11 +18,11 @@ end
 
 if ~isfield(options, 'saveOptions')
     options.saveOptions = struct('saveImages', true, 'saveInHQ', false, ...
-        'savedir', fullfile('..', '..', 'output', options.dataset));
+        'savedir', fullfile('..', '..', '..', 'output', options.dataset));
 end
 
 if ~isfield(options.saveOptions, 'savedir')
-    options.saveOptions.savedir = fullfile('..', '..', 'output', options.dataset);
+    options.saveOptions.savedir = fullfile('..', '..',  '..','output', options.dataset);
 end
 
 if ~isfield(options, 'skipLoading')

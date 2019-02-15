@@ -202,7 +202,7 @@ function [outputLog] = logInfo(options, runTime)
     end
     outputLog = strjoin([outputLog, '-------------------------------------------\n\n\n\n\n\n\n']);
     logname = strcat(options.action, '_log.txt');
-    fileID = fopen(fullfile('..', 'logs', logname), 'a');
+    fileID = fopen(fullfile('..', '..', 'logs', logname), 'a');
     fprintf(fileID, outputLog);
     fclose(fileID);
 

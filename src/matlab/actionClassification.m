@@ -2,9 +2,9 @@
 validations = {'LeaveOut', 'Kfold'};
 votingRules = {'majority', 'weighted majority', 'complex vote'};
 frechet = @(Z1,ZJ) arrayfun(@(x) DiscreteFrechetDist(ZJ(x,:), Z1), (1:size(ZJ,1))');
-distances = { frechet, 'correlation', 'chebychev', 'euclidean'};
-groups = {'fixed+unfixed', 'fixed', 'notcut', 'unfixed'}; %, 'unfixedleft' , 'goodleft', 'goodright'};
-features = {'spectrum', 'pca', 'lda', 'pcalda', 'spectrumlbp1', 'spectrumlbp2'}; %, 'spectrumlbp3'};
+distances = { frechet, 'correlation', 'euclidean'};
+groups = {'fixed+unfixed', 'fixed', 'unfixed'}; %, 'unfixedleft' , 'goodleft', 'goodright'};
+features = {'ref', 'refpca', 'reflda', 'refpcalda', 'lbp1', 'lbp2', 'reflbp1', 'reflbp2'}; %, 'spectrumlbp3'};
 options.saveOptions.saveInHQ = true;
 kernels = {'linear', 'rbf'};
 
@@ -33,7 +33,7 @@ for g = 1:length(groups)
     [inputIdx, labels] = createClassifierInputIndexes(name, groups{g}, labelsAsText);
     [trainIdx, testIdx] = createCVTestIndexes(validation, labels);
     for p = 1:length(features)
-        observations = classifierInput(dataset, inputIdx, labels, features{p}, name);
+        observations = classifierInput(dataset, inputIdx, labels, features{p}, name, groups{g});
         for i = 1:length(votingRules)
             for k = [1, 3, 5]
                 for d = 1:length(classifierSettings)
@@ -53,14 +53,16 @@ save( generateName(options, strcat(classifier,'_', dataset, '_', 'Classifier.mat
 [~, sortIdx] = sort([classifiers.Accuracy], 'descend'); % or classificationError.AvgAUC
 classifiers = classifiers(sortIdx);
 
-%% Comparison plots 
-compareClassifiers(classifiers, options, classifier, dataset, validation)
+if (options.showImages)
+    %% Comparison plots 
+    compareClassifiers(classifiers, options, classifier, dataset, validation)
 
-%% Comparison between input datasets 
-compareInputs(groups, classifiers, classifier, options, validation, dataset, 4);
+    %% Comparison between input datasets 
+    compareInputs(groups, classifiers, classifier, options, validation, dataset, 4);
 
-%% Comparison between features 
-compareFeatures(features, classifiers, classifier, options, validation, dataset, 5);
+    %% Comparison between features 
+    compareFeatures(features, classifiers, classifier, options, validation, dataset, 5);
+end
 
 disp('Finished classification')
 
@@ -290,11 +292,13 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
     if (nargin < 3)
         labelsAsText = false;
     end
-    load(fullfile('..', '..', 'input', name, 'ID.mat'), 'ID');
+    
+    load( fullfile(generateName([], 'input'), name, 'ID.mat'), 'ID');
+    
     if strcmp(criterion, 'unique') || strcmp(criterion, 'fixed+unfixed')
         [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         
-    elseif strcmp(criterion, 'notcut')
+    elseif strcmp(criterion, 'fixed+unfixed')  % not cut 
         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsCut] == false));
         
@@ -302,7 +306,7 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == true));
 
-    elseif strcmp(criterion, 'unfixed') ||  strcmp(criterion, 'unfixedright')
+    elseif strcmp(criterion, 'unfixed') ||  strcmp(criterion, 'unfixedright') 
         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
@@ -330,7 +334,7 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
     end
     
     if ~ strcmp(criterion, 'all')
-        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'goodSampleIndexes');
+        load(fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'goodSampleIndexes');
         inputIdx = intersect(inputIdx, find(goodSampleIndexes));
     end
         
@@ -347,32 +351,39 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function G = classifierInput(dataset, inputIdx, labels, features, name)
+function observations = classifierInput(dataset, inputIdx, labels, features, name, inputgroup)
 
-    if strcmp(dataset, 'measured')
-        load(fullfile('..', '..', 'input', name, 'in.mat'), 'Spectra');
-        Gall = Spectra;
+    if (nargin < 6)
+        inputgroup = '';
+    end
 
-    elseif strcmp(dataset, 'estimated')
-        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
-        Gall = EstimatedSpectra;
+    reflectanceFeats = [];
+    if contains(features, 'ref')
+        if strcmp(dataset, 'measured')
+            load(fullfile(generateName([], 'input'), name, 'in.mat'), 'Spectra');
+            Gall = Spectra;
 
-    else
-        error('Not acceptable input. Choose "measured" or "estimated".')
+        elseif strcmp(dataset, 'estimated')
+            load(fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
+            Gall = EstimatedSpectra;
+
+        else
+            error('Not acceptable input. Choose "measured" or "estimated".')
+        end
+
+        reflectanceFeats = Gall(inputIdx, :);  % G rows are observations and columns are variables
+
+        if contains(features, 'pca' ) || contains(features, 'lda')
+            parts = split(features, 'lbp');
+            projection = strrep(parts(1), 'ref', '');
+            [~, scores] = dimensionReduction(projection, reflectanceFeats, labels);
+            reflectanceFeats = scores(:, 1:10);
+        end
     end
     
-    Ginput = Gall(inputIdx, :);  % G rows are observations and columns are variables
-
-    if contains(features, 'pca' ) || contains(features, 'lda')
-        [~, scores] = dimensionReduction(features, Ginput, labels);
-        G = scores(:, 1:10);
-
-    else %contains(features, 'spectrum')
-        G = Ginput;
-    end
-
+    lbpFeats = [];
     if contains(features, 'lbp')
-        load(fullfile('..', '..', 'output', name, 'ReflectanceEstimationPreset', 'out.mat'), 'MultiScaleLbpFeatures');
+        load( fullfile(generateName([], 'output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'MultiScaleLbpFeatures');
         if contains(features, 'lbp1')
             scales = 1;
         elseif contains(features, 'lbp2')
@@ -383,14 +394,19 @@ function G = classifierInput(dataset, inputIdx, labels, features, name)
             scales = length(MultiScaleLbpFeatures);
         end      
         lbps = size(MultiScaleLbpFeatures{1},2);
-        Gplus = zeros(length(labels), length(G) + scales * lbps);
-        Gplus(:,1:size(G, 2)) = G;        
+        lbpFeats = zeros(length(labels), scales * lbps);      
         for i = 1:scales
             lbpFeatures = MultiScaleLbpFeatures{i};
-            rangeIdx = length(G) + (i-1)*lbps + (1:lbps);
-            Gplus(:,rangeIdx) = lbpFeatures(inputIdx,:);
+            rangeIdx = (i-1)*lbps + (1:lbps);
+            lbpFeats(:,rangeIdx) = lbpFeatures(inputIdx,:);
         end
-        G = Gplus;
+    end    
+    observations = [reflectanceFeats, lbpFeats]; 
+    
+    %% Export feature set 
+    featuresFilename = fullfile(generateName([], 'output'), name, 'Classification', strcat(strjoin({'FeatureVectors', inputgroup, features }, '_'), '.mat' ));
+    if ~exist( featuresFilename, 'file')
+        save(featuresFilename, 'observations', 'labels');
     end
 end
 
