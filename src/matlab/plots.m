@@ -398,7 +398,7 @@ switch plotType
     case {'pca', 'lda', 'pca b', 'lda b', 'pcalda'}     
         %% plot discriminant analysis results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        if strcmp(plotType, 'pca')
+        if strcmp(plotType, 'pca') && ~isempty(latent) && ~isempty(explained)
             subplot(1, 3, 1);
             plot(1:length(latent), latent, '-mx');
             xlabel('Sorted eigenvalue index');
