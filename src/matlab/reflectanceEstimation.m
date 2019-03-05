@@ -68,13 +68,13 @@ signalCov = [0.0290584774952317;0.0355809665018991;0.0254338785693633;0.02780028
 
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
     load(precomputedFile, 'Coefficients');
-    coeff = squeeze(Coefficients(id.Index, 3, 1:7))'; %id.CoeffIndex
+    coeff = squeeze(Coefficients(id.CoeffID, 3, 1:7))'; %id.CoeffID %id.Index
     coeff = [sum(coeff(1:2)), sum(coeff(3:5)), sum(coeff(6:7))];
 else
     load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
     pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
-    coeff = squeeze(Coefficients(id.Index, pvmIdx, 1:7))'; %id.CoeffIndex
+    coeff = squeeze(Coefficients(id.CoeffID, pvmIdx, 1:7))'; %id.CoeffID %id.Index
 end
 
 
@@ -123,7 +123,7 @@ G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI
 %G = G ./ options.luminanceCorrection;
 
 % computed beforehand with prepareSmoothingMatrix
-isBenign = id.IsNormal;
+isBenign = id.IsBenign;
 if (id.IsCut)
     fixing = 'Cut';
 elseif (id.IsFixed)
@@ -150,7 +150,7 @@ switch smoothingMatrixMethod
         
     case 'Cor_Sample' % average xcorr of all measured data for each sample
         load(precomputedFile, 'Cor_Sample');
-        M = squeeze(Cor_Sample(id.SampleId,:,:));
+        M = squeeze(Cor_Sample(id.SampleID,:,:));
         
     case 'Cor_Malignancy'
         if isBenign
@@ -176,31 +176,31 @@ switch smoothingMatrixMethod
     case 'Cor_SampleMalignancy' % average xcorr of all measured cancerous data for cancerous sample
         if isBenign
             load(precomputedFile, 'Cor_SampleBenign');
-            M = squeeze(Cor_SampleBenign(id.SampleId,:,:));
+            M = squeeze(Cor_SampleBenign(id.SampleID,:,:));
         else
             load(precomputedFile, 'Cor_SampleMalignant');
-            M = squeeze(Cor_SampleMalignant(id.SampleId,:,:));
+            M = squeeze(Cor_SampleMalignant(id.SampleID,:,:));
         end
         
     case 'Cor_SampleMalignancyFixing' % average xcorr of all fixed cancer measured data for fixed cancer sample
         if isBenign && strcmp(fixing, 'Cut')
             load(precomputedFile, 'Cor_SampleBenignCut');
-            M = squeeze(Cor_SampleBenignCut(id.SampleId,:,:));
+            M = squeeze(Cor_SampleBenignCut(id.SampleID,:,:));
         elseif isBenign && strcmp(fixing, 'Fixed')
             load(precomputedFile, 'Cor_SampleBenignFixed');
-            M = squeeze(Cor_SampleBenignFixed(id.SampleId,:,:));
+            M = squeeze(Cor_SampleBenignFixed(id.SampleID,:,:));
         elseif isBenign && strcmp(fixing, 'Unfixed')
             load(precomputedFile, 'Cor_SampleBenignUnfixed');
-            M = squeeze(Cor_SampleBenignUnfixed(id.SampleId,:,:));
+            M = squeeze(Cor_SampleBenignUnfixed(id.SampleID,:,:));
         elseif ~isBenign && strcmp(fixing, 'Cut')
             load(precomputedFile, 'Cor_SampleMalignantCut');
-            M = squeeze(Cor_SampleMalignantCut(id.SampleId,:,:));
+            M = squeeze(Cor_SampleMalignantCut(id.SampleID,:,:));
         elseif ~isBenign && strcmp(fixing, 'Fixed')
             load(precomputedFile, 'Cor_SampleMalignantFixed');
-            M = squeeze(Cor_SampleMalignantFixed(id.SampleId,:,:));
+            M = squeeze(Cor_SampleMalignantFixed(id.SampleID,:,:));
         elseif ~isBenign && strcmp(fixing, 'Unfixed')
             load(precomputedFile, 'Cor_SampleMalignantUnfixed');
-            M = squeeze(Cor_SampleMalignantUnfixed(id.SampleId,:,:));
+            M = squeeze(Cor_SampleMalignantUnfixed(id.SampleID,:,:));
         else 
             error('Unsupported type')
         end

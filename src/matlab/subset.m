@@ -14,27 +14,27 @@ function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
 
     load(fullfile(generateName([], 'input'), name, 'ID.mat'), 'ID'); 
 
-    A = [ID.IsNormal];
+    A = [ID.IsBenign];
     X = {'Malignant', 'Benign'};
     B = X(1+A);
 
     lineNames = strcat([ID.Sample], '_', [ID.Type], '_', B)';
 
     if strcmp(criterion, 'unique')
-        [~, subIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, subIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
 
     elseif strcmp(criterion, 'unfixed')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         subIdx = intersect(unIdx, find([ID.IsFixed] == false));
 
     elseif strcmp(criterion, 'goodright')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         goodIdx = intersect(unIdx , find([ID.IsGood]));
         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
         subIdx = intersect(unIdx, goodIdx);
     
     elseif strcmp(criterion, 'goodleft')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
         goodIdx = intersect(unIdx , find([ID.IsGood]));
         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
         subIdx = intersect(unIdx, goodIdx);
@@ -43,15 +43,15 @@ function [Gs, lineNamesGs, subIdx, As] = subset(input, name, criterion)
         subIdx = A == A;
 
     elseif strcmp(criterion, 'fixed')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         subIdx = intersect(unIdx, find([ID.IsFixed] == true));
         
     elseif strcmp(criterion, 'unfixedleft')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
         subIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
     elseif strcmp(criterion, 'unfixedright')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         subIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
     else

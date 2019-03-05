@@ -40,24 +40,24 @@ switch filename
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
 
     case 'csv'
-        if isempty(idx.Csvid)
-            currentName = num2str(idx.UniqueCount);
+        if isempty(idx.SpectrumFile)
+            currentName = num2str(idx.MsiID);
         else
-            currentName = strrep(idx.Csvid, '.csv', '');
+            currentName = strrep(idx.SpectrumFile, '.csv', '');
             currentName = strrep(currentName, '\', '_');
         end
 
     case 'sample'
-        splits = strsplit(idx.Csvid, '\');
+        splits = strsplit(idx.SpectrumFile, '\');
         currentName = splits{1};
 
     case 'current'  
         [~, csv] = generateName(options, 'csv', idx);
         time = strrep(idx.T, ':', ' ');
         time = strrep(time, '.', ',');
-        un = strcat('(', num2str(idx.UniqueCount) , ')');
+        un = strcat('(', num2str(idx.MsiID) , ')');
         load(fullfile(options.systemdir, 'data.mat'), 'data');
-        datax = data(:, idx.Representative);
+        datax = data(:, idx.RgbID);
         if (~isempty(datax) && isnumeric(datax.Sample))
             datax.Sample = num2str(datax.Sample);
         end

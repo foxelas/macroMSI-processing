@@ -163,7 +163,7 @@ for k = 1:msiN
 %         scatter( [450, 465, 505, 525, 575, 605, 630], squeeze( raw2msi(msi(:, minIdx(1), minIdx(2), :), 'adjusted')) * 25, 'mo');
 %         hold off
         if false %(isSingleMethod)
-            [~, whiteReference] = readMSI({data(ID(k).Data).File});
+            [~, whiteReference] = readMSI({data([data.MsiID] == ID(k).MsiID).File});
             coordinates = [newCoordinates(k, 1:2); ID(k).Originx, ID(k).Originy];
             plots('cropped', 2, 'Image', whiteReference + cat(3, 0.1*maskI, 0.05*maskI, 0.1*maskI), 'Coordinates', coordinates );
         end

@@ -296,32 +296,32 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
     load( fullfile(generateName([], 'input'), name, 'ID.mat'), 'ID');
     
     if strcmp(criterion, 'unique') || strcmp(criterion, 'fixed+unfixed')
-        [~, inputIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, inputIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         
     elseif strcmp(criterion, 'fixed+unfixed')  % not cut 
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsCut] == false));
         
     elseif strcmp(criterion, 'fixed')
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == true));
 
     elseif strcmp(criterion, 'unfixed') ||  strcmp(criterion, 'unfixedright') 
-        [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+        [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
 %     elseif strcmp(criterion, 'unfixedleft')
-%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+%         [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
 %         inputIdx = intersect(unIdx, find([ID.IsFixed] == false));
         
 %     elseif strcmp(criterion, 'goodright') || strcmp(criterion, 'good')
-%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'last');
+%         [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
 %         goodIdx = intersect(unIdx , find([ID.IsGood]));
 %         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
 %         inputIdx = intersect(unIdx, goodIdx);
 %     
 %     elseif strcmp(criterion, 'goodleft')
-%         [~, unIdx, ~] = unique(strcat({ID.Csvid}, {ID.T}), 'first');
+%         [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
 %         goodIdx = intersect(unIdx , find([ID.IsGood]));
 %         %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
 %         inputIdx = intersect(unIdx, goodIdx);
@@ -338,7 +338,7 @@ function [inputIdx, labels] = createClassifierInputIndexes(name, criterion, labe
         inputIdx = intersect(inputIdx, find(goodSampleIndexes));
     end
         
-    A = [ID.IsNormal]';
+    A = [ID.IsBenign]';
     if (labelsAsText)
         X = {'Malignant', 'Benign'};
         labels = X(1+A);

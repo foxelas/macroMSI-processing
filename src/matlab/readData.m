@@ -23,16 +23,16 @@ if ~options.skipLoading
         end
         
         %% Read raw spectra 
-        [uniqueSpectraNames, uniqueSpectraIdxs, uniqueSpectraIdxsInID] = unique(strcat({ID.Csvid}, {ID.T}));
+        [uniqueSpectraNames, uniqueSpectraIdxs, uniqueSpectraIdxsInID] = unique(strcat({ID.SpectrumFile}, {ID.T}));
         idd = ID(uniqueSpectraIdxs);
         specN = length(uniqueSpectraIdxs);
         completeUniqueSpectra = zeros(specN, 401);
 
         for i = 1:specN
             % read raw measured spectrum
-            rawSpectrum = readSpectrum(idd(i).Csvid, idd(i).T);
+            rawSpectrum = readSpectrum(idd(i).SpectrumFile, idd(i).T);
             % read raw white measured spectrum of the reference surface
-            referenceSpectrum = readSpectrum(char(strcat(data(idd(i).Representative).Sample, '\', 'white.csv')));
+            referenceSpectrum = readSpectrum(char(strcat(data(idd(i).RgbID).Sample, '\', 'white.csv')));
 
             if abs(rawSpectrum-referenceSpectrum) < 0.000001
                 error('Measurement is same as white.')
@@ -62,7 +62,7 @@ if ~options.skipLoading
         WhiteIs = cell(msiN,1);
         DarkIs = cell(msiN,1);
         
-        groups = findgroups([ID.UniqueCount]);
+        groups = findgroups([ID.MsiID]);
         for g = 1:max(groups)
         %% Read MSI
             gIdxs = find(groups == g);
@@ -78,7 +78,7 @@ if ~options.skipLoading
             end
             
             idd = ID(gIdxs(1));
-            files = {data(idd.Data).File};    
+            files = {data([data.MsiID] == idd.MsiID).File};    
             if contains(options.dataset, 'region')
                 [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion(files, coordinates, currentOptions);
 
@@ -159,7 +159,7 @@ if ~options.skipLoading
                 rAll(:, total) =  ref;
                 rSample(:, j) =  ref;
 
-                if (id.IsNormal)
+                if (id.IsBenign)
                     %% Benign case
                     rBenign(:, total) =  ref; 
                     rSampleBenign(:, j) =  ref; 

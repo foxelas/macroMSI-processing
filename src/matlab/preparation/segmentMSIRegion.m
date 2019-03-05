@@ -39,7 +39,7 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = se
 
     % Retrieve whole MSI
     [MSI, whiteReference, darkReference] = readMSI(files); %     I = squeeze(MSI(1,:,:,:));    
-    g = permute(valueSelect(MSI, 'adjusted'), [2, 3, 1]);
+    g = permute(raw2msi(MSI, 'adjusted'), [2, 3, 1]);
     
     segmentWhite = cell(ROIs,1);
     segmentDark = cell(ROIs,1);

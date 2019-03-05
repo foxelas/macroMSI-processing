@@ -7,14 +7,14 @@ function [data, ID] = prepareDirectory(directory)
 %     {'IMG'        }
 %     {'IsCut'      }
 %     {'IsFixed'    }
-%     {'IsNormal'   }
+%     {'IsBenign'   }
 %     {'Originx'    }
 %     {'Originy'    }
 %     {'Sample'     }
 %     {'T'          }
 %     {'Type'       }
-%     {'UniqueCount'}
-%     {'csvid'      }
+%     {'MsiID'}
+%     {'SpectrumFile'      }
 %     {'data'       }
 %     {'rmse'       }
 
@@ -32,7 +32,7 @@ end
 filetype = 'tif';
 D = rdir(['*\*\*\*.', filetype]);
 dataInfo = {D.name}';
-data = struct('File', {}, 'Sample', {}, 'Type', {}, 'Camera', {}, 'Filename', {}, 'Extension', {}, 'UniqueCount', [], 'Count', [], 'HasPointImg', [], 'HasSpectralData', []);
+data = struct('File', {}, 'Sample', {}, 'Type', {}, 'Camera', {}, 'Filename', {}, 'Extension', {}, 'MsiID', [], 'Count', [], 'HasPointImg', [], 'HasSpectralData', []);
 count = 0;
 for i = 1:length(dataInfo)
     dataSplit = strsplit(dataInfo{i}, {'\', '.'});
@@ -49,7 +49,7 @@ for i = 1:length(dataInfo)
     end
     count = count + 1;
     data(i).Count = ceil(count/8);
-    data(i).UniqueCount = ceil(i/8);
+    data(i).MsiID = ceil(i/8);
 end
 
 pointImg = rdir('*\*\IMG*.jpg');
@@ -63,7 +63,7 @@ for i = 1:length(pointImg)
     end
 end
 
-fprintf('Total number of images = %d, of which:\n', data(end).UniqueCount);
+fprintf('Total number of images = %d, of which:\n', data(end).MsiID);
 fprintf('      unfixed = %d\n', sum(strcmp([data.Type], 'unfixed'))/8);
 fprintf('      fixed = %d\n', sum(strcmp([data.Type], 'fixed'))/8);
 fprintf('      cut = %d\n', sum(strcmp([data.Type], 'cut'))/8);
@@ -78,7 +78,7 @@ for i = 1:length(dirs)
 end
 
 %% create ID.mat
-ID = struct('UniqueCount', [], 'Originx', [], 'Originy', [], 'IsNormal', [], 'T', {}, 'IsFixed', [], 'csvid', {}, 'IMG', {}, 'CoeffRef', {}, 'data', []);
+ID = struct('MsiID', [], 'Originx', [], 'Originy', [], 'IsBenign', [], 'T', {}, 'IsFixed', [], 'SpectrumFile', {}, 'IMG', {}, 'CoeffID', {});
 
 csvList = rdir('*\*\*.csv');
 if ~isempty(csvList)
@@ -95,34 +95,33 @@ if ~isempty(csvList)
             [~, times, ~] = xlsread(csvList(i).name, 1, 'A3');
             times = strsplit(char(times), ',');
             if contains(csvList(i).name, {'notnormal', 'not_normal', 'cancer', 'shuyou'}, 'IgnoreCase', true)
-                isNormal = false;
+                IsBenign = false;
             else
-                isNormal = true;
+                IsBenign = true;
             end
             for n = 2:numel(times)
-                ID(l).UniqueCount = data(k).UniqueCount;
+                ID(l).MsiID = data(k).MsiID;
                 ID(l).Originx = 1;
                 ID(l).Originy = 1;
-                ID(l).Csvid = csvList(i).name;
+                ID(l).SpectrumFile = csvList(i).name;
                 if contains(csvList(i).name, {'notnormal', 'not_normal', 'cancer', 'shuyou'}, 'IgnoreCase', true)
-                    ID(l).IsNormal = false;
+                    ID(l).IsBenign = false;
                 else
-                    ID(l).IsNormal = true;
+                    ID(l).IsBenign = true;
                 end
-                ID(l).IsNormal = isNormal;
+                ID(l).IsBenign = IsBenign;
                 ID(l).T = times{n};
-                ID(l).Data = find([data.UniqueCount] == ID(l).UniqueCount);
-                ID(l).Sample = data(ID(l).Representative).Sample;
-                ID(l).Type = data(ID(l).Representative).Type;
-                ID(l).IsFixed = ~contains(data(ID(l).Representative).File, 'unfixed');
-                ID(l).IsCut = contains(data(ID(l).Representative).File, 'cut');
+                ID(l).Sample = data(ID(l).RgbID).Sample;
+                ID(l).Type = data(ID(l).RgbID).Type;
+                ID(l).IsFixed = ~contains(data(ID(l).RgbID).File, 'unfixed');
+                ID(l).IsCut = contains(data(ID(l).RgbID).File, 'cut');
                 l = l + 1;
             end
         end
     end
-    a = {ID.UniqueCount};
+    a = {ID.MsiID};
     b = {ID.T};
-    d = {ID.Csvid};
+    d = {ID.SpectrumFile};
     c = cellfun(@(x, y, z) [x, y, z], a', b', d', 'un', 0);
     [~, ii] = unique(c, 'stable');
     ID = ID(ii);
@@ -133,7 +132,7 @@ samples = unique([ID.Sample]);
 for i = 1 : length(samples)
     for j = 1:length(ID)
         if strcmp(samples(i), ID(j).Sample)
-            ID(j).SampleId = i;
+            ID(j).SampleID = i;
         end
     end
 end
@@ -145,12 +144,12 @@ if ~isempty(measuredmat)
         % sample name exists in the measument list
         if ~isempty(strfind({measuredReflectance.sampleName}, data(i).Sample))
             l = ceil(i/8);
-            ID(l).UniqueCount = data(i).UniqueCount;
+            ID(l).MsiID = data(i).MsiID;
             ID(l).Originx = 1200;
             ID(l).Originy = 800;
             ID(l).IsFixed = false;
-            ID(l).IsNormal = true;
-            ID(l).Data = find([data.UniqueCount] == ID(k).UniqueCount);
+            ID(l).IsBenign = true;
+            ID(l).Data = find([data.MsiID] == ID(k).MsiID);
         end
     end
 end

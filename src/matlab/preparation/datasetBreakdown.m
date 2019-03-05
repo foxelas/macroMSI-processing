@@ -1,7 +1,7 @@
 function [] = datasetBreakdown(ID,options)
 %%Count and analyze the contents of the dataset
 
-    [~, idx, ~] = unique(strcat({ID.Csvid}, {ID.T}));
+    [~, idx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}));
     measuredSpectraCount = length(idx);
     normalFixedCount = 0;
     normalCutCount = 0;
@@ -12,17 +12,17 @@ function [] = datasetBreakdown(ID,options)
     for i = 1:measuredSpectraCount
         if ~(ID(idx(i)).IsFixed)
             unfixedCount = unfixedCount + 1;
-            if ID(idx(i)).IsNormal
+            if ID(idx(i)).IsBenign
                 normalUnfixedCount = normalUnfixedCount + 1;
             end
         elseif (ID(idx(i)).IsFixed && ~(ID(idx(i)).IsCut))
             fixedCount = fixedCount + 1;
-            if ID(idx(i)).IsNormal
+            if ID(idx(i)).IsBenign
                 normalFixedCount = normalFixedCount + 1;
             end
         else
             cutCount = cutCount + 1;
-            if ID(idx(i)).IsNormal
+            if ID(idx(i)).IsBenign
                 normalCutCount = normalCutCount + 1;
             end
         end

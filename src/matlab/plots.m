@@ -415,10 +415,10 @@ switch plotType
         attr = split(lineNames, ' ');
         sample = {attr{:, 1}}';
         type = {attr{:, 2}}';
-        isNormal = {attr{:, 3}}';
-        idx = strcmp(isNormal, 'Normal') | strcmp(isNormal, 'Benign');
+        isBenign = {attr{:, 3}}';
+        idx = strcmp(isBenign, 'Normal') | strcmp(isBenign, 'Benign');
         colors(idx) = 'b';
-        colors(~ismember(idx, 1:length(isNormal))) = 'r';
+        colors(~ismember(idx, 1:length(isBenign))) = 'r';
         
         %dummy legends
         h = zeros(2, 1);

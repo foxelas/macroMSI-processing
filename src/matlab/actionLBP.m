@@ -11,7 +11,7 @@ for scale = 1:maxScale
     lbpFeatures = zeros(msiN, msibands * 10);
     for k=1:msiN
         
-        files = {data(ID(k).Data).File};   
+        files = {data([data.MsiID] == ID(k).MsiID).File}; %{data(ID(k).Data).File};   
         coordinates = [ID(k).Originx; ID(k).Originy];
         % coordinates = out.newCoordinates(k,:);
         msi = readMSI(files, coordinates, 5 + scale, 5 + scale, []); 

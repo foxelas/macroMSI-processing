@@ -42,7 +42,7 @@ for i = 1:max(G)
             coeffIndexMin = coeffIndex;
         end
     end
-    [ID(idxs).CoeffIndex] = deal(coeffIndexMin);
+    [ID(idxs).CoeffID] = deal(coeffIndexMin);
 end
 
 ID = orderfields(ID);
