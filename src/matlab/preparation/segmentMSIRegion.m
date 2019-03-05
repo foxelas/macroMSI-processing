@@ -67,7 +67,7 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = se
             patchY = (y-2):(y+2);
             mask(patchY, patchX) = 1;
         end
-        segmentMaskI{roi}.maskI = mask;
+        segmentMaskI{roi} = mask;
         [r, c] = find(mask);
         patchY = min(r):max(r);
         patchX = min(c):max(c);
