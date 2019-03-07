@@ -1,14 +1,17 @@
 from os.path import dirname, join as pjoin
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as QDA
+from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import scipy.io as sio 
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import interactive
+from matplotlib import interactive 
+import time 
 
-interactive(True)
+#interactive(True)
 
 # exec(open("main.py").read())
 
@@ -83,6 +86,8 @@ is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
 ###################Measured Data######
 
 measured_spectra, unique_ids = np.unique(spectra, return_index=True, axis=0)
+sc = StandardScaler()
+measured_spectra = sc.fit_transform(measured_spectra)
 measuredN = len(measured_spectra)
 labels = is_benign[unique_ids]
 label_dict = {0: 'Malignant', 1: 'Benign'}
@@ -128,11 +133,28 @@ print("pca-projected dimension ", measured_pca.shape)
 print("pca explained variance ", pca.explained_variance_)
 plot_da(measured_pca, 'Principal Component Analysis')
 
+##################RandomForest########
+model = RandomForestRegressor(random_state=1, max_depth=10)
+model.fit(measured_spectra,labels)
+features = np.linspace(380, 780, 81)
+importances = model.feature_importances_
+indices = np.argsort(importances)[-9:]  # top 10 features
+mean_importance = np.mean(importances)
+print(mean_importance)
+print(indices)
+plt.figure()
+plt.title('Feature Importances')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), [features[i] for i in indices])
+plt.xlabel('Relative Importance')
+plt.show()
+
 ##################LDA#################
-lda = LDA(n_components=2)
+lda = LDA(n_components=2, solver="svd", store_covariance=True)
+#y_pred = lda.fit(measured_spectra, labels).predict(measured_spectra)
 measured_lda = lda.fit(measured_spectra, labels).transform(measured_spectra)
 #plot_da(measured_lda, 'Linear Discriminant Analysis')
-
+ 
 ##################QDA#################
 qda = QDA()
 measured_qda = qda.fit(measured_spectra, labels).predict(measured_spectra)
