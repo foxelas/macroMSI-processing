@@ -1,9 +1,12 @@
 from os.path import dirname, join as pjoin
-from sklearn.decomposition import PCA
+from sklearn import manifold
+from sklearn.decomposition import PCA, FactorAnalysis, TruncatedSVD, FastICA 
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as QDA
+from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestRegressor
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import scipy.io as sio 
 import pandas as pd
@@ -95,14 +98,7 @@ benign_ids = get_indexes(1, is_benign[unique_ids])
 malignant_ids = get_indexes(0, is_benign[unique_ids])
 
 def plot_da(X, title):
-	if 'Principal' in title:
-		tag = 'PC'
-	elif 'Linear' in title:
-		tag = 'LD'
-	elif 'Quadratic' in title:
-		tag = 'QD'
-	else:
-		tag = ''
+	tag = title.strip('Analysis')
 
 	plt.figure()
 	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
@@ -122,46 +118,111 @@ def plot_da(X, title):
 	plt.tight_layout
 	plt.show()
 
+def plot_da3(X, title):
+	tag = title.strip('Analysis')
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
+		ax.scatter(xs=X[:,0][labels == label], 
+					ys=X[:,1][labels == label] * -1, #To flip the plot
+					zs=X[:,2][labels == label] * -1, #To flip the plot
+					marker=marker,
+					color=color,
+					alpha=0.7,
+					label=label_dict[label])
+	ax.set_xlabel(tag + '1')
+	ax.set_ylabel(tag + '2')
+	ax.set_zlabel(tag + '3')
+
+	leg = plt.legend(loc='upper right', fancybox=True)
+	leg.get_frame().set_alpha(0.7)
+	plt.title(title)
+
+	plt.grid()
+	plt.tight_layout
+	plt.show()
+
+def plot_da_components(X, title):
+	plt.figure()
+	plt.title(title)
+	plt.scatter(X[:,0], X[:,1], label='1st and 2nd Component')
+	plt.scatter(X[:,1], X[:,2], label='2nd and 3rd Component')
+	plt.scatter(X[:,2], X[:,0], label='1st and 3rd Component')
+	leg = plt.legend(loc='upper right', fancybox=True)
+	leg.get_frame().set_alpha(0.7)
+	plt.show()
+
+##################RandomForest########
+rf = RandomForestRegressor(random_state=1, max_depth=10)
+rf.fit(measured_spectra,labels)
+features = np.linspace(380, 780, 81)
+importances = rf.feature_importances_
+indices = np.argsort(importances)[-9:]  # top 10 features
+mean_importance = np.mean(importances)
+print('Average wavelength importance: ', mean_importance)
+plt.figure()
+plt.title('Wavelength Importances')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), [features[i] for i in indices])
+plt.xlabel('Relative Importance')
+plt.show()
+measured_rf = SelectFromModel(rf).fit_transform(measured_spectra, labels)
+print('Reduced dimensions: ', measured_rf.shape)
+
 ##################PCA#################
 pca = PCA(n_components=2)
-
-#Measured Spectra PCA 
 pca.fit(measured_spectra)
 measured_pca = pca.transform(measured_spectra)
 print("original dimension: ", measured_spectra.shape)
 print("pca-projected dimension ", measured_pca.shape)
 print("pca explained variance ", pca.explained_variance_)
 plot_da(measured_pca, 'Principal Component Analysis')
+print('Reduced dimensions: ', measured_pca.shape)
 
-##################RandomForest########
-model = RandomForestRegressor(random_state=1, max_depth=10)
-model.fit(measured_spectra,labels)
-features = np.linspace(380, 780, 81)
-importances = model.feature_importances_
-indices = np.argsort(importances)[-9:]  # top 10 features
-mean_importance = np.mean(importances)
-print(mean_importance)
-print(indices)
-plt.figure()
-plt.title('Feature Importances')
-plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-plt.yticks(range(len(indices)), [features[i] for i in indices])
-plt.xlabel('Relative Importance')
-plt.show()
+##################SVD########
+measured_svd = TruncatedSVD(n_components=3, random_state=42).fit_transform(measured_spectra)
+plot_da3(measured_svd, 'SVD Component Analysis') 
+plot_da_components(measured_svd, 'SVD Components')
+
+##################FactorAnalysis########
+measured_fa = FactorAnalysis(n_components = 2).fit_transform(measured_spectra) #without labels 
+plot_da(measured_fa, 'Factor Analysis') 
+print('Reduced dimensions: ', measured_fa.shape)
+
+measured_fa = FactorAnalysis(n_components = 3).fit_transform(measured_spectra, labels) #with labels 
+plot_da3(measured_fa, 'Factor Analysis') 
+print('Reduced dimensions: ', measured_fa.shape)
+plot_da_components(measured_fa, 'Factor Analysis Components')
+
+##################ICA########
+ica = FastICA(n_components=3, random_state=12, max_iter=500, tol=0.001) 
+measured_ica=ica.fit_transform(measured_spectra)
+plot_da(measured_ica, 'Independent Component Analysis')
+plot_da3(measured_ica, 'Independent Component Analysis') 
+
+##################ISOMAP########
+measured_isomap = manifold.Isomap(n_neighbors=5, n_components=3, n_jobs=-1).fit_transform(measured_spectra)
+plot_da_components(measured_isomap, 'ISOMAP Components')
+plot_da3(measured_isomap, 'ISOMAP Component Analysis') 
+
+##################t-SNE########
+measured_tsne = manifold.TSNE(n_components=3, n_iter=300).fit_transform(measured_spectra)
+plot_da_components(measured_tsne, 't-SNE Components')
+plot_da3(measured_tsne, 't-SNE Component Analysis') 
+
 
 ##################LDA#################
 lda = LDA(n_components=2, solver="svd", store_covariance=True)
 #y_pred = lda.fit(measured_spectra, labels).predict(measured_spectra)
 measured_lda = lda.fit(measured_spectra, labels).transform(measured_spectra)
+print('Reduced dimensions: ', measured_lda.shape)
 #plot_da(measured_lda, 'Linear Discriminant Analysis')
  
 ##################QDA#################
 qda = QDA()
 measured_qda = qda.fit(measured_spectra, labels).predict(measured_spectra)
 #plot_da(measured_qda, 'Quadratic Discriminant Analysis')
-
-#head, *tail = Spectra
-
 
 
 #from sklearn.model_selection import train_test_split
