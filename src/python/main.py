@@ -1,4 +1,5 @@
-from os.path import dirname, join as pjoin
+from os import mkdir, makedirs
+from os.path import dirname, join as pjoin, exists
 from sklearn import manifold
 from sklearn.decomposition import PCA, FactorAnalysis, TruncatedSVD, FastICA 
 from sklearn.preprocessing import StandardScaler
@@ -11,10 +12,10 @@ import numpy as np
 import scipy.io as sio 
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import interactive 
+from matplotlib import interactive, is_interactive
 import time 
 
-#interactive(True)
+interactive(True)
 
 # exec(open("main.py").read())
 
@@ -55,10 +56,17 @@ def _todict(matobj):
 
 get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
 
+
+def create_directory(dirName):
+	if not exists(dirName):
+	    makedirs(dirName)
+
 ####################load matfiles#######################
 
 base_dir  = '/media/sf_research/input/'
 data_dir = 'saitama_v5_min_region'
+out_dir = pjoin('/media/sf_research/output/', data_dir)
+create_directory(out_dir)
 matfile = pjoin(base_dir, data_dir, 'in.mat')
 #mat_contents = sio.loadmat(matfile)
 in_mat = loadmat(matfile)
@@ -97,6 +105,27 @@ label_dict = {0: 'Malignant', 1: 'Benign'}
 benign_ids = get_indexes(1, is_benign[unique_ids])
 malignant_ids = get_indexes(0, is_benign[unique_ids])
 
+def plot_lda(X, title):
+	plt.figure()
+	print(xrange(len(X)))
+	print(X.shape)
+	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
+		plt.scatter(x=xrange(len(X)),
+				y=X[:,0][labels == label], 
+				marker=marker,
+				color=color,
+				alpha=0.7,
+				label=label_dict[label])
+	plt.xlabel('Samples')
+	plt.ylabel('Linear Discriminant')
+	leg = plt.legend(loc='upper right', fancybox=True)
+	leg.get_frame().set_alpha(0.7)
+	plt.title(title)
+	plt.grid()
+	plt.tight_layout
+	plt.show()
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
+
 def plot_da(X, title):
 	tag = title.strip('Analysis')
 
@@ -113,10 +142,10 @@ def plot_da(X, title):
 	leg = plt.legend(loc='upper right', fancybox=True)
 	leg.get_frame().set_alpha(0.7)
 	plt.title(title)
-
 	plt.grid()
 	plt.tight_layout
 	plt.show()
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
 def plot_da3(X, title):
 	tag = title.strip('Analysis')
@@ -142,6 +171,7 @@ def plot_da3(X, title):
 	plt.grid()
 	plt.tight_layout
 	plt.show()
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
 def plot_da_components(X, title):
 	plt.figure()
@@ -152,78 +182,105 @@ def plot_da_components(X, title):
 	leg = plt.legend(loc='upper right', fancybox=True)
 	leg.get_frame().set_alpha(0.7)
 	plt.show()
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-##################RandomForest########
-rf = RandomForestRegressor(random_state=1, max_depth=10)
-rf.fit(measured_spectra,labels)
-features = np.linspace(380, 780, 81)
-importances = rf.feature_importances_
-indices = np.argsort(importances)[-9:]  # top 10 features
-mean_importance = np.mean(importances)
-print('Average wavelength importance: ', mean_importance)
-plt.figure()
-plt.title('Wavelength Importances')
-plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-plt.yticks(range(len(indices)), [features[i] for i in indices])
-plt.xlabel('Relative Importance')
-plt.show()
-measured_rf = SelectFromModel(rf).fit_transform(measured_spectra, labels)
-print('Reduced dimensions: ', measured_rf.shape)
+def dimension_reduction(method):
+	if method == 'RandomForest':		
+		##################RandomForest########
+		rf = RandomForestRegressor(random_state=1, max_depth=10)
+		rf.fit(measured_spectra,labels)
+		features = np.linspace(380, 780, 81)
+		importances = rf.feature_importances_
+		indices = np.argsort(importances)[-9:]  # top 10 features
+		mean_importance = np.mean(importances)
+		print('Average wavelength importance: ', mean_importance)
+		plt.figure()
+		plt.title('Wavelength Importances')
+		plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+		plt.yticks(range(len(indices)), [features[i] for i in indices])
+		plt.xlabel('Relative Importance')
+		plt.show()
+		measured_rf = SelectFromModel(rf).fit_transform(measured_spectra, labels)
+		print('Reduced dimensions: ', measured_rf.shape)
+		return measured_rf
 
-##################PCA#################
-pca = PCA(n_components=2)
-pca.fit(measured_spectra)
-measured_pca = pca.transform(measured_spectra)
-print("original dimension: ", measured_spectra.shape)
-print("pca-projected dimension ", measured_pca.shape)
-print("pca explained variance ", pca.explained_variance_)
-plot_da(measured_pca, 'Principal Component Analysis')
-print('Reduced dimensions: ', measured_pca.shape)
+	elif method == 'PCA': 
+		##################PCA#################
+		pca = PCA(n_components=2)
+		pca.fit(measured_spectra)
+		measured_pca = pca.transform(measured_spectra)
+		print("original dimension: ", measured_spectra.shape)
+		print("pca-projected dimension ", measured_pca.shape)
+		print("pca explained variance ", pca.explained_variance_)
+		plot_da(measured_pca, 'Principal Component Analysis')
+		print('Reduced dimensions: ', measured_pca.shape)
+		return measured_pca
 
-##################SVD########
-measured_svd = TruncatedSVD(n_components=3, random_state=42).fit_transform(measured_spectra)
-plot_da3(measured_svd, 'SVD Component Analysis') 
-plot_da_components(measured_svd, 'SVD Components')
+	elif method == 'SVD': 
+		##################SVD########
+		measured_svd = TruncatedSVD(n_components=3, random_state=42).fit_transform(measured_spectra)
+		plot_da3(measured_svd, 'SVD Component Analysis') 
+		plot_da_components(measured_svd, 'SVD Components')
+		return measured_svd
 
-##################FactorAnalysis########
-measured_fa = FactorAnalysis(n_components = 2).fit_transform(measured_spectra) #without labels 
-plot_da(measured_fa, 'Factor Analysis') 
-print('Reduced dimensions: ', measured_fa.shape)
+	elif method == 'FactorAnalysis':
+		##################FactorAnalysis########
+		measured_fa = FactorAnalysis(n_components = 2).fit_transform(measured_spectra) #without labels 
+		plot_da(measured_fa, 'Factor Analysis') 
+		print('Reduced dimensions: ', measured_fa.shape)
 
-measured_fa = FactorAnalysis(n_components = 3).fit_transform(measured_spectra, labels) #with labels 
-plot_da3(measured_fa, 'Factor Analysis') 
-print('Reduced dimensions: ', measured_fa.shape)
-plot_da_components(measured_fa, 'Factor Analysis Components')
+		measured_fa = FactorAnalysis(n_components = 3).fit_transform(measured_spectra, labels) #with labels 
+		plot_da3(measured_fa, 'Factor Analysis') 
+		print('Reduced dimensions: ', measured_fa.shape)
+		plot_da_components(measured_fa, 'Factor Analysis Components')
+		return measured_fa
 
-##################ICA########
-ica = FastICA(n_components=3, random_state=12, max_iter=500, tol=0.001) 
-measured_ica=ica.fit_transform(measured_spectra)
-plot_da(measured_ica, 'Independent Component Analysis')
-plot_da3(measured_ica, 'Independent Component Analysis') 
+	elif method == 'ICA':
+		##################ICA########
+		ica = FastICA(n_components=3, random_state=12, max_iter=500, tol=0.001) 
+		measured_ica=ica.fit_transform(measured_spectra)
+		plot_da(measured_ica, 'Independent Component Analysis')
+		plot_da3(measured_ica, 'Independent Component Analysis') 
+		return measured_ica
 
-##################ISOMAP########
-measured_isomap = manifold.Isomap(n_neighbors=5, n_components=3, n_jobs=-1).fit_transform(measured_spectra)
-plot_da_components(measured_isomap, 'ISOMAP Components')
-plot_da3(measured_isomap, 'ISOMAP Component Analysis') 
+	elif method == 'ISOMAP':
+		##################ISOMAP########
+		measured_isomap = manifold.Isomap(n_neighbors=5, n_components=3, n_jobs=-1).fit_transform(measured_spectra)
+		plot_da_components(measured_isomap, 'ISOMAP Components')
+		plot_da3(measured_isomap, 'ISOMAP Component Analysis') 
+		return measured_isomap
 
-##################t-SNE########
-measured_tsne = manifold.TSNE(n_components=3, n_iter=300).fit_transform(measured_spectra)
-plot_da_components(measured_tsne, 't-SNE Components')
-plot_da3(measured_tsne, 't-SNE Component Analysis') 
+	elif method == 't-SNE':
+		##################t-SNE########
+		measured_tsne = manifold.TSNE(n_components=3, n_iter=300).fit_transform(measured_spectra)
+		plot_da_components(measured_tsne, 't-SNE Components')
+		plot_da3(measured_tsne, 't-SNE Component Analysis') 
+		return measured_tsne
 
+	elif method == 'LDA':
+		##################LDA#################
+		lda = LDA(n_components=2, solver="svd", store_covariance=True)
+		#y_pred = lda.fit(measured_spectra, labels).predict(measured_spectra)
+		measured_lda = lda.fit(measured_spectra, labels).transform(measured_spectra)
+		print('Reduced dimensions: ', measured_lda.shape)
+		plot_lda(measured_lda, 'Linear Discriminant Analysis')
+		return measured_lda
 
-##################LDA#################
-lda = LDA(n_components=2, solver="svd", store_covariance=True)
-#y_pred = lda.fit(measured_spectra, labels).predict(measured_spectra)
-measured_lda = lda.fit(measured_spectra, labels).transform(measured_spectra)
-print('Reduced dimensions: ', measured_lda.shape)
-#plot_da(measured_lda, 'Linear Discriminant Analysis')
- 
-##################QDA#################
-qda = QDA()
-measured_qda = qda.fit(measured_spectra, labels).predict(measured_spectra)
-#plot_da(measured_qda, 'Quadratic Discriminant Analysis')
+	elif method == 'QDA':
+		##################QDA#################
+		qda = QDA()
+		measured_qda = qda.fit(measured_spectra, labels).predict(measured_spectra)
+		#plot_da(measured_qda, 'Quadratic Discriminant Analysis')
+		return measured_qda
 
+	else:
+		print('Method not implemented.')
+		return
+
+create_directory(pjoin(out_dir, 'dimension_reduction'))
+
+measured_reduced = dimension_reduction('PCA')
+measured_reduced = dimension_reduction('LDA')
 
 #from sklearn.model_selection import train_test_split
 #X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.5)
