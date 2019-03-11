@@ -107,15 +107,18 @@ malignant_ids = get_indexes(0, is_benign[unique_ids])
 
 def plot_lda(X, title):
 	plt.figure()
-	print(xrange(len(X)))
-	print(X.shape)
-	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
-		plt.scatter(x=xrange(len(X)),
-				y=X[:,0][labels == label], 
-				marker=marker,
-				color=color,
-				alpha=0.7,
-				label=label_dict[label])
+	positives_end = np.sum(labels==0) + 1
+	negatives_end = np.sum(labels==1) + 1
+	for label, marker, color, sample_start, sample_end in zip(range(2), ('s', 'o'), ('red', 'green'), (1, positives_end + 1), (positives_end, positives_end + negatives_end)):
+		print(np.array(range(sample_start, sample_end)).shape)
+		print(len(X[:,0][labels == label]))
+		plt.scatter(x=np.array(range(sample_start, sample_end)),  
+					y=X[:,0][labels == label], 
+					marker=marker,
+					color=color,
+					alpha=0.7,
+					label=label_dict[label])
+
 	plt.xlabel('Samples')
 	plt.ylabel('Linear Discriminant')
 	leg = plt.legend(loc='upper right', fancybox=True)
@@ -284,3 +287,62 @@ measured_reduced = dimension_reduction('LDA')
 
 #from sklearn.model_selection import train_test_split
 #X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.5)
+
+# By hardic goel
+def estimate_lda_params(data):
+	grouped = data.groupby(labels)
+	means = ()
+	for c in range(2): 
+		means[c] = np.array(data[:][labels == c]).mean(axis = 0)
+
+	overall_mean = np.array(data).mean(axis = 0)
+
+	#between class variance 
+	S_b = np.zeros((data.shape[1]-1, data.shape[1]-1))
+	for c in means.keys():
+		S_b += np.multiply(len(data[:][labels == c]), 
+							np.outer((means[c] - overall_mean), (means[c]-overall_mean)))
+
+	#within class covariance 
+	S_w = np.zeros(S_b.shape)
+	for c in range(2):
+		tmp = np.subtract((data[:][labels == c]).T, np.expand_dims(means[c], axis = 1))
+		S_w = np.add(np.dot(tmp, tmp.T), S_w)
+
+	matrix = np.dot(np.linalg.pinv(S_w), S_b)
+	eigenvals, eigenvecs = np.linalg.eig(matrix)
+	eiglist = [(eigvals[i], eigenvecs[;,i]) for i in range(len(eigvals))]_
+
+	eiglist = sorted(eiglist, key = lambda x : x[0], reverse = True)
+
+	w = np.array([eiglist[i][1] for i in range(2)])
+
+	tot = 0
+	for c in means.keys():
+		tot += np.dot(w, means[c])
+	w0 = 0.5 * tot
+	
+	c1 = means.keys()[0]
+	c2 = means.keys()[1]
+	mu1 = np.dot(w, means[c1])
+	if (mu1 >= w0):
+		c1 = 0
+	else: 
+		c1 = 1
+
+	return w, w0, c1, means
+
+def calculate_lda_score(inputs, w, w0, c1, means):
+	proj = np.dot(w, inputs.T).T
+	c1 = means.keys()[0]
+	c2 = means.keys()[1]
+	if (c1 == 1): 
+		proj = [c1 if proj[i] >= w0 else c2 for i in range(len(proj))]
+	else:
+		proj = [c1 if proj[i] < w0 else c2 for i in range(len(proj))]
+
+	errors = (proj != labels)
+	return sum(errors)
+
+
+w, w0, c1, means = estimate_lda_params(measured_spectra)
