@@ -1,15 +1,23 @@
 from os import mkdir, makedirs
 from os.path import dirname, join as pjoin, exists
 from sklearn import manifold
+import sklearn.metrics
 from sklearn.decomposition import PCA, FactorAnalysis, TruncatedSVD, FastICA 
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as QDA
+from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.feature_selection import SelectFromModel
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, auc, roc_auc_score
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import scipy.io as sio 
+from scipy.spatial.distance import chebyshev, correlation, hamming, minkowski
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import interactive, is_interactive
@@ -96,24 +104,26 @@ is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
 
 ###################Measured Data######
 
-measured_spectra, unique_ids = np.unique(spectra, return_index=True, axis=0)
-sc = StandardScaler()
-measured_spectra = sc.fit_transform(measured_spectra)
-measuredN = len(measured_spectra)
+data, unique_ids = np.unique(spectra, return_index=True, axis=0)
+measuredN = len(data)
 labels = is_benign[unique_ids]
 label_dict = {0: 'Malignant', 1: 'Benign'}
 benign_ids = get_indexes(1, is_benign[unique_ids])
 malignant_ids = get_indexes(0, is_benign[unique_ids])
 
-def plot_lda(X, title):
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=0)
+sc = StandardScaler()
+train_data = sc.fit_transform(train_data)
+test_data = sc.transform(test_data)
+
+
+def plot_lda(X, X_labels, title):
 	plt.figure()
-	positives_end = np.sum(labels==0) + 1
-	negatives_end = np.sum(labels==1) + 1
+	positives_end = np.sum(X_labels==0) + 1
+	negatives_end = np.sum(X_labels==1) + 1
 	for label, marker, color, sample_start, sample_end in zip(range(2), ('s', 'o'), ('red', 'green'), (1, positives_end + 1), (positives_end, positives_end + negatives_end)):
-		print(np.array(range(sample_start, sample_end)).shape)
-		print(len(X[:,0][labels == label]))
 		plt.scatter(x=np.array(range(sample_start, sample_end)),  
-					y=X[:,0][labels == label], 
+					y=X[:,0][X_labels == label], 
 					marker=marker,
 					color=color,
 					alpha=0.7,
@@ -129,13 +139,13 @@ def plot_lda(X, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def plot_da(X, title):
+def plot_da(X, X_labels, title):
 	tag = title.strip('Analysis')
 
 	plt.figure()
 	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
-		plt.scatter(x=X[:,0][labels == label], 
-					y=X[:,1][labels == label] * -1, #To flip the plot
+		plt.scatter(x=X[:,0][X_labels == label], 
+					y=X[:,1][X_labels == label] * -1, #To flip the plot
 					marker=marker,
 					color=color,
 					alpha=0.7,
@@ -150,15 +160,15 @@ def plot_da(X, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def plot_da3(X, title):
+def plot_da3(X, X_labels, title):
 	tag = title.strip('Analysis')
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
-		ax.scatter(xs=X[:,0][labels == label], 
-					ys=X[:,1][labels == label] * -1, #To flip the plot
-					zs=X[:,2][labels == label] * -1, #To flip the plot
+		ax.scatter(xs=X[:,0][X_labels == label], 
+					ys=X[:,1][X_labels == label] * -1, #To flip the plot
+					zs=X[:,2][X_labels == label] * -1, #To flip the plot
 					marker=marker,
 					color=color,
 					alpha=0.7,
@@ -176,7 +186,7 @@ def plot_da3(X, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def plot_da_components(X, title):
+def plot_da_components(X, X_labels, title):
 	plt.figure()
 	plt.title(title)
 	plt.scatter(X[:,0], X[:,1], label='1st and 2nd Component')
@@ -187,162 +197,365 @@ def plot_da_components(X, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def dimension_reduction(method):
+def dimension_reduction(data, data_labels, method, show_figures=False, components=2):
+
+	create_directory(pjoin(out_dir, 'dimension_reduction'))
+
 	if method == 'RandomForest':		
 		##################RandomForest########
 		rf = RandomForestRegressor(random_state=1, max_depth=10)
-		rf.fit(measured_spectra,labels)
+		rf.fit(data,data_labels)
 		features = np.linspace(380, 780, 81)
 		importances = rf.feature_importances_
 		indices = np.argsort(importances)[-9:]  # top 10 features
 		mean_importance = np.mean(importances)
-		print('Average wavelength importance: ', mean_importance)
-		plt.figure()
-		plt.title('Wavelength Importances')
-		plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-		plt.yticks(range(len(indices)), [features[i] for i in indices])
-		plt.xlabel('Relative Importance')
-		plt.show()
-		measured_rf = SelectFromModel(rf).fit_transform(measured_spectra, labels)
-		print('Reduced dimensions: ', measured_rf.shape)
-		return measured_rf
+		if show_figures:
+			print('Average wavelength importance: ', mean_importance)
+			plt.figure()
+			plt.title('Wavelength Importances')
+			plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+			plt.yticks(range(len(indices)), [features[i] for i in indices])
+			plt.xlabel('Relative Importance')
+			plt.show()
+
+		method_obj = SelectFromModel(rf).fit(data, data_labels)
+		data_transformed = method_obj.transform(data)
+		print('Reduced dimensions: ', data_transformed.shape)
+		return data_transformed, method_obj
 
 	elif method == 'PCA': 
 		##################PCA#################
-		pca = PCA(n_components=2)
-		pca.fit(measured_spectra)
-		measured_pca = pca.transform(measured_spectra)
-		print("original dimension: ", measured_spectra.shape)
-		print("pca-projected dimension ", measured_pca.shape)
-		print("pca explained variance ", pca.explained_variance_)
-		plot_da(measured_pca, 'Principal Component Analysis')
-		print('Reduced dimensions: ', measured_pca.shape)
-		return measured_pca
+		pca = PCA(n_components=components).fit(data)
+		data_transformed = pca.transform(data)
+		if show_figures:
+			print("original dimension: ", data.shape)
+			print("pca-projected dimension ", data_transformed.shape)
+			print("pca explained variance ", pca.explained_variance_)
+			plot_da(data_transformed, data_labels,'Principal Component Analysis')
+			print('Reduced dimensions: ', data_transformed.shape)
+		return data_transformed, pca
 
 	elif method == 'SVD': 
 		##################SVD########
-		measured_svd = TruncatedSVD(n_components=3, random_state=42).fit_transform(measured_spectra)
-		plot_da3(measured_svd, 'SVD Component Analysis') 
-		plot_da_components(measured_svd, 'SVD Components')
-		return measured_svd
+		svd = TruncatedSVD(n_components=3, random_state=42).fit(data)
+		data_transformed = svd.transform(data)
+		if show_figures:
+			plot_da3(data_transformed, data_labels, 'SVD Component Analysis') 
+			plot_da_components(data_transformed, data_labels, 'SVD Components')
+		return data_transformed, svd
 
 	elif method == 'FactorAnalysis':
 		##################FactorAnalysis########
-		measured_fa = FactorAnalysis(n_components = 2).fit_transform(measured_spectra) #without labels 
-		plot_da(measured_fa, 'Factor Analysis') 
-		print('Reduced dimensions: ', measured_fa.shape)
+		if show_figures:
+			fa = FactorAnalysis(n_components=components).fit(data)
+			data_transformed = fa.transform(data) #without labels 
+			plot_da(data_transformed, data_labels, 'Factor Analysis') 
+			print('Reduced dimensions: ', data_transformed.shape)
 
-		measured_fa = FactorAnalysis(n_components = 3).fit_transform(measured_spectra, labels) #with labels 
-		plot_da3(measured_fa, 'Factor Analysis') 
-		print('Reduced dimensions: ', measured_fa.shape)
-		plot_da_components(measured_fa, 'Factor Analysis Components')
-		return measured_fa
+		fa = FactorAnalysis(n_components = 3).fit(data, data_labels)
+		data_transformed = fa.transform(data) #with labels 
+		if show_figures:
+			plot_da3(data_transformed, data_labels, 'Factor Analysis') 
+			print('Reduced dimensions: ', data_transformed.shape)
+			plot_da_components(data_transformed, data_labels, 'Factor Analysis Components')
+		return data_transformed, fa
 
 	elif method == 'ICA':
 		##################ICA########
-		ica = FastICA(n_components=3, random_state=12, max_iter=500, tol=0.001) 
-		measured_ica=ica.fit_transform(measured_spectra)
-		plot_da(measured_ica, 'Independent Component Analysis')
-		plot_da3(measured_ica, 'Independent Component Analysis') 
-		return measured_ica
+		ica = FastICA(n_components=3, random_state=12, max_iter=500, tol=0.001).fit(data)
+		data_transformed=ica.transform(data)
+		if show_figures:
+			plot_da(data_transformed, data_labels, 'Independent Component Analysis')
+			plot_da3(data_transformed, data_labels, 'Independent Component Analysis') 
+		return data_transformed, ica
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
-		measured_isomap = manifold.Isomap(n_neighbors=5, n_components=3, n_jobs=-1).fit_transform(measured_spectra)
-		plot_da_components(measured_isomap, 'ISOMAP Components')
-		plot_da3(measured_isomap, 'ISOMAP Component Analysis') 
-		return measured_isomap
+		isomap = manifold.Isomap(n_neighbors=5, n_components=3, n_jobs=-1).fit(data)
+		data_transformed = isomap.transform(data)
+		if show_figures:
+			plot_da_components(data_transformed, data_labels, 'ISOMAP Components')
+			plot_da3(data_transformed, data_labels, 'ISOMAP Component Analysis') 
+		return data_transformed, isomap
 
 	elif method == 't-SNE':
 		##################t-SNE########
-		measured_tsne = manifold.TSNE(n_components=3, n_iter=300).fit_transform(measured_spectra)
-		plot_da_components(measured_tsne, 't-SNE Components')
-		plot_da3(measured_tsne, 't-SNE Component Analysis') 
-		return measured_tsne
+		tsne = manifold.TSNE(n_components=3, n_iter=300).fit(data)
+		data_transformed = tsne.transform(data)
+		if show_figures:
+			plot_da_components(data_transformed, data_labels, 't-SNE Components')
+			plot_da3(data_transformed, data_labels, 't-SNE Component Analysis') 
+		return data_transformed, tsne
 
 	elif method == 'LDA':
 		##################LDA#################
-		lda = LDA(n_components=2, solver="svd", store_covariance=True)
-		#y_pred = lda.fit(measured_spectra, labels).predict(measured_spectra)
-		measured_lda = lda.fit(measured_spectra, labels).transform(measured_spectra)
-		print('Reduced dimensions: ', measured_lda.shape)
-		plot_lda(measured_lda, 'Linear Discriminant Analysis')
-		return measured_lda
+		lda = LDA(n_components=1, solver="svd", store_covariance=True).fit(data, data_labels)
+		data_transformed = lda.transform(data)
+		if show_figures:
+			print('Reduced dimensions: ', data_transformed.shape)
+			plot_lda(data_transformed, data_labels, 'Linear Discriminant Analysis')
+		return data_transformed, lda
 
 	elif method == 'QDA':
 		##################QDA#################
-		qda = QDA()
-		measured_qda = qda.fit(measured_spectra, labels).predict(measured_spectra)
-		#plot_da(measured_qda, 'Quadratic Discriminant Analysis')
-		return measured_qda
+		qda = QDA().fit(data, labels)
+		data_transformed = qda.transform(data)
+		#plot_da(data_transformed, 'Quadratic Discriminant Analysis')
+		return data_transformed, qda
 
 	else:
 		print('Method not implemented.')
 		return
 
-create_directory(pjoin(out_dir, 'dimension_reduction'))
+def show_classifier_performance_stats(test_labels, pred_labels):
+	cm = confusion_matrix(test_labels, pred_labels)
+	accuracy = accuracy_score(test_labels, pred_labels)
+	auc_score = roc_auc_score(test_labels, pred_labels)
 
-measured_reduced = dimension_reduction('PCA')
-measured_reduced = dimension_reduction('LDA')
+	print('Confusion matrix: ', cm)
+	print('Accuracy: ', accuracy)
+	print('AUC: ', auc_score)
 
-#from sklearn.model_selection import train_test_split
-#X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.5)
+	return accuracy, auc_score
 
-# By hardic goel
-def estimate_lda_params(data):
-	grouped = data.groupby(labels)
-	means = ()
-	for c in range(2): 
-		means[c] = np.array(data[:][labels == c]).mean(axis = 0)
-
-	overall_mean = np.array(data).mean(axis = 0)
-
-	#between class variance 
-	S_b = np.zeros((data.shape[1]-1, data.shape[1]-1))
-	for c in means.keys():
-		S_b += np.multiply(len(data[:][labels == c]), 
-							np.outer((means[c] - overall_mean), (means[c]-overall_mean)))
-
-	#within class covariance 
-	S_w = np.zeros(S_b.shape)
-	for c in range(2):
-		tmp = np.subtract((data[:][labels == c]).T, np.expand_dims(means[c], axis = 1))
-		S_w = np.add(np.dot(tmp, tmp.T), S_w)
-
-	matrix = np.dot(np.linalg.pinv(S_w), S_b)
-	eigenvals, eigenvecs = np.linalg.eig(matrix)
-	eiglist = [(eigvals[i], eigenvecs[;,i]) for i in range(len(eigvals))]_
-
-	eiglist = sorted(eiglist, key = lambda x : x[0], reverse = True)
-
-	w = np.array([eiglist[i][1] for i in range(2)])
-
-	tot = 0
-	for c in means.keys():
-		tot += np.dot(w, means[c])
-	w0 = 0.5 * tot
-	
-	c1 = means.keys()[0]
-	c2 = means.keys()[1]
-	mu1 = np.dot(w, means[c1])
-	if (mu1 >= w0):
-		c1 = 0
-	else: 
-		c1 = 1
-
-	return w, w0, c1, means
-
-def calculate_lda_score(inputs, w, w0, c1, means):
-	proj = np.dot(w, inputs.T).T
-	c1 = means.keys()[0]
-	c2 = means.keys()[1]
-	if (c1 == 1): 
-		proj = [c1 if proj[i] >= w0 else c2 for i in range(len(proj))]
+def apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method='', components=2):
+	if dimred_method!='':
+		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
+		test_dimred = dimred_obj.transform(test_data)
 	else:
-		proj = [c1 if proj[i] < w0 else c2 for i in range(len(proj))]
+		train_dimred = train_data
+		test_dimred = test_data
 
-	errors = (proj != labels)
-	return sum(errors)
+	return train_dimred, test_dimred
+
+def plot_accuracy_and_auc(performance_stats, performance_names):
+	fig, ax1 = plt.subplots()
+	x = np.arange(len(performance_stats))
+	accuracy = performance_stats[:,0]
+	auc_score = performance_stats[:,1]
+
+	title = 'Classification Performance Comparison'
+	plt.title(title)
+	plt.xticks(x, performance_names, rotation='vertical')
+	ax1.plot(x, accuracy, 'b-')
+	ax1.set_xlabel('classifier')
+	# Make the y-axis label, ticks and tick labels match the line color.
+	ax1.set_ylabel('Accuracy', color='b')
+	ax1.tick_params('y', colors='b')
+
+	ax2 = ax1.twinx()
+	ax2.plot(x, auc_score, 'r.')
+	ax2.set_ylabel('AUC', color='r')
+	ax2.tick_params('y', colors='r')
+
+	fig.tight_layout()
+	plt.show()
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
+
+def classify_many(names, classifiers, train_data, test_data, train_labels, test_labels, method=''):
+	performance_stats = np.empty((0, 2))
+	performance_names = []
+
+	#original spectum as input
+	for name, clf in zip(names, classifiers):
+		train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method=method, components=10)
+		clf.fit(train_dimred, train_labels)
+		score = clf.score(test_dimred, test_labels)
+		test_pred_labels = clf.predict(test_dimred) 
+		print('Performance stats for ', name, ' ', method)
+		performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
+		performance_names.append(' '.join([name,method]))
+
+	return performance_stats, performance_names
+
+def compare_classifiers(train_data, test_data, train_labels, test_labels):
+
+	names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Decision Tree",
+         "Random Forest", "Naive Bayes", "LDA", "QDA"]
+	classifiers = [
+	    KNN(3),
+	    SVC(kernel="linear", C=0.025),
+	    SVC(gamma=2, C=1),
+	    DecisionTreeClassifier(max_depth=5),
+	    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+	    GaussianNB(),
+	    LDA(),
+	    QDA()]
+
+#original spectum as input
+	pf_stats1, pf_names1 = classify_many(names, classifiers, train_data, test_data, train_labels, test_labels)
+	# for name, clf in zip(names, classifiers):
+	# 	clf.fit(train_data, train_labels)
+	# 	score = clf.score(test_data, test_labels)
+	# 	test_pred_labels = clf.predict(test_data) 
+	# 	print('Performance stats for ', name)
+	# 	performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
+	# 	performance_names.append(name)
+
+#10-pc PCA-projected data as input
+	pf_stats2, pf_names2 = classify_many(names, classifiers, train_data, test_data, train_labels, test_labels, 'PCA')
+
+	# for name, clf in zip(names, classifiers):
+	# 	train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method='PCA', components=10)
+	# 	clf.fit(train_dimred, train_labels)
+	# 	score = clf.score(test_dimred, test_labels)
+	# 	test_pred_labels = clf.predict(test_dimred) 
+	# 	print('Performance stats for ', name, 'with pca projected data')
+	# 	performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
+	# 	performance_names.append(''.join([name,'-PCA']))
+	performance_stats = pf_stats1 + pf_stats2
+	performance_names = pf_names1 + pf_names2
+	print(performance_stats)
+	print(pf_stats1)
+	print(pf_stats2)
+	plot_accuracy_and_auc(performance_stats, performance_names)
+
+def compare_knn_classifiers(train_data, test_data, train_labels, test_labels):
+	performance_stats = np.empty((0, 2))
+	performance_names = []
+	names = ["KNN-1-minkowski","KNN-3-minkowski","KNN-5-minkowski",
+		"KNN-1-cityblock","KNN-3-cityblock","KNN-5-cityblock",
+		"KNN-1-euclidean","KNN-3-euclidean","KNN-5-euclidean",
+		"KNN-1-chebyshev","KNN-3-chebyshev","KNN-5-chebyshev",
+		"KNN-1-hamming","KNN-3-hamming","KNN-5-hamming",
+		"KNN-1-correlation","KNN-3-correlation","KNN-5-correlation"]
+	classifiers = [
+	    KNN(n_neighbors =1, algorithm = auto, metric='minkowski'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='minkowski'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='minkowski'),
+	    KNN(n_neighbors =1, algorithm = auto, metric='cityblock'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='cityblock'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='cityblock'),
+	    KNN(n_neighbors =1, algorithm = auto, metric='euclidean'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='euclidean'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='euclidean'),
+	    KNN(n_neighbors =1, algorithm = auto, metric='chebyshev'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='chebyshev'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='chebyshev'),
+	    KNN(n_neighbors =1, algorithm = auto, metric='hamming'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='hamming'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='hamming'),
+	    KNN(n_neighbors =1, algorithm = auto, metric='correlation'),
+	    KNN(n_neighbors =3, algorithm = auto, metric='correlation'),
+	    KNN(n_neighbors =5, algorithm = auto, metric='correlation')
+	]
+
+#original spectum as input
+	for name, clf in zip(names, classifiers):
+		clf.fit(train_data, train_labels)
+		score = clf.score(test_data, test_labels)
+		test_pred_labels = clf.predict(test_data) 
+		print('Performance stats for ', name)
+		performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
+		performance_names.append(name)
+
+compare_classifiers(train_data, test_data, train_labels, test_labels)
+
+# def dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, dimred_method=''):
+# 	if dimred_method!='':
+# 		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
+# 		test_dimred = dimred_obj.transform(test_data)
+# 	else:
+# 		train_dimred = train_data
+# 		test_dimred = test_data
+
+# 	print('Train set dimensions', train_dimred.shape)
+# 	print('Test set dimensions', test_dimred.shape)
+# 	rfc = RandomForestClassifier(n_estimators=20,max_depth=2).fit(train_dimred, train_labels)
+# 	test_pred_labels = rfc.predict(test_dimred) 
+# 	show_classifier_performance_stats(test_labels, test_pred_labels)
 
 
-w, w0, c1, means = estimate_lda_params(measured_spectra)
+# def dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, dimred_method=''):
+# 	if dimred_method!='':
+# 		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
+# 		test_dimred = dimred_obj.transform(test_data)
+# 	else:
+# 		train_dimred = train_data
+# 		test_dimred = test_data
+
+# 	print('Train set dimensions', train_dimred.shape)
+# 	print('Test set dimensions', test_dimred.shape)
+# 	svmc = SVC(kernel='linear').fit(train_dimred, train_labels)
+# 	test_pred_labels = svmc.predict(test_dimred) 
+# 	show_classifier_performance_stats(test_labels, test_pred_labels)
+
+# def classify_various(train_data, test_data, train_labels, test_labels, classifier):
+# 	if classifier == 'SVM':
+# 		print('Train with raw features')
+# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels)
+# 		print('Train with PCA-projected features')
+# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, 'PCA')
+# 		print('Train with LDA-projected features')
+# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, 'LDA')
+
+# 	elif classifier == 'RandomForest':
+# 		print('Train with raw features')
+# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels)
+# 		print('Train with PCA-projected features')
+# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, 'PCA')
+# 		print('Train with LDA-projected features')
+# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, 'LDA')
+
+#classify_various(train_data, test_data, train_labels, test_labels, 'RandomForest')
+#classify_various(train_data, test_data, train_labels, test_labels, 'SVM')
+
+
+# # By hardic goel
+# def estimate_lda_params(data):
+# 	grouped = data.groupby(labels)
+# 	means = ()
+# 	for c in range(2): 
+# 		means[c] = np.array(data[:][labels == c]).mean(axis = 0)
+
+# 	overall_mean = np.array(data).mean(axis = 0)
+
+# 	#between class variance 
+# 	S_b = np.zeros((data.shape[1]-1, data.shape[1]-1))
+# 	for c in means.keys():
+# 		S_b += np.multiply(len(data[:][labels == c]), 
+# 							np.outer((means[c] - overall_mean), (means[c]-overall_mean)))
+
+# 	#within class covariance 
+# 	S_w = np.zeros(S_b.shape)
+# 	for c in range(2):
+# 		tmp = np.subtract((data[:][labels == c]).T, np.expand_dims(means[c], axis = 1))
+# 		S_w = np.add(np.dot(tmp, tmp.T), S_w)
+
+# 	matrix = np.dot(np.linalg.pinv(S_w), S_b)
+# 	eigenvals, eigenvecs = np.linalg.eig(matrix)
+# 	eiglist = [(eigvals[i], eigenvecs[:,i]) for i in range(len(eigvals))]
+
+# 	eiglist = sorted(eiglist, key = lambda x : x[0], reverse = True)
+
+# 	w = np.array([eiglist[i][1] for i in range(2)])
+
+# 	tot = 0
+# 	for c in means.keys():
+# 		tot += np.dot(w, means[c])
+# 	w0 = 0.5 * tot
+	
+# 	c1 = means.keys()[0]
+# 	c2 = means.keys()[1]
+# 	mu1 = np.dot(w, means[c1])
+# 	if (mu1 >= w0):
+# 		c1 = 0
+# 	else: 
+# 		c1 = 1
+
+# 	return w, w0, c1, means
+
+# def calculate_lda_score(inputs, w, w0, c1, means):
+# 	proj = np.dot(w, inputs.T).T
+# 	c1 = means.keys()[0]
+# 	c2 = means.keys()[1]
+# 	if (c1 == 1): 
+# 		proj = [c1 if proj[i] >= w0 else c2 for i in range(len(proj))]
+# 	else:
+# 		proj = [c1 if proj[i] < w0 else c2 for i in range(len(proj))]
+
+# 	errors = (proj != labels)
+# 	return sum(errors)
+
+
+# w, w0, c1, means = estimate_lda_params(data)
