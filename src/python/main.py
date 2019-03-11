@@ -12,10 +12,11 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score, auc, roc_auc_score
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.metrics import confusion_matrix, accuracy_score, auc, roc_auc_score, roc_curve
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from scipy import interp
 import scipy.io as sio 
 from scipy.spatial.distance import chebyshev, correlation, hamming, minkowski
 import pandas as pd
@@ -312,15 +313,15 @@ def show_classifier_performance_stats(test_labels, pred_labels):
 	accuracy = accuracy_score(test_labels, pred_labels)
 	auc_score = roc_auc_score(test_labels, pred_labels)
 
-	print('Confusion matrix: ', cm)
-	print('Accuracy: ', accuracy)
-	print('AUC: ', auc_score)
+	#print('Confusion matrix: ', cm)
+	#print('Accuracy: ', accuracy)
+	#print('AUC: ', auc_score)
 
 	return accuracy, auc_score
 
 def apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method='', components=2):
 	if dimred_method!='':
-		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
+		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method, False, components)
 		test_dimred = dimred_obj.transform(test_data)
 	else:
 		train_dimred = train_data
@@ -328,14 +329,13 @@ def apply_dimension_reduction(train_data, test_data, train_labels, test_labels, 
 
 	return train_dimred, test_dimred
 
-def plot_accuracy_and_auc(performance_stats, performance_names):
+def plot_accuracy_and_auc(performance_stats, performance_names, plot_title='Classification Performance Comparison'):
 	fig, ax1 = plt.subplots()
 	x = np.arange(len(performance_stats))
 	accuracy = performance_stats[:,0]
 	auc_score = performance_stats[:,1]
 
-	title = 'Classification Performance Comparison'
-	plt.title(title)
+	plt.title(plot_title)
 	plt.xticks(x, performance_names, rotation='vertical')
 	ax1.plot(x, accuracy, 'b-')
 	ax1.set_xlabel('classifier')
@@ -350,32 +350,123 @@ def plot_accuracy_and_auc(performance_stats, performance_names):
 
 	fig.tight_layout()
 	plt.show()
-	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def classify_many(names, classifiers, train_data, test_data, train_labels, test_labels, method=''):
+	create_directory(pjoin(out_dir, 'classification'))
+	img_title = plot_title.replace(' ', '_').lower()
+	plt.savefig(pjoin(out_dir, 'classification', img_title + '.png'), bbox_inches='tight')
+
+def fit_classifier(classifier_name, train_data, train_labels):
+	if 'SVM' in classifier_name:
+		a, b, c, d = classifier_name.split('-') 
+		d = d if not('PCA' in d) else (d.split(' '))[0] 
+		c = c if (c == 'auto' or c == 'scale') else float(c)
+		clf = SVC(kernel=b, gamma=c, shrinking=(d==True))
+	elif 'KNN' in classifier_name:
+		a, b, c =  classifier_name.split('-')
+		c = c.strip(' ') if not('PCA' in c) else (c.split(' '))[0] 
+		clf = KNN(n_neighbors=int(b), metric=c)
+	else:
+		print('Not yet implemented.')
+		return
+
+	if 'PCA' in classifier_name: 
+		train_data = dimension_reduction(train_data, train_labels, 'PCA', show_figures=False, components=10)
+	clf.fit(train_data, train_labels)
+	return clf
+
+def cross_validate(classifier, data, labels, folds=5, method=''):
+	cv = StratifiedKFold(n_splits=folds)
+
+	tprs = []
+	aucs = []
+	accs = []
+	fpr_f = []
+	tpr_f = []
+	mean_fpr = np.linspace(0, 1, 100)
+
+	for train, test in cv.split(data, labels):
+
+		train_f = sc.fit_transform(data[train])
+		test_f = sc.transform(data[test])
+
+		train_f, test_f = apply_dimension_reduction(train_f, test_f, labels[train], labels[test], method, 10)
+		classifier.fit(train_f, labels[train])
+		pred_labels = classifier.predict(test_f)
+		accs.append(accuracy_score(labels[test], pred_labels))
+
+		pred_probas = classifier.predict_proba(test_f)
+		# Compute ROC curve and area the curve
+		fpr, tpr, thresholds = roc_curve(labels[test], pred_probas[:, 1])
+		fpr_f.append(fpr)
+		tpr_f.append(tpr)
+		tprs.append(interp(mean_fpr, fpr, tpr))
+		tprs[-1][0] = 0.0
+		roc_auc = auc(fpr, tpr)
+		aucs.append(roc_auc)
+
+	mean_tpr = np.mean(tprs, axis=0)
+	mean_tpr[-1] = 1.0
+	mean_auc = auc(mean_fpr, mean_tpr)
+	std_auc = np.std(aucs)
+
+	mean_acc = np.mean(accs)
+
+	return mean_acc, mean_auc 
+
+
+def plot_cv_roc_curve(fpr_f, tpr_f, tprs, aucs):
+
+	for i in range(len(aucs)):
+		plt.plot(fpr, tpr, lw=1, alpha=0.3, label='ROC fold %d (AUC = %0.2f)' % (i+1, aucs[i]))
+
+	plt.plot([0, 1], [0, 1], linestyle='--', lw=2, color='r', label='Chance', alpha=.8)
+
+	mean_tpr = np.mean(tprs, axis=0)
+	mean_tpr[-1] = 1.0
+	mean_auc = auc(mean_fpr, mean_tpr)
+	std_auc = np.std(aucs)
+	plt.plot(mean_fpr, mean_tpr, color='b', label=r'Mean ROC (AUC = %0.2f $\pm$ %0.2f)' % (mean_auc, std_auc), lw=2, alpha=.8)
+
+	std_tpr = np.std(tprs, axis=0)
+	tprs_upper = np.minimum(mean_tpr + std_tpr, 1)
+	tprs_lower = np.maximum(mean_tpr - std_tpr, 0)
+
+	plt.xlim([-0.05, 1.05])
+	plt.ylim([-0.05, 1.05])
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title('Receiver operating characteristic curve for CrossVal')
+	plt.legend(loc="lower right")
+	plt.show()
+
+
+def classify_many(names, classifiers, data, labels, method=''):
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 
 	#original spectum as input
 	for name, clf in zip(names, classifiers):
-		train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method=method, components=10)
-		clf.fit(train_dimred, train_labels)
-		score = clf.score(test_dimred, test_labels)
-		test_pred_labels = clf.predict(test_dimred) 
-		print('Performance stats for ', name, ' ', method)
-		performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
+		mean_acc, mean_auc = cross_validate(clf, data, labels, 5, method)
+		# train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method=method, components=10)
+		# clf.fit(train_dimred, train_labels)
+		# score = clf.score(test_dimred, test_labels)
+		# test_pred_labels = clf.predict(test_dimred) 
+		# #print('Performance stats for ', name, ' ', method)
+		#show_classifier_performance_stats(test_labels, test_pred_labels)
+		performance_stats = np.append(performance_stats, [(mean_acc, mean_auc)], axis=0)
 		performance_names.append(' '.join([name,method]))
 
 	return performance_stats, performance_names
 
-def compare_classifiers(train_data, test_data, train_labels, test_labels):
+def compare_classifiers(data, labels, title=''):
 
-	names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Decision Tree",
+	names = ["Nearest Neighbors", "KNN-1-correlation", "Linear SVM", "RBF SVM", "Decision Tree",
          "Random Forest", "Naive Bayes", "LDA", "QDA"]
 	classifiers = [
 	    KNN(3),
-	    SVC(kernel="linear", C=0.025),
-	    SVC(gamma=2, C=1),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='correlation'),
+	    SVC(kernel="linear", C=0.025, probability=True),
+	    SVC(gamma=2, C=1, probability=True),
 	    DecisionTreeClassifier(max_depth=5),
 	    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
 	    GaussianNB(),
@@ -383,34 +474,15 @@ def compare_classifiers(train_data, test_data, train_labels, test_labels):
 	    QDA()]
 
 #original spectum as input
-	pf_stats1, pf_names1 = classify_many(names, classifiers, train_data, test_data, train_labels, test_labels)
-	# for name, clf in zip(names, classifiers):
-	# 	clf.fit(train_data, train_labels)
-	# 	score = clf.score(test_data, test_labels)
-	# 	test_pred_labels = clf.predict(test_data) 
-	# 	print('Performance stats for ', name)
-	# 	performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
-	# 	performance_names.append(name)
-
+	pf_stats1, pf_names1 = classify_many(names, classifiers, data, labels)
 #10-pc PCA-projected data as input
-	pf_stats2, pf_names2 = classify_many(names, classifiers, train_data, test_data, train_labels, test_labels, 'PCA')
+	pf_stats2, pf_names2 = classify_many(names, classifiers, data, labels, 'PCA')
 
-	# for name, clf in zip(names, classifiers):
-	# 	train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method='PCA', components=10)
-	# 	clf.fit(train_dimred, train_labels)
-	# 	score = clf.score(test_dimred, test_labels)
-	# 	test_pred_labels = clf.predict(test_dimred) 
-	# 	print('Performance stats for ', name, 'with pca projected data')
-	# 	performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
-	# 	performance_names.append(''.join([name,'-PCA']))
-	performance_stats = pf_stats1 + pf_stats2
+	performance_stats = np.concatenate((pf_stats1, pf_stats2), axis=0)
 	performance_names = pf_names1 + pf_names2
-	print(performance_stats)
-	print(pf_stats1)
-	print(pf_stats2)
-	plot_accuracy_and_auc(performance_stats, performance_names)
+	plot_accuracy_and_auc(performance_stats, performance_names, title)
 
-def compare_knn_classifiers(train_data, test_data, train_labels, test_labels):
+def compare_knn_classifiers(data, labels, title=''):
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 	names = ["KNN-1-minkowski","KNN-3-minkowski","KNN-5-minkowski",
@@ -420,85 +492,88 @@ def compare_knn_classifiers(train_data, test_data, train_labels, test_labels):
 		"KNN-1-hamming","KNN-3-hamming","KNN-5-hamming",
 		"KNN-1-correlation","KNN-3-correlation","KNN-5-correlation"]
 	classifiers = [
-	    KNN(n_neighbors =1, algorithm = auto, metric='minkowski'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='minkowski'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='minkowski'),
-	    KNN(n_neighbors =1, algorithm = auto, metric='cityblock'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='cityblock'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='cityblock'),
-	    KNN(n_neighbors =1, algorithm = auto, metric='euclidean'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='euclidean'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='euclidean'),
-	    KNN(n_neighbors =1, algorithm = auto, metric='chebyshev'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='chebyshev'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='chebyshev'),
-	    KNN(n_neighbors =1, algorithm = auto, metric='hamming'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='hamming'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='hamming'),
-	    KNN(n_neighbors =1, algorithm = auto, metric='correlation'),
-	    KNN(n_neighbors =3, algorithm = auto, metric='correlation'),
-	    KNN(n_neighbors =5, algorithm = auto, metric='correlation')
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='minkowski'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='minkowski'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='minkowski'),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='cityblock'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='cityblock'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='cityblock'),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='euclidean'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='euclidean'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='euclidean'),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='chebyshev'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='chebyshev'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='chebyshev'),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='hamming'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='hamming'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='hamming'),
+	    KNN(n_neighbors =1, algorithm = 'auto', metric='correlation'),
+	    KNN(n_neighbors =3, algorithm = 'auto', metric='correlation'),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='correlation')
 	]
-
 #original spectum as input
-	for name, clf in zip(names, classifiers):
-		clf.fit(train_data, train_labels)
-		score = clf.score(test_data, test_labels)
-		test_pred_labels = clf.predict(test_data) 
-		print('Performance stats for ', name)
-		performance_stats = np.append(performance_stats, [show_classifier_performance_stats(test_labels, test_pred_labels)], axis=0)
-		performance_names.append(name)
+	pf_stats1, pf_names1 = classify_many(names, classifiers, data, labels)
+#10-pc PCA-projected data as input
+	pf_stats2, pf_names2 = classify_many(names, classifiers, data, labels, 'PCA')
+	
+	performance_stats = np.concatenate((pf_stats1, pf_stats2), axis=0)
+	performance_names = pf_names1 + pf_names2
 
-compare_classifiers(train_data, test_data, train_labels, test_labels)
+	performance_stats, unique_ids = np.unique(performance_stats, return_index=True, axis=0)
+	performance_names = [performance_names[i] for i in unique_ids]
 
-# def dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, dimred_method=''):
-# 	if dimred_method!='':
-# 		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
-# 		test_dimred = dimred_obj.transform(test_data)
-# 	else:
-# 		train_dimred = train_data
-# 		test_dimred = test_data
+	plot_accuracy_and_auc(performance_stats, performance_names, title)
+	print('\n------------------------------------------------------')
+	print('KNN performance \n')
+	max_accuracy_index = (np.argsort(performance_stats[:,0]))[-10:]
+	[print(-i, 'th best Accuracy ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_accuracy_index,0], [performance_names[i] for i in max_accuracy_index])]
+	print(' ')
+	max_auc_index = np.argsort(performance_stats[:,1])[-10:]
+	[print(-i, 'th best A.U.C. ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_auc_index,1], [performance_names[i] for i in max_auc_index])]
+	print('------------------------------------------------------')
 
-# 	print('Train set dimensions', train_dimred.shape)
-# 	print('Test set dimensions', test_dimred.shape)
-# 	rfc = RandomForestClassifier(n_estimators=20,max_depth=2).fit(train_dimred, train_labels)
-# 	test_pred_labels = rfc.predict(test_dimred) 
-# 	show_classifier_performance_stats(test_labels, test_pred_labels)
+	best_classifier_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-2:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-2:]]
+	return best_classifier_names
 
+def compare_svm_classifiers(data, labels, title=''):
+	performance_stats = np.empty((0, 2))
+	performance_names = []
+	names = []
+	classifiers = []
 
-# def dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, dimred_method=''):
-# 	if dimred_method!='':
-# 		train_dimred, dimred_obj = dimension_reduction(train_data, train_labels, dimred_method)
-# 		test_dimred = dimred_obj.transform(test_data)
-# 	else:
-# 		train_dimred = train_data
-# 		test_dimred = test_data
+	for kernel in ('rbf', 'poly', 'linear', 'sigmoid'):
+		for gamma in {'auto', 'scale', 0.5, 1, 2}:
+				for shrinking in (True, False):
+					if not(kernel == 'linear' and gamma != 'auto'):
+						names.append('-'.join(['SVM', kernel, str(gamma), str(shrinking)]))
+						classifiers.append(SVC(kernel=kernel, gamma=gamma, shrinking=shrinking, probability=True))
 
-# 	print('Train set dimensions', train_dimred.shape)
-# 	print('Test set dimensions', test_dimred.shape)
-# 	svmc = SVC(kernel='linear').fit(train_dimred, train_labels)
-# 	test_pred_labels = svmc.predict(test_dimred) 
-# 	show_classifier_performance_stats(test_labels, test_pred_labels)
+	performance_stats, performance_names = classify_many(names, classifiers, data, labels)
 
-# def classify_various(train_data, test_data, train_labels, test_labels, classifier):
-# 	if classifier == 'SVM':
-# 		print('Train with raw features')
-# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels)
-# 		print('Train with PCA-projected features')
-# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, 'PCA')
-# 		print('Train with LDA-projected features')
-# 		dimred_and_train_svm_classifier(train_data, test_data, train_labels, test_labels, 'LDA')
+	performance_stats, unique_ids = np.unique(performance_stats, return_index=True, axis=0)
+	performance_names = [performance_names[i] for i in unique_ids]
 
-# 	elif classifier == 'RandomForest':
-# 		print('Train with raw features')
-# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels)
-# 		print('Train with PCA-projected features')
-# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, 'PCA')
-# 		print('Train with LDA-projected features')
-# 		dimred_and_train_random_forest_classifier(train_data, test_data, train_labels, test_labels, 'LDA')
+	plot_accuracy_and_auc(performance_stats, performance_names, title)
+	print('\n------------------------------------------------------')
+	print('SVM performance \n')
+	max_accuracy_index = (np.argsort(performance_stats[:,0]))[-10:]
+	[print(-i, 'th best Accuracy ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_accuracy_index,0], [performance_names[i] for i in max_accuracy_index])]
+	print(' ')
+	max_auc_index = np.argsort(performance_stats[:,1])[-10:]
+	[print(-i, 'th best A.U.C. ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_auc_index,1], [performance_names[i] for i in max_auc_index])]
+	print('------------------------------------------------------')
 
-#classify_various(train_data, test_data, train_labels, test_labels, 'RandomForest')
-#classify_various(train_data, test_data, train_labels, test_labels, 'SVM')
+	best_classifier_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-2:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-2:]]
+	return best_classifier_names
+
+best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison')
+best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
+print(best_knn_confs)
+best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison')
+best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
+print(best_svm_confs)
+
+compare_classifiers(data, labels, 'Classification Performance Comparison')
 
 
 # # By hardic goel
