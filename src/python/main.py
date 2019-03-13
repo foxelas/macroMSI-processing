@@ -4,8 +4,7 @@ from sklearn import manifold
 import sklearn.metrics
 from sklearn.decomposition import PCA, FactorAnalysis, TruncatedSVD, FastICA 
 from sklearn.preprocessing import StandardScaler
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as QDA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA, QuadraticDiscriminantAnalysis as QDA
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -63,8 +62,8 @@ def _todict(matobj):
             dict[strg] = elem
     return dict
 
-get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
-
+get_indexes_equal = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
+get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if y in  x]
 
 def create_directory(dirName):
 	if not exists(dirName):
@@ -102,27 +101,65 @@ id_struct = id_mat['ID']
 is_benign = np.array([id_struct[x].IsBenign for x in range(msiN) ])
 is_cut = np.array([id_struct[x].IsCut for x in range(msiN) ])
 is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
+positive_labels = np.array([int((x + 1) % 2) for x in is_benign])
+label_dict = {0: 'Benign', 1: 'Malignant'}
+
+fixation = []
+for i in range(msiN):
+	if is_fixed[i] and not(is_cut[i]):
+		fixation.append('fixed')	
+	elif is_cut[i]:
+		fixation.append('cut')
+	else:
+		fixation.append('unfixed')
 
 ###################Measured Data######
 
-data, unique_ids = np.unique(spectra, return_index=True, axis=0)
-measuredN = len(data)
-labels = is_benign[unique_ids]
-label_dict = {0: 'Malignant', 1: 'Benign'}
-benign_ids = get_indexes(1, is_benign[unique_ids])
-malignant_ids = get_indexes(0, is_benign[unique_ids])
+def subset_indexes(name, data, fixation_type):
+	subset_ids = []
+	if name == 'unique':
+		data_s, subset_ids = np.unique(data, return_index=True, axis=0)
 
-train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=0)
+	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
+		subset_ids = np.array(get_indexes_equal(name, fixation_type))
+
+	elif 'unique' in name:
+		name1, name2 = name.split('_')
+		subset_ids1 = subset_indexes(name1, data, fixation_type)
+		subset_ids2 = subset_indexes(name2, data, fixation_type)
+		subset_ids = np.intersect1d(subset_ids1, subset_ids2)
+
+	else: 
+		print('Not implemented yet.')
+		return 
+
+	return subset_ids
+
+def get_subset(name, data, labels, fixation_type):
+	subset_ids = subset_indexes(name, data, fixation_type)
+	data_s = data[subset_ids,:]
+	labels_s = labels[subset_ids]
+	fixation_type_s = [fixation_type[x] for x in subset_ids]
+
+	return data_s, labels_s, fixation_type_s
+
+data, labels, fixation_s = get_subset('unique', spectra, positive_labels, fixation)
+measuredN = len(data)
+print('Subset contains ', measuredN, ' observations')
 sc = StandardScaler()
-train_data = sc.fit_transform(train_data)
-test_data = sc.transform(test_data)
+
+# data, unique_ids = np.unique(spectra, return_index=True, axis=0)
+# labels = is_benign[unique_ids]
+
+# benign_ids = get_indexes_equal(1, is_benign[subset_ids])
+# malignant_ids = get_indexes_equal(0, is_benign[subset_ids])
 
 
 def plot_lda(X, X_labels, title):
 	plt.figure()
 	positives_end = np.sum(X_labels==0) + 1
 	negatives_end = np.sum(X_labels==1) + 1
-	for label, marker, color, sample_start, sample_end in zip(range(2), ('s', 'o'), ('red', 'green'), (1, positives_end + 1), (positives_end, positives_end + negatives_end)):
+	for label, marker, color, sample_start, sample_end in zip(range(2), ('s', 'o'), ('green', 'red'), (1, positives_end + 1), (positives_end, positives_end + negatives_end)):
 		plt.scatter(x=np.array(range(sample_start, sample_end)),  
 					y=X[:,0][X_labels == label], 
 					marker=marker,
@@ -144,7 +181,7 @@ def plot_da(X, X_labels, title):
 	tag = title.strip('Analysis')
 
 	plt.figure()
-	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
+	for label, marker, color in zip(range(2), ('s', 'o'), ('green', 'red')):
 		plt.scatter(x=X[:,0][X_labels == label], 
 					y=X[:,1][X_labels == label] * -1, #To flip the plot
 					marker=marker,
@@ -166,7 +203,7 @@ def plot_da3(X, X_labels, title):
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
-	for label, marker, color in zip(range(2), ('s', 'o'), ('red', 'green')):
+	for label, marker, color in zip(range(2), ('s', 'o'), ('green', 'red')):
 		ax.scatter(xs=X[:,0][X_labels == label], 
 					ys=X[:,1][X_labels == label] * -1, #To flip the plot
 					zs=X[:,2][X_labels == label] * -1, #To flip the plot
@@ -231,7 +268,7 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 		if show_figures:
 			print("original dimension: ", data.shape)
 			print("pca-projected dimension ", data_transformed.shape)
-			print("pca explained variance ", pca.explained_variance_)
+			print("pca explained variance ", pca.explained_variance_ratio_)
 			plot_da(data_transformed, data_labels,'Principal Component Analysis')
 			print('Reduced dimensions: ', data_transformed.shape)
 		return data_transformed, pca
@@ -307,6 +344,7 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 	else:
 		print('Method not implemented.')
 		return
+dimension_reduction(data, labels, 'PCA', True, 2)
 
 def show_classifier_performance_stats(test_labels, pred_labels):
 	cm = confusion_matrix(test_labels, pred_labels)
@@ -355,6 +393,7 @@ def plot_accuracy_and_auc(performance_stats, performance_names, plot_title='Clas
 	img_title = plot_title.replace(' ', '_').lower()
 	plt.savefig(pjoin(out_dir, 'classification', img_title + '.png'), bbox_inches='tight')
 
+
 def fit_classifier(classifier_name, train_data, train_labels):
 	if 'SVM' in classifier_name:
 		a, b, c, d = classifier_name.split('-') 
@@ -370,12 +409,12 @@ def fit_classifier(classifier_name, train_data, train_labels):
 		return
 
 	if 'PCA' in classifier_name: 
-		train_data = dimension_reduction(train_data, train_labels, 'PCA', show_figures=False, components=10)
+		train_data, dimred_obj = dimension_reduction(train_data, train_labels, 'PCA', show_figures=False, components=10)
 	clf.fit(train_data, train_labels)
 	return clf
 
 def cross_validate(classifier, data, labels, folds=5, method=''):
-	cv = StratifiedKFold(n_splits=folds)
+	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
 
 	tprs = []
 	aucs = []
@@ -446,7 +485,7 @@ def classify_many(names, classifiers, data, labels, method=''):
 
 	#original spectum as input
 	for name, clf in zip(names, classifiers):
-		mean_acc, mean_auc = cross_validate(clf, data, labels, 5, method)
+		mean_acc, mean_auc = cross_validate(clf, data, labels, 10, method)
 		# train_dimred, test_dimred = apply_dimension_reduction(train_data, test_data, train_labels, test_labels, dimred_method=method, components=10)
 		# clf.fit(train_dimred, train_labels)
 		# score = clf.score(test_dimred, test_labels)
@@ -460,14 +499,16 @@ def classify_many(names, classifiers, data, labels, method=''):
 
 def compare_classifiers(data, labels, title=''):
 
-	names = ["Nearest Neighbors", "KNN-1-correlation", "Linear SVM", "RBF SVM", "Decision Tree",
-         "Random Forest", "Naive Bayes", "LDA", "QDA"]
+	names = ["KNN-3-minkowski", "KNN-1-correlation", "SVM-linear-0.025", "SVM-linear-auto-True", "SVM-rbf-scale-False", "Decision Tree-gini",
+         "Decision Tree-entropy", "Random Forest", "Naive Bayes", "LDA", "QDA"]
 	classifiers = [
-	    KNN(3),
+	    KNN(n_neighbors =5, algorithm = 'auto', metric='cityblock'),
 	    KNN(n_neighbors =1, algorithm = 'auto', metric='correlation'),
 	    SVC(kernel="linear", C=0.025, probability=True),
-	    SVC(gamma=2, C=1, probability=True),
-	    DecisionTreeClassifier(max_depth=5),
+	    SVC(kernel="linear", gamma="auto", shrinking=True, probability=True),
+	    SVC(kernel="rbf", gamma="scale", shrinking=False, probability=True),
+	    DecisionTreeClassifier(criterion="gini"),
+	    DecisionTreeClassifier(criterion="entropy"),
 	    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
 	    GaussianNB(),
 	    LDA(),
@@ -481,6 +522,17 @@ def compare_classifiers(data, labels, title=''):
 	performance_stats = np.concatenate((pf_stats1, pf_stats2), axis=0)
 	performance_names = pf_names1 + pf_names2
 	plot_accuracy_and_auc(performance_stats, performance_names, title)
+	print('\n------------------------------------------------------')
+	print('classifier performance \n')
+	max_accuracy_index = (np.argsort(performance_stats[:,0]))[-10:]
+	[print(-i, 'th best Accuracy ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_accuracy_index,0], [performance_names[i] for i in max_accuracy_index])]
+	print(' ')
+	max_auc_index = np.argsort(performance_stats[:,1])[-10:]
+	[print(-i, 'th best A.U.C. ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_auc_index,1], [performance_names[i] for i in max_auc_index])]
+	print('------------------------------------------------------')
+
+	best_classifier_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-10:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-10:]]
+	return best_classifier_names
 
 def compare_knn_classifiers(data, labels, title=''):
 	performance_stats = np.empty((0, 2))
@@ -566,14 +618,78 @@ def compare_svm_classifiers(data, labels, title=''):
 	best_classifier_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-2:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-2:]]
 	return best_classifier_names
 
-best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison')
-best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
-print(best_knn_confs)
-best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison')
-best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
-print(best_svm_confs)
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.25, random_state=1)
+train_data = sc.fit_transform(train_data)
+test_data = sc.transform(test_data)
 
-compare_classifiers(data, labels, 'Classification Performance Comparison')
+# best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison')
+# best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
+# print(best_knn_confs)
+# best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison')
+# best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
+# print(best_svm_confs)
+
+best_clf_confs = compare_classifiers(data, labels, 'Classification Performance Comparison')
+print(best_clf_confs)
+
+def get_classifier(classifier_name):
+	classifier_name = classifier_name.replace('PCA', '').strip(' ')
+	if 'SVM' in classifier_name:
+		a, b, c, d = classifier_name.split('-') 
+		c = c if (c == 'auto' or c == 'scale') else float(c)
+		clf = SVC(kernel=b, gamma=c, shrinking=(d==True), probability=True)
+
+	elif 'KNN' in classifier_name:
+		a, b, c =  classifier_name.split('-')
+		clf = KNN(n_neighbors=int(b), algorithm = 'auto', metric=c)
+
+	elif 'QDA' in classifier_name:
+		clf = QDA()
+
+	elif 'LDA' in classifier_name:
+		clf = LDA()
+
+	elif 'Decision Tree' in classifier_name:
+		a, b=  classifier_name.split('-')
+		clf = DecisionTreeClassifier(criterion=b)
+
+	elif 'Random Forest' in classifier_name:
+		clf = RandomForestClassifier(n_estimators=10)
+
+	elif 'Naive Bayes' in classifier_name:
+		clf = GaussianNB()
+
+	else:
+		print(classifier_name, 'Not yet implemented.')
+		return
+
+	return clf
+
+def compare_input_sets(names, data, labels, fixation_type):
+	classifiers = [get_classifier(c) for c in names]
+
+	performance_stats = np.empty((0, 2))
+	performance_names = []
+	for input_set in ('unique_unfixed', 'unique_fixed', 'unique_cut', 'unique'):
+		data_s, labels_s, fixation_s = get_subset(input_set, data, labels, fixation)
+		pf_stats1, pf_names1 = classify_many([ '-'.join([x, input_set]) for x in names], classifiers, data_s, labels_s)
+
+		performance_stats = np.concatenate((performance_stats, pf_stats1), axis=0)
+		performance_names = performance_names + pf_names1
+
+	best_performance_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-15:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-15:]]
+	best_performance_stats = np.concatenate(([performance_stats[i,:] for i in  (np.argsort(performance_stats[:,0]))[-15:]], [performance_stats[i,:] for i in np.argsort(performance_stats[:,1])[-15:]]), axis=0)
+	best_performance_stats, unique_ids = np.unique(best_performance_stats, return_index=True, axis=0)
+	best_performance_names = [best_performance_names[i] for i in unique_ids]
+	best_performance_ids = np.argsort([x[::-1] for x in best_performance_names])
+	best_performance_names = [best_performance_names[x] for x in best_performance_ids]
+	best_performance_stats = best_performance_stats[best_performance_ids,:]
+	print(best_performance_names)
+	print(best_performance_stats)
+
+	plot_accuracy_and_auc(best_performance_stats, best_performance_names, 'Compare Input Sets')
+
+best_classifier_names = compare_input_sets(best_clf_confs, data, labels, fixation)
 
 
 # # By hardic goel
