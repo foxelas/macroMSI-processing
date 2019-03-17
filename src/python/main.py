@@ -72,11 +72,14 @@ def create_directory(dirName):
 
 base_dir  = '/media/sf_research/input/'
 data_dir = 'saitama_v5_min_region'
+in_dir = pjoin(base_dir, data_dir)
 out_dir = pjoin('/media/sf_research/output/', data_dir)
 create_directory(out_dir)
-matfile = pjoin(base_dir, data_dir, 'in.mat')
-in_mat = loadmat(matfile)
-print('Loaded mat file with headers', in_mat.keys())
+
+in_mat = loadmat( pjoin(in_dir, 'in.mat'))
+print('Finished loading input matfile.')#print('Loaded mat file with headers', in_mat.keys())
+out_mat = loadmat(pjoin(out_dir, 'ReflectanceEstimationPreset', 'out.mat'))
+print('Finished loading output matfile.')
 
 ####################prepare data structs#######################
 complete_spectra = in_mat['CompleteSpectra']
@@ -93,9 +96,11 @@ msi_dim = msis[0].shape
 bandN = msi_dim[0]
 rgbN = msi_dim[3]
 
-matfile = pjoin(base_dir, data_dir, 'ID.mat')
+estimated_spectra = out_mat['EstimatedSpectra']
+
+matfile = pjoin(in_dir, 'ID.mat')
 id_mat = loadmat(matfile)
-print('Loaded mat file with headers', id_mat.keys())
+print('Finished loading ID matfile.')
 id_struct = id_mat['ID']
 is_benign = np.array([id_struct[x].IsBenign for x in range(msiN) ])
 is_cut = np.array([id_struct[x].IsCut for x in range(msiN) ])
@@ -112,18 +117,21 @@ for i in range(msiN):
 	else:
 		fixation.append('unfixed')
 
-def subset_indexes(name, data, fixation_type):
+data_s, unique_measured_ids = np.unique(spectra, return_index=True, axis=0)
+
+
+def subset_indexes(name, data):
 	subset_ids = []
 	if name == 'unique':
-		data_s, subset_ids = np.unique(data, return_index=True, axis=0)
+		subset_ids = unique_measured_ids
 
 	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
-		subset_ids = np.array(get_indexes_equal(name, fixation_type))
+		subset_ids = np.array(get_indexes_equal(name, fixation))
 
 	elif 'unique' in name:
 		name1, name2 = name.split('_')
-		subset_ids1 = subset_indexes(name1, data, fixation_type)
-		subset_ids2 = subset_indexes(name2, data, fixation_type)
+		subset_ids1 = subset_indexes(name1, data)
+		subset_ids2 = subset_indexes(name2, data)
 		subset_ids = np.intersect1d(subset_ids1, subset_ids2)
 
 	else: 
@@ -132,23 +140,15 @@ def subset_indexes(name, data, fixation_type):
 
 	return subset_ids
 
-def get_subset(name, data, labels, fixation_type):
-	subset_ids = subset_indexes(name, data, fixation_type)
+def get_subset(name, data, labels):
+	subset_ids = subset_indexes(name, data)
 	data_s = data[subset_ids,:]
 	labels_s = labels[subset_ids]
-	fixation_type_s = [fixation_type[x] for x in subset_ids]
+	fixation_s = [fixation[x] for x in subset_ids]
 
-	return data_s, labels_s, fixation_type_s
-
-####################get unique measured spectra dataset#######################
-data, labels, fixation_s = get_subset('unique', spectra, positive_labels, fixation)
-measuredN = len(data)
-print('Subset contains ', measuredN, ' observations')
-
+	return data_s, labels_s, fixation_s
 
 ####################dimension reduction#######################
-sc = StandardScaler()
-
 def plot_da(X, X_labels, title):
 	fig = plt.figure()
 	tag = title.strip('Analysis')
@@ -225,10 +225,10 @@ def plot_feature_importance(features, importances, indices, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def dimension_reduction(data, data_labels, method, show_figures=False, components=2):
+def dimension_reduction(data, data_labels, method, show_figures=False, components=2, name=''):
 	create_directory(pjoin(out_dir, 'dimension_reduction'))
 
-	if method == 'RandomForest':		
+	if method == 'RF':		
 		##################RandomForest########
 		rf = RandomForestRegressor(random_state=1, max_depth=10, n_estimators=10)
 		rf.fit(data,data_labels)
@@ -238,7 +238,7 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 		mean_importance = np.mean(importances)
 		print('Random Forest-Average wavelength importance: ', mean_importance)
 		if show_figures:
-			plot_feature_importance(features, importances, indices, 'Wavelength Importances by Random Forest')
+			plot_feature_importance(features, importances, indices, 'Wavelength Importances by Random Forest' + '(' + name + ')')
 
 		dimred = SelectFromModel(rf).fit(data, data_labels)
 		data_transformed = dimred.transform(data)
@@ -249,62 +249,62 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 		data_transformed = dimred.transform(data)
 		if show_figures:
 			print("PCA-explained variance ", dimred.explained_variance_ratio_)
-			plot_da(data_transformed, data_labels,'Principal Component Analysis')
+			plot_da(data_transformed, data_labels,'Principal Component Analysis' + '(' + name + ')')
 
 	elif method == 'SVD': 
 		##################SVD########
 		dimred = TruncatedSVD(n_components=components, random_state=42).fit(data)
 		data_transformed = dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'SVD Component Analysis') 
-			plot_da_components(data_transformed, data_labels, 'SVD Components')
+			plot_da(data_transformed, data_labels, 'SVD Component Analysis' + '(' + name + ')') 
+			plot_da_components(data_transformed, data_labels, 'SVD Components' + '(' + name + ')')
 
-	elif method == 'FactorAnalysis':
+	elif method == 'FA':
 		##################FactorAnalysis########
 		dimred = FactorAnalysis(n_components = components).fit(data, data_labels)
 		data_transformed = dimred.transform(data) #with labels 
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Factor Analysis') 
-			plot_da_components(data_transformed, data_labels, 'Factor Analysis Components')
+			plot_da(data_transformed, data_labels, 'Factor Analysis' + '(' + name + ')') 
+			plot_da_components(data_transformed, data_labels, 'Factor Analysis Components' + '(' + name + ')')
 
 	elif method == 'ICA':
 		##################ICA########
 		dimred = FastICA(n_components=components, random_state=1, max_iter=500, tol=0.01).fit(data)
 		data_transformed=dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Independent Component Analysis')
+			plot_da(data_transformed, data_labels, 'Independent Component Analysis' + '(' + name + ')')
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
 		dimred = manifold.Isomap(n_neighbors=5, n_components=components, n_jobs=-1).fit(data)
 		data_transformed = dimred.transform(data)
 		if show_figures:
-			plot_da_components(data_transformed, data_labels, 'ISOMAP Components')
-			plot_da(data_transformed, data_labels, 'ISOMAP Component Analysis') 
+			plot_da_components(data_transformed, data_labels, 'ISOMAP Components' + '(' + name + ')')
+			plot_da(data_transformed, data_labels, 'ISOMAP Component Analysis' + '(' + name + ')') 
 
 	elif method == 't-SNE':
 		##################t-SNE########
 		dimred = manifold.TSNE(n_components=components, n_iter=300).fit(data)
 		data_transformed = dimred.fit_transform(data)
 		if show_figures:
-			plot_da_components(data_transformed, data_labels, 't-SNE Components')
-			plot_da(data_transformed, data_labels, 't-SNE Component Analysis') 
+			plot_da_components(data_transformed, data_labels, 't-SNE Components' + '(' + name + ')')
+			plot_da(data_transformed, data_labels, 't-SNE Component Analysis' + '(' + name + ')') 
 
 	elif method == 'LDA':
 		##################LDA#################
 		dimred = LDA(n_components=components, solver="svd", store_covariance=True).fit(data, data_labels)
 		data_transformed = dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Linear Discriminant Analysis')
+			plot_da(data_transformed, data_labels, 'Linear Discriminant Analysis' + '(' + name + ')')
 
 	elif method == 'QDA':
 		##################QDA#################
-		dimred = QDA().fit(data, labels)
+		dimred = QDA().fit(data, data_labels)
 		data_transformed = np.array([[x] for x in dimred.decision_function(data)])
-		plot_da(data_transformed, data_labels, 'Quadratic Discriminant Analysis')
+		plot_da(data_transformed, data_labels, 'Quadratic Discriminant Analysis' + '(' + name + ')')
 
 	else:
-		print('Method not implemented.')
+		print(method, ' not implemented.')
 		return
 
 	if show_figures:
@@ -323,19 +323,16 @@ def apply_dimension_reduction(train_data, test_data, train_labels, test_labels, 
 
 	return train_dimred, test_dimred
 
-def compare_all_dimension_reduction(data, data_labels, show_figures=False):
-	dimension_reduction(data, labels, 'RandomForest', show_figures, 2)
-	dimension_reduction(data, labels, 'PCA', show_figures, 2)
-	dimension_reduction(data, labels, 'SVD', show_figures, 3)
-	dimension_reduction(data, labels, 'FactorAnalysis', show_figures, 3)
-	dimension_reduction(data, labels, 'ICA', show_figures, 3)
-	dimension_reduction(data, labels, 'ISOMAP', show_figures, 3)
-	dimension_reduction(data, labels, 't-SNE', show_figures, 3)
-	dimension_reduction(data, labels, 'LDA', show_figures, 1)
-	dimension_reduction(data, labels, 'QDA', show_figures, 1)
-
-compare_all_dimension_reduction(data, labels, True)
-#dimension_reduction(data, labels, 'PCA', True, 2)
+def compare_all_dimension_reduction(data, labels, show_figures=False, name=''):
+	dimension_reduction(data, labels, 'RF', show_figures, 2, name)
+	dimension_reduction(data, labels, 'PCA', show_figures, 2, name)
+	dimension_reduction(data, labels, 'SVD', show_figures, 3, name)
+	dimension_reduction(data, labels, 'FA', show_figures, 3, name)
+	dimension_reduction(data, labels, 'ICA', show_figures, 3, name)
+	dimension_reduction(data, labels, 'ISOMAP', show_figures, 3, name)
+	dimension_reduction(data, labels, 't-SNE', show_figures, 3, name)
+	dimension_reduction(data, labels, 'LDA', show_figures, 1, name)
+	dimension_reduction(data, labels, 'QDA', show_figures, 1, name)
 
 ####################classification#######################
 
@@ -397,6 +394,7 @@ def fit_classifier(classifier_name, train_data, train_labels):
 
 def cross_validate(classifier, data, labels, folds=5, method=''):
 	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
+	sc = StandardScaler()
 
 	tprs = []
 	aucs = []
@@ -410,7 +408,7 @@ def cross_validate(classifier, data, labels, folds=5, method=''):
 		train_f = sc.fit_transform(data[train])
 		test_f = sc.transform(data[test])
 
-		train_f, test_f = apply_dimension_reduction(train_f, test_f, labels[train], labels[test], method, 10)
+		train_f, test_f = apply_dimension_reduction(train_f, test_f, labels[train], labels[test], method, folds)
 		classifier.fit(train_f, labels[train])
 		pred_labels = classifier.predict(test_f)
 		accs.append(accuracy_score(labels[test], pred_labels))
@@ -435,7 +433,7 @@ def cross_validate(classifier, data, labels, folds=5, method=''):
 	return mean_acc, mean_auc 
 
 def get_best_classifiers(performance_stats, performance_names, title, best_n=10):
-	plot_accuracy_and_auc(performance_stats, performance_names, title)
+	
 	print('\n------------------------------------------------------')
 	print(performance_names, ': Best performance \n')
 	max_accuracy_index = (np.argsort(performance_stats[:,0]))[-best_n:]
@@ -445,7 +443,25 @@ def get_best_classifiers(performance_stats, performance_names, title, best_n=10)
 	[print(-i, 'th best A.U.C. ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_auc_index,1], [performance_names[i] for i in max_auc_index])]
 	print('------------------------------------------------------')
 
-	best_classifier_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-best_n:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-best_n:]]
+	#concatenate best AUC and best accuracy performances
+	best_classifier_names = [performance_names[i] for i in  max_accuracy_index] + [performance_names[i] for i in max_auc_index]
+	best_classifier_stats = np.concatenate(([performance_stats[i,:] for i in  max_accuracy_index], [performance_stats[i,:] for i in max_auc_index]), axis=0)
+	#return only unique classifications
+	best_classifier_stats, unique_ids = np.unique(best_classifier_stats, return_index=True, axis=0) 
+	best_classifier_names = [best_classifier_names[i] for i in unique_ids]
+
+	if 'Input' in title: 
+		#sort by last word in classifier name 
+		best_classifier_ids_sorted = np.argsort([x[::-1] for x in best_classifier_names])
+		best_classifier_names = [best_classifier_names[x] for x in best_classifier_ids_sorted]
+		best_classifier_stats = best_classifier_stats[best_classifier_ids_sorted,:]
+		plot_accuracy_and_auc(best_classifier_stats, best_classifier_names, title)
+	else:
+		plot_accuracy_and_auc(performance_stats, performance_names, title)
+
+	print('Best ' + title)
+	[print('Accuracy:', y, ', AUC:', z, '--', x) for (x,y,z) in zip(best_classifier_names, best_classifier_stats[:,0], best_classifier_stats[:,1])]
+
 	return best_classifier_names
 
 def plot_cv_roc_curve(fpr_f, tpr_f, tprs, aucs):
@@ -474,13 +490,13 @@ def plot_cv_roc_curve(fpr_f, tpr_f, tprs, aucs):
 	plt.show()
 
 
-def classify_many(names, classifiers, data, labels, method=''):
+def classify_many(names, classifiers, data, labels, method='', folds=10):
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 
 	#original spectum as input
 	for name, clf in zip(names, classifiers):
-		mean_acc, mean_auc = cross_validate(clf, data, labels, 10, method)
+		mean_acc, mean_auc = cross_validate(clf, data, labels, folds, method)
 		performance_stats = np.append(performance_stats, [(mean_acc, mean_auc)], axis=0)
 		performance_names.append(' '.join([name,method]))
 
@@ -488,12 +504,12 @@ def classify_many(names, classifiers, data, labels, method=''):
 
 def compare_classifiers(data, labels, title=''):
 
-	names = ["KNN-3-minkowski", "KNN-1-correlation", "SVM-linear-0.025", "SVM-linear-auto-True", "SVM-rbf-scale-False", "Decision Tree-gini",
+	names = ["KNN-3-minkowski", "KNN-1-correlation", "SVM-linear-0.025-True", "SVM-linear-auto-True", "SVM-rbf-scale-False", "Decision Tree-gini",
          "Decision Tree-entropy", "Random Forest", "Naive Bayes", "LDA", "QDA"]
 	classifiers = [
 	    KNN(n_neighbors =5, algorithm = 'auto', metric='cityblock'),
 	    KNN(n_neighbors =1, algorithm = 'auto', metric='correlation'),
-	    SVC(kernel="linear", C=0.025, probability=True),
+	    SVC(kernel="linear", C=0.025, shrinking=True, probability=True),
 	    SVC(kernel="linear", gamma="auto", shrinking=True, probability=True),
 	    SVC(kernel="rbf", gamma="scale", shrinking=False, probability=True),
 	    DecisionTreeClassifier(criterion="gini"),
@@ -611,43 +627,46 @@ def get_classifier(classifier_name):
 
 	return clf
 
-def compare_input_sets(names, data, labels, fixation_type):
+def compare_input_sets(names, data, labels, title):
 	classifiers = [get_classifier(c) for c in names]
 
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 	for input_set in ('unique_unfixed', 'unique_fixed', 'unique_cut', 'unique'):
-		data_s, labels_s, fixation_s = get_subset(input_set, data, labels, fixation)
-		pf_stats1, pf_names1 = classify_many([ '-'.join([x, input_set]) for x in names], classifiers, data_s, labels_s)
+		data_s, labels_s, fixation_s = get_subset(input_set, data, labels)
+		print('Subset ', input_set,' contains ', len(labels_s), ' observations')
+		pf_stats1, pf_names1 = classify_many([ '-'.join([x, input_set]) for x in names], classifiers, data_s, labels_s, '', 5)
 
 		performance_stats = np.concatenate((performance_stats, pf_stats1), axis=0)
 		performance_names = performance_names + pf_names1
 
-	best_performance_names = [performance_names[i] for i in  (np.argsort(performance_stats[:,0]))[-15:]] + [performance_names[i] for i in np.argsort(performance_stats[:,1])[-15:]]
-	best_performance_stats = np.concatenate(([performance_stats[i,:] for i in  (np.argsort(performance_stats[:,0]))[-15:]], [performance_stats[i,:] for i in np.argsort(performance_stats[:,1])[-15:]]), axis=0)
-	best_performance_stats, unique_ids = np.unique(best_performance_stats, return_index=True, axis=0)
-	best_performance_names = [best_performance_names[i] for i in unique_ids]
-	best_performance_ids = np.argsort([x[::-1] for x in best_performance_names])
-	best_performance_names = [best_performance_names[x] for x in best_performance_ids]
-	best_performance_stats = best_performance_stats[best_performance_ids,:]
-	print(best_performance_names)
-	print(best_performance_stats)
+	best_classifier_names = get_best_classifiers(performance_stats, performance_names, title, 15)
 
-	plot_accuracy_and_auc(best_performance_stats, best_performance_names, 'Compare Input Sets')
+def split_and_scale(data, labels):
+	sc = StandardScaler()
+	train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.25, random_state=1)
+	train_data = sc.fit_transform(train_data)
+	test_data = sc.transform(test_data)
+	return train_data, test_data, train_labels, test_labels, sc
 
-train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.25, random_state=1)
-train_data = sc.fit_transform(train_data)
-test_data = sc.transform(test_data)
+def apply_on_dataset(input_data, input_labels, input_subset, input_name=''):
+	data, labels, fixation_s = get_subset(input_subset, input_data, input_labels)
+	print('Subset contains ', len(labels), ' observations')
 
-best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison')
-best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
-print('Best KNN classifier configurations:\n', best_knn_confs)
-best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison')
-best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
-print('Best SVM classifier configurations:\n', best_svm_confs)
+	compare_all_dimension_reduction(data, labels, True, input_name)
+	#dimension_reduction(data, labels, 'PCA', True, 2)
 
-best_clf_confs = compare_classifiers(data, labels, 'Classification Performance Comparison')
-print('Best overall classifier configurations:\n', best_clf_confs)
+	#train_data, test_data, train_labels, test_labels, sc = split_and_scale(data, labels)
+	best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison' + '(' + input_name + ')')
+	#best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
+	best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison' + '(' + input_name + ')')
+	#best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
+	best_clf_confs = compare_classifiers(data, labels, 'Classification Performance Comparison' + '(' + input_name + ')')
 
-best_classifier_names = compare_input_sets(best_clf_confs, data, labels, fixation)
-print('Best classsifiers based on input set:\n', best_classifier_names)
+	best_classifier_names = compare_input_sets(best_clf_confs, input_data, input_labels, 'Input Set Comparison' + '(' + input_name + ')')
+
+####################apply on unique measured spectra dataset#######################
+best_clf_confs_measured = apply_on_dataset(spectra, positive_labels, 'unique', 'measured')
+
+####################apply on unique estimated spectra dataset#######################
+best_clf_confs_estimated = apply_on_dataset(estimated_spectra, positive_labels, 'unique', 'estimated')
