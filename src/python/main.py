@@ -408,7 +408,7 @@ def cross_validate(classifier, data, labels, folds=5, method=''):
 		train_f = sc.fit_transform(data[train])
 		test_f = sc.transform(data[test])
 
-		train_f, test_f = apply_dimension_reduction(train_f, test_f, labels[train], labels[test], method, 10)
+		train_f, test_f = apply_dimension_reduction(train_f, test_f, labels[train], labels[test], method, folds)
 		classifier.fit(train_f, labels[train])
 		pred_labels = classifier.predict(test_f)
 		accs.append(accuracy_score(labels[test], pred_labels))
