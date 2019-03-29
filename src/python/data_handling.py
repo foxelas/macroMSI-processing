@@ -1,5 +1,5 @@
+from os import mkdir, makedirs
 from os.path import dirname, join as pjoin, exists
-from sklearn.model_selection import train_test_split, StratifiedKFold
 import scipy.io as sio 
 import numpy as np
 import csv
@@ -43,21 +43,44 @@ def _todict(matobj):
 get_indexes_equal = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
 get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if y in  x]
 
+def create_directory(dirName):
+	if not exists(dirName):
+	    makedirs(dirName)
+
 ####################load matfiles#######################
 
 base_dir  = '/media/sf_research/input/'
 data_dir = 'saitama_v5_min_region'
 in_dir = pjoin(base_dir, data_dir)
+out_dir = pjoin('/media/sf_research/output/', data_dir)
+create_directory(out_dir)
 
 in_mat = loadmat( pjoin(in_dir, 'in.mat'))
 print('Finished loading input matfile.')#print('Loaded mat file with headers', in_mat.keys())
+out_mat = loadmat(pjoin(out_dir, 'ReflectanceEstimationPreset', 'out.mat'))
+print('Finished loading output matfile.')
+
+####################prepare data structs#######################
+complete_spectra = in_mat['CompleteSpectra']
+darkIs = in_mat['DarkIs']
+msi_names = in_mat['MSINames']
+msis = in_mat['MSIs']
+masks = in_mat['Masks']
+spectra = in_mat['Spectra']
+spectra_names = in_mat['SpectraNames']
+whiteIs = in_mat['WhiteIs']
+
+msiN, lambdaN = complete_spectra.shape
+msi_dim = msis[0].shape
+bandN = msi_dim[0]
+rgbN = msi_dim[3]
+
+estimated_spectra = out_mat['EstimatedSpectra']
 
 matfile = pjoin(in_dir, 'ID.mat')
 id_mat = loadmat(matfile)
 print('Finished loading ID matfile.')
 id_struct = id_mat['ID']
-msiN = id_struct.shape[0]
-names = np.array(['_'.join([id_struct[x].SpectrumFile, id_struct[x].T]) for x in range(msiN) ])
 is_benign = np.array([id_struct[x].IsBenign for x in range(msiN) ])
 is_cut = np.array([id_struct[x].IsCut for x in range(msiN) ])
 is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
@@ -73,10 +96,35 @@ for i in range(msiN):
 	else:
 		fixation.append('unfixed')
 
+samples = np.unique(np.array([id_struct[x].Sample for x in range(msiN) ])).tolist()
+
+###################gets#####################
+def get_out_dir():
+	return out_dir
+
+def get_in_dir():
+	return in_dir
+
+def get_label_dict():
+	return label_dict
+
+def get_fixation():
+	return fixation
+
+def get_measured_spectra():
+	return spectra
+
+def get_reconstructed_spectra():
+	return estimated_spectra
+
+def get_labels():
+	return positive_labels
+
 def subset_indexes(name, data):
 	subset_ids = []
 	if name == 'unique':
-		x, subset_ids = np.unique(names, return_index=True, axis=0)
+		names = np.array(['_'.join([id_struct[x].SpectrumFile, id_struct[x].T]) for x in range(msiN) ])
+		x, subset_ids = np.unique(np.array(spectra_names, dtype=str), return_index=True, axis=0)
 
 	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
 		subset_ids = np.array(get_indexes_equal(name, fixation))
@@ -128,22 +176,31 @@ def write_file(filename, contents):
 		writer.writerows(contents)
 	csvFile.close()
 
+#write_file( 'names_mixed.csv', get_subset_contents('unique', spectra_names, positive_labels))
 
-measured_names, measured_ids = np.unique(names, return_index=True, axis=0)
+def write_folds(subset_name='unique', folds=10):
+	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
 
-write_file( 'names_mixed.csv', get_subset_contents('unique', names, positive_labels))
-write_file( 'names_unfixed.csv', get_subset_contents('unfixed', names, positive_labels))
-write_file( 'names_fixed.csv', get_subset_contents('fixed', names, positive_labels))
-write_file( 'names_cut.csv', get_subset_contents('cut', names, positive_labels))
-write_file( 'names_unique_unfixed.csv', get_subset_contents('unique_unfixed', names, positive_labels))
+	start_index = 0
+	for i in range(folds):
+		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
+		fold_contents = [ subset[j][:] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]]
+		start_index = end_index
+		write_file( 'names_fold' + str(i) + '.csv', fold_contents)
 
-samples = np.unique(np.array([id_struct[x].Sample for x in range(msiN) ])).tolist()
-folds = 10
-subset = get_subset_contents('unique_unfixed', names, positive_labels)
+def get_fold_indexes(subset_name='unique', folds=10):
+	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
 
-start_index = 0
-for i in range(folds):
-	end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
-	fold_contents = [ subset[j][:] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]]
-	start_index = end_index
-	write_file( 'names_fold' + str(i) + '.csv', fold_contents)
+	start_index = 0
+	fold_indexes = []
+	for i in range(folds):
+		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
+		fold_indexes.append([ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]])
+		start_index = end_index
+
+	fold_indexes = [x for x in fold_indexes if x] 
+	folds = len(fold_indexes)
+
+	return fold_indexes, folds
+
+#print(get_fold_indexes('unique_unfixed', 10))

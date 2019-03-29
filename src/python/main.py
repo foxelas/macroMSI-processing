@@ -22,133 +22,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import interactive, is_interactive
 import time 
+import csv
+import math
 
 interactive(True)
 # exec(open("main.py").read())
 
-def loadmat(filename):
-    '''
-    this function should be called instead of direct spio.loadmat
-    as it cures the problem of not properly recovering python dictionaries
-    from mat files. It calls the function check keys to cure all entries
-    which are still mat-objects
-    
-    from: `StackOverflow <http://stackoverflow.com/questions/7008608/scipy-io-loadmat-nested-structures-i-e-dictionaries>`_
-    '''
-    data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
-    return _check_keys(data)
 
-def _check_keys(dict):
-    '''
-    checks if entries in dictionary are mat-objects. If yes
-    todict is called to change them to nested dictionaries
-    '''
-    for key in dict:
-        if isinstance(dict[key], sio.matlab.mio5_params.mat_struct):
-            dict[key] = _todict(dict[key])
-    return dict        
-
-def _todict(matobj):
-    '''
-    A recursive function which constructs from matobjects nested dictionaries
-    '''
-    dict = {}
-    for strg in matobj._fieldnames:
-        elem = matobj.__dict__[strg]
-        if isinstance(elem, sio.matlab.mio5_params.mat_struct):
-            dict[strg] = _todict(elem)
-        else:
-            dict[strg] = elem
-    return dict
-
-get_indexes_equal = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
-get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if y in  x]
-
-def create_directory(dirName):
-	if not exists(dirName):
-	    makedirs(dirName)
-
-####################load matfiles#######################
-
-base_dir  = '/media/sf_research/input/'
-data_dir = 'saitama_v5_min_region'
-in_dir = pjoin(base_dir, data_dir)
-out_dir = pjoin('/media/sf_research/output/', data_dir)
-create_directory(out_dir)
-
-in_mat = loadmat( pjoin(in_dir, 'in.mat'))
-print('Finished loading input matfile.')#print('Loaded mat file with headers', in_mat.keys())
-out_mat = loadmat(pjoin(out_dir, 'ReflectanceEstimationPreset', 'out.mat'))
-print('Finished loading output matfile.')
-
-####################prepare data structs#######################
-complete_spectra = in_mat['CompleteSpectra']
-darkIs = in_mat['DarkIs']
-msi_names = in_mat['MSINames']
-msis = in_mat['MSIs']
-masks = in_mat['Masks']
-spectra = in_mat['Spectra']
-spectra_names = in_mat['SpectraNames']
-whiteIs = in_mat['WhiteIs']
-
-msiN, lambdaN = complete_spectra.shape
-msi_dim = msis[0].shape
-bandN = msi_dim[0]
-rgbN = msi_dim[3]
-
-estimated_spectra = out_mat['EstimatedSpectra']
-
-matfile = pjoin(in_dir, 'ID.mat')
-id_mat = loadmat(matfile)
-print('Finished loading ID matfile.')
-id_struct = id_mat['ID']
-is_benign = np.array([id_struct[x].IsBenign for x in range(msiN) ])
-is_cut = np.array([id_struct[x].IsCut for x in range(msiN) ])
-is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
-positive_labels = np.array([int((x + 1) % 2) for x in is_benign])
-label_dict = {0: 'Benign', 1: 'Malignant'}
-
-fixation = []
-for i in range(msiN):
-	if is_fixed[i] and not(is_cut[i]):
-		fixation.append('fixed')	
-	elif is_cut[i]:
-		fixation.append('cut')
-	else:
-		fixation.append('unfixed')
-
-data_s, unique_measured_ids = np.unique(spectra, return_index=True, axis=0)
-
-
-def subset_indexes(name, data):
-	subset_ids = []
-	if name == 'unique':
-		subset_ids = unique_measured_ids
-
-	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
-		subset_ids = np.array(get_indexes_equal(name, fixation))
-
-	elif 'unique' in name:
-		name1, name2 = name.split('_')
-		subset_ids1 = subset_indexes(name1, data)
-		subset_ids2 = subset_indexes(name2, data)
-		subset_ids = np.intersect1d(subset_ids1, subset_ids2)
-
-	else: 
-		print('Not implemented yet.')
-		return 
-
-	return subset_ids
-
-def get_subset(name, data, labels):
-	subset_ids = subset_indexes(name, data)
-	data_s = data[subset_ids,:]
-	labels_s = labels[subset_ids]
-	fixation_s = [fixation[x] for x in subset_ids]
-
-	return data_s, labels_s, fixation_s
 
 ####################dimension reduction#######################
+# Dimension reduction is trained based on the measured set 
+
 def plot_da(X, X_labels, title):
 	fig = plt.figure()
 	tag = title.strip('Analysis')
