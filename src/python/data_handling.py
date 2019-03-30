@@ -4,6 +4,7 @@ import scipy.io as sio
 import numpy as np
 import csv
 import math
+import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
@@ -53,6 +54,7 @@ def create_directory(dirName):
 ####################load matfiles#######################
 
 base_dir  = '/media/sf_research/input/'
+log_dir = '/media/sf_research/macroMSI_research/logs/'
 data_dir = 'saitama_v5_min_region'
 in_dir = pjoin(base_dir, data_dir)
 out_dir = pjoin('/media/sf_research/output/', data_dir)
@@ -108,6 +110,9 @@ def get_out_dir():
 def get_in_dir():
 	return in_dir
 
+def get_log_dir():
+	return log_dir
+
 def get_label_dict():
 	return label_dict
 
@@ -122,6 +127,9 @@ def get_reconstructed_spectra():
 
 def get_labels():
 	return positive_labels
+
+def get_log_file():
+	return pjoin(get_log_dir(), datetime.datetime.now().strftime("%Y-%m-%d %H_%M") + '.log')
 
 def subset_indexes(name, data):
 	subset_ids = []
@@ -177,13 +185,17 @@ def head(values, n = 10):
 	[print(values[i]) for i in range(n)]
 	print('....')
 
-def write_file(filename, contents):
+def write_file(filename, contents, write_options="w+"):
 
-	with open(pjoin(in_dir, filename), 'w') as csvFile:
-		writer = csv.writer(csvFile)
+	with open(pjoin(in_dir, filename), write_options) as csv_file:
+		writer = csv.writer(csv_file)
 		writer.writerows(contents)
-	csvFile.close()
+	csv_file.close()
 
+def write_log(filename, contents, write_options="a+"):
+	with open(filename, write_options) as log_file:
+		log_file.write(log_file)
+	log_file.close()
 
 ############################Data set splits############################################
 test_sample_names = ['9933']

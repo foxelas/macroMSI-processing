@@ -1,6 +1,7 @@
 import data_handling as dh
 import dimred as dm
 
+from os.path import dirname, join as pjoin, exists
 from sklearn.preprocessing import StandardScaler
 from sklearn import manifold
 import sklearn.metrics
@@ -18,9 +19,11 @@ import scipy.io as sio
 from scipy.spatial.distance import chebyshev, correlation, hamming, minkowski
 import matplotlib.pyplot as plt
 from matplotlib import interactive, is_interactive
-
+import sys
 
 interactive(True)
+
+out_dir = dh.get_out_dir()
 
 ####################classification#######################
 
@@ -71,12 +74,15 @@ def plot_accuracy_and_auc(performance_stats, performance_names, plot_title='Clas
 	fig.tight_layout()
 	plt.show()
 
-	create_directory(pjoin(out_dir, 'classification'))
+	dh.create_directory(pjoin(out_dir, 'classification'))
 	img_title = plot_title.replace(' ', '_').lower()
 	plt.savefig(pjoin(out_dir, 'classification', img_title + '.png'), bbox_inches='tight')
 
 def get_classifier(classifier_name):
-	classifier_name = classifier_name[:classifier_name.find("/")]
+
+	if "/" in classifier_name:
+		classifier_name = classifier_name[:classifier_name.find("/")]
+
 	if 'SVM' in classifier_name:
 		a, b, c, d = classifier_name.split('-') 
 		c = c if (c == 'auto' or c == 'scale') else float(c)
@@ -143,7 +149,7 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 			#needed or not?
 			sc2 = StandardScaler()
 			train_data = sc2.fit_transform(train_data)
-			test_data = sc2.fit(test_data)
+			test_data = sc2.transform(test_data)
 
 		classifier.fit(train_data, train_labels)
 		pred_labels = classifier.predict(test_data)
@@ -179,10 +185,13 @@ def classify_many(names, subset_name, n_components, stratified):
 
 	for name in names:
 		clf = get_classifier(name)
-		if name.contains("/"): 
-			dimred =  dm.get_dimred(classifier_name[classifier_name.find("/"):], n_components)
+		if '/' in name:
+			dimred =  dm.get_dimred(name[name.find("/")+1:], n_components)
+		else:
+			dimred = None
 
 		mean_acc, mean_auc = cross_validate(clf, data, labels, subset_name, reference, dimred, stratified)
+		print(name, ' with accuracy ', mean_acc,', auc ', mean_auc, '\n', flush=True)
 		performance_stats = np.append(performance_stats, [(mean_acc, mean_auc)], axis=0)
 
 	return performance_stats
@@ -190,35 +199,24 @@ def classify_many(names, subset_name, n_components, stratified):
 
 def get_best_classifiers(performance_stats, performance_names, title, best_n=10):
 	
-	print('\n------------------------------------------------------')
-	print(performance_names, ': Best performance \n')
-	max_accuracy_index = (np.argsort(performance_stats[:,0]))[-best_n:]
-	[print(-i, 'th best Accuracy ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_accuracy_index,0], [performance_names[i] for i in max_accuracy_index])]
-	print(' ')
-	max_auc_index = np.argsort(performance_stats[:,1])[-best_n:]
-	[print(-i, 'th best A.U.C. ', x,  ' by ',y) for i,x,y in zip(range(-len(max_accuracy_index), 0), performance_stats[max_auc_index,1], [performance_names[i] for i in max_auc_index])]
-	print('------------------------------------------------------')
-
-	#concatenate best AUC and best accuracy performances
-	best_classifier_names = [performance_names[i] for i in  max_accuracy_index] + [performance_names[i] for i in max_auc_index]
-	best_classifier_stats = np.concatenate(([performance_stats[i,:] for i in  max_accuracy_index], [performance_stats[i,:] for i in max_auc_index]), axis=0)
-	#return only unique classifications
-	best_classifier_stats, unique_ids = np.unique(best_classifier_stats, return_index=True, axis=0) 
-	best_classifier_names = [best_classifier_names[i] for i in unique_ids]
+	mutual_performance_stats = [ x[0] + x[1] for x in performance_stats]
+	print(mutual_performance_stats)
+	best_performance_indexes = np.argsort(mutual_performance_stats)[-best_n:]
+	best_performance_names = [performance_names[i] for i in best_performance_indexes]
+	best_performance_stats = performance_stats[ best_performance_indexes, :]
 
 	if 'Input' in title: 
 		#sort by last word in classifier name 
-		best_classifier_ids_sorted = np.argsort([x[::-1] for x in best_classifier_names])
-		best_classifier_names = [best_classifier_names[x] for x in best_classifier_ids_sorted]
-		best_classifier_stats = best_classifier_stats[best_classifier_ids_sorted,:]
-		plot_accuracy_and_auc(best_classifier_stats, best_classifier_names, title)
-	else:
-		plot_accuracy_and_auc(performance_stats, performance_names, title)
+		best_classifier_ids_sorted = np.argsort([x[::-1] for x in best_performance_names])
+		best_performance_names = [best_performance_names[x] for x in best_classifier_ids_sorted]
+		best_performance_stats = best_performance_stats[best_classifier_ids_sorted,:]
+	
+	plot_accuracy_and_auc(best_performance_stats, best_performance_names, title)
 
-	print('Best ' + title)
-	[print('Accuracy:', y, ', AUC:', z, '--', x) for (x,y,z) in zip(best_classifier_names, best_classifier_stats[:,0], best_classifier_stats[:,1])]
+	print('Best ' + title, flush=True)
+	[print('Accuracy:', y, ', AUC:', z, '--', x, flush=True) for (x,y,z) in zip(best_performance_names, best_performance_stats[:,0], best_performance_stats[:,1])]
 
-	return best_classifier_names
+	return best_performance_names
 
 def get_various_classifiers_names():
 	return ["KNN-3-minkowski", "KNN-1-correlation", "SVM-linear-0.025-True", "SVM-linear-auto-True", "SVM-rbf-scale-False", "Decision Tree-gini",
@@ -243,35 +241,25 @@ def get_svm_classifier_names():
 
 def compare_classifiers(names, subset_name, title='', n_components=10, stratified=True):
 
-	classifier_names = names
-	classifier_names = [classifier_names.append(("/").join([clf, "PCA"])) for clf in names]
-
+	classifier_names = names + ['/'.join([c, 'PCA']) for c in names]
 	performance_stats = classify_many(classifier_names, subset_name, n_components, stratified)
-	best_classifier_names = get_best_classifiers(performance_stats, classifier_names, title, 10)
+	best_classifier_names = get_best_classifiers(performance_stats, classifier_names, title, 20)
 
 	return best_classifier_names
 
-def compare_input_sets(names, data, labels, title):
-	classifiers = [get_classifier(c) for c in names]
+def compare_input_sets(names, title, n_components=10, stratified=True):
 
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 	for input_set in ('unique_unfixed', 'unique_fixed', 'unique_cut', 'unique'):
-		data_s, labels_s, fixation_s = get_subset(input_set, data, labels)
-		print('Subset ', input_set,' contains ', len(labels_s), ' observations')
-		pf_stats1, pf_names1 = classify_many([ '-'.join([x, input_set]) for x in names], classifiers, data_s, labels_s, '', 5)
-
+		dh.write_file(classification_log, "Input set: " + input_set)
+		pf_stats1 = classify_many(classifier_names, input_set, '', n_components, stratified)
+		pf_names1 = [ ("/").join([x, input_set]) for x in classifier_names]
 		performance_stats = np.concatenate((performance_stats, pf_stats1), axis=0)
 		performance_names = performance_names + pf_names1
 
-	best_classifier_names = get_best_classifiers(performance_stats, performance_names, title, 15)
+	best_classifier_names = get_best_classifiers(performance_stats, performance_names, title, 20)
 
-def split_and_scale(data, labels):
-	sc = StandardScaler()
-	train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.25, random_state=1)
-	train_data = sc.fit_transform(train_data)
-	test_data = sc.transform(test_data)
-	return train_data, test_data, train_labels, test_labels, sc
 
 def apply_on_dataset(input_data, input_labels, input_subset, input_name=''):
 	data, labels, fixation_s = get_subset(input_subset, input_data, input_labels)
@@ -289,11 +277,25 @@ def apply_on_dataset(input_data, input_labels, input_subset, input_name=''):
 
 	best_classifier_names = compare_input_sets(best_clf_confs, input_data, input_labels, 'Input Set Comparison' + '(' + input_name + ')')
 
-#scaler = dh.get_scaler(dh.get_measured_spectra())
+	#scaler = dh.get_scaler(dh.get_measured_spectra())
 
-####################apply on unique estimated spectra dataset#######################
-#current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_reconstructed_spectra(), dh.get_labels(), scaler)
-#best_clf_confs_estimated = apply_on_dataset(estimated_spectra, positive_labels, 'unique', 'estimated')
+	####################apply on unique estimated spectra dataset#######################
+	#current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_reconstructed_spectra(), dh.get_labels(), scaler)
+	#best_clf_confs_estimated = apply_on_dataset(estimated_spectra, positive_labels, 'unique', 'estimated')
 
-acc, auc = cross_validate(get_classifier("SVM-linear-auto-True"), dh.get_reconstructed_spectra(), dh.get_labels(), 'unique', dh.get_measured_spectra(), None)
-print(acc, auc)
+
+def run_comparison():
+	input_set = "unique"
+	print("Classification comparison", '\n')
+	compare_classifiers(get_svm_classifier_names(), input_set, 'SVM Classification Performance Comparison' + '(' + input_set + ')', 10, True)
+	compare_classifiers(get_knn_classifiers_names(), input_set, 'KNN Classification Performance Comparison' + '(' + input_set + ')', 10, True)
+	compare_classifiers(get_various_classifiers_names(), input_set, 'Classification Performance Comparison' + '(' + input_set + ')', 10, True)
+	compare_input_sets(get_various_classifiers_names(), 'Input Set Comparison', 10, True)
+
+classification_log = dh.get_log_file()
+
+sys.stdout = open(classification_log, 'w+')
+run_comparison()
+
+
+
