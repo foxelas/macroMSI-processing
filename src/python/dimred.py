@@ -3,23 +3,16 @@ import data_handling as dh
 from os import mkdir, makedirs
 from os.path import dirname, join as pjoin, exists
 from sklearn import manifold
-import sklearn.metrics
 from sklearn.decomposition import PCA, FactorAnalysis, TruncatedSVD, FastICA 
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA, QuadraticDiscriminantAnalysis as QDA
-from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.feature_selection import SelectFromModel
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestRegressor
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import interactive, is_interactive
-import time 
-import csv
-import math
+import matplotlib.pyplot as plt
+
 
 interactive(True)
 
@@ -35,10 +28,8 @@ def plot_da(X, X_labels, title):
 	n_components = X.shape[1]
 
 	if n_components == 1 : #When X is reduced to 1 dimension
-		positives_end = np.sum(X_labels==0) + 1
-		negatives_end = np.sum(X_labels==1) + 1
-		for label, marker, color, sample_start, sample_end in zip(range(2), ('s', 'o'), ('green', 'red'), (1, positives_end + 1), (positives_end, positives_end + negatives_end)):
-			plt.scatter(x=np.array(range(sample_start, sample_end)),  
+		for label, marker, color in zip(range(2), ('s', 'o'), ('green', 'red')):
+			plt.scatter(x=np.where(X_labels == label)[0],  
 						y=X[:,0][X_labels == label], 
 						marker=marker,
 						color=color,
@@ -105,13 +96,60 @@ def plot_feature_importance(features, importances, indices, title):
 	plt.show()
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
-def dimension_reduction(data, data_labels, method, show_figures=False, components=2, name=''):
-	dh.create_directory(pjoin(out_dir, 'dimension_reduction'))
-
+def get_dimred(method, components=2):
 	if method == 'RF':		
 		##################RandomForest########
-		rf = RandomForestRegressor(random_state=1, max_depth=10, n_estimators=10)
-		rf.fit(data,data_labels)
+		dimred_obj = RandomForestRegressor(random_state=1, max_depth=10, n_estimators=10)
+
+	elif method == 'PCA': 
+		##################PCA#################
+		dimred_obj = PCA(n_components=components)
+
+	elif method == 'SVD': 
+		##################SVD########
+		dimred_obj = TruncatedSVD(n_components=components, random_state=42)
+
+	elif method == 'FA':
+		##################FactorAnalysis########
+		dimred_obj = FactorAnalysis(n_components = components)
+
+	elif method == 'ICA':
+		##################ICA########
+		dimred_obj = FastICA(n_components=components, random_state=1, max_iter=500, tol=0.01)
+
+	elif method == 'ISOMAP':
+		##################ISOMAP########
+		dimred_obj = manifold.Isomap(n_neighbors=5, n_components=components, n_jobs=-1)
+
+	elif method == 't-SNE':
+		##################t-SNE########
+		dimred_obj = manifold.TSNE(n_components=components, n_iter=300)
+
+	elif method == 'LDA':
+		##################LDA#################
+		dimred_obj = LDA(n_components=components, solver="svd", store_covariance=True)
+
+	elif method == 'QDA':
+		##################QDA#################
+		dimred_obj = QDA()
+
+	else:
+		print(method, ' not implemented.')
+		return	
+
+	return dimred_obj
+
+def dimension_reduction(data, data_labels, method=None, show_figures=False, components=2, name=''):
+
+	if method is None: 
+		return data
+
+	dh.create_directory(pjoin(out_dir, 'dimension_reduction'))
+
+	dimred_obj = get_dimred(method, components)
+	if method == 'RF':		
+		##################RandomForest########
+		rf = dimred_obj.fit(data,data_labels)
 		features = np.linspace(380, 780, 81)
 		importances = rf.feature_importances_
 		indices = np.argsort(importances)[-9:]  # top 10 features
@@ -120,67 +158,67 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 		if show_figures:
 			plot_feature_importance(features, importances, indices, 'Wavelength Importances by Random Forest' + '(' + name + ')')
 
-		dimred = SelectFromModel(rf).fit(data, data_labels)
-		data_transformed = dimred.transform(data)
+		fitted_dimred = SelectFromModel(rf).fit(data, data_labels)
+		data_transformed = fitted_dimred.transform(data)
 
 	elif method == 'PCA': 
 		##################PCA#################
-		dimred = PCA(n_components=components).fit(data)
-		data_transformed = dimred.transform(data)
+		fitted_dimred = dimred_obj.fit(data)
+		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
-			print("PCA-explained variance ", dimred.explained_variance_ratio_)
+			print("PCA-explained variance ", fitted_dimred.explained_variance_ratio_)
 			plot_da(data_transformed, data_labels,'Principal Component Analysis' + '(' + name + ')')
 
 	elif method == 'SVD': 
 		##################SVD########
-		dimred = TruncatedSVD(n_components=components, random_state=42).fit(data)
-		data_transformed = dimred.transform(data)
+		fitted_dimred = dimred_obj.fit(data)
+		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
 			plot_da(data_transformed, data_labels, 'SVD Component Analysis' + '(' + name + ')') 
 			plot_da_components(data_transformed, data_labels, 'SVD Components' + '(' + name + ')')
 
 	elif method == 'FA':
 		##################FactorAnalysis########
-		dimred = FactorAnalysis(n_components = components).fit(data, data_labels)
-		data_transformed = dimred.transform(data) #with labels 
+		fitted_dimred = dimred_obj.fit(data, data_labels)
+		data_transformed = fitted_dimred.transform(data) #with labels 
 		if show_figures:
 			plot_da(data_transformed, data_labels, 'Factor Analysis' + '(' + name + ')') 
 			plot_da_components(data_transformed, data_labels, 'Factor Analysis Components' + '(' + name + ')')
 
 	elif method == 'ICA':
 		##################ICA########
-		dimred = FastICA(n_components=components, random_state=1, max_iter=500, tol=0.01).fit(data)
-		data_transformed=dimred.transform(data)
+		fitted_dimred = dimred_obj.fit(data)
+		data_transformed=fitted_dimred.transform(data)
 		if show_figures:
 			plot_da(data_transformed, data_labels, 'Independent Component Analysis' + '(' + name + ')')
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
-		dimred = manifold.Isomap(n_neighbors=5, n_components=components, n_jobs=-1).fit(data)
-		data_transformed = dimred.transform(data)
+		fitted_dimred = dimred_obj.fit(data)
+		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
 			plot_da_components(data_transformed, data_labels, 'ISOMAP Components' + '(' + name + ')')
 			plot_da(data_transformed, data_labels, 'ISOMAP Component Analysis' + '(' + name + ')') 
 
 	elif method == 't-SNE':
 		##################t-SNE########
-		dimred = manifold.TSNE(n_components=components, n_iter=300).fit(data)
-		data_transformed = dimred.fit_transform(data)
+		fitted_dimred = dimred_obj.fit(data)
+		data_transformed = fitted_dimred.fit_transform(data)
 		if show_figures:
 			plot_da_components(data_transformed, data_labels, 't-SNE Components' + '(' + name + ')')
 			plot_da(data_transformed, data_labels, 't-SNE Component Analysis' + '(' + name + ')') 
 
 	elif method == 'LDA':
 		##################LDA#################
-		dimred = LDA(n_components=components, solver="svd", store_covariance=True).fit(data, data_labels)
-		data_transformed = dimred.transform(data)
+		fitted_dimred = dimred_obj.fit(data, data_labels)
+		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
 			plot_da(data_transformed, data_labels, 'Linear Discriminant Analysis' + '(' + name + ')')
 
 	elif method == 'QDA':
 		##################QDA#################
-		dimred = QDA().fit(data, data_labels)
-		data_transformed = np.array([[x] for x in dimred.decision_function(data)])
+		fitted_dimred = dimred_obj.fit(data, data_labels)
+		data_transformed = np.array([[x] for x in fitted_dimred.decision_function(data)])
 		plot_da(data_transformed, data_labels, 'Quadratic Discriminant Analysis' + '(' + name + ')')
 
 	else:
@@ -190,14 +228,19 @@ def dimension_reduction(data, data_labels, method, show_figures=False, component
 	if show_figures:
 		print(method + '-Reduced dimensions: ', data_transformed.shape)
 
-	return data_transformed, dimred
+	return data_transformed, fitted_dimred
 
 
-def reduce(data, dimred_obj=None):
-	if dimred_obj is None:
+def reduce(data, fitted_dimred=None):
+	if fitted_dimred is None:
 		return data
 	else:
-		return dimred_obj.transform(data)
+		return fitted_dimred.transform(data)
+
+def fit_and_reduce(train, test, train_labels, method=None, n_components=2):
+	train_transformed, fitted_dimred = dimension_reduction(train, train_labels, method, False, n_components)
+	test_transformed = reduce(test, fitted_dimred)
+	return train_transformed, test_transformed
 
 def compare_dimension_reduction(data, labels, show_figures=False, name=''):
 	dimension_reduction(data, labels, 'RF', show_figures, 2, name)
@@ -211,7 +254,10 @@ def compare_dimension_reduction(data, labels, show_figures=False, name=''):
 	dimension_reduction(data, labels, 'QDA', show_figures, 1, name)
 
 
-current_data, current_labels, current_fixation, current_indexes = dh.get_subset('unique', dh.get_measured_spectra(), dh.get_labels())
-print('Subset contains ', len(current_labels), ' observations')
+# scaler = dh.get_scaler(dh.get_measured_spectra())
+# current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_measured_spectra(), dh.get_labels(), scaler)
+# print('Subset contains ', len(current_labels), ' observations')
 
-compare_dimension_reduction(current_data, current_labels, True, 'measured')
+# compare_dimension_reduction(current_data, current_labels, True, 'measured')
+
+

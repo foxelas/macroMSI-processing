@@ -4,6 +4,9 @@ import scipy.io as sio
 import numpy as np
 import csv
 import math
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, StratifiedKFold
+
 
 def loadmat(filename):
     '''
@@ -141,17 +144,22 @@ def subset_indexes(name, data):
 
 	return subset_ids
 
+def get_subset_with_index(indexes, data, labels):
+	if (len(data.shape) > 1):
+		data_s = data[indexes,:]
+	else:
+		data_s = data[indexes]
+	labels_s = labels[indexes]
+	fixation_s = [fixation[x] for x in indexes]
+
+	return data_s, labels_s, fixation_s
+
 def get_subset(name, data, labels):
 	subset_ids = subset_indexes(name, data)
-	if (len(data.shape) > 1):
-		data_s = data[subset_ids,:]
-	else:
-		data_s = data[subset_ids]
-	labels_s = labels[subset_ids]
-	fixation_s = [fixation[x] for x in subset_ids]
+	data_s, labels_s, fixation_s = get_subset_with_index(subset_ids, data, labels)
 
-	print('Created subset ' + name + '')
-	head(data_s)
+	#sprint('Created subset ' + name + '')
+	#head(data_s)
 	return data_s, labels_s, fixation_s, subset_ids
 
 def get_subset_contents(name, data, labels):
@@ -176,7 +184,9 @@ def write_file(filename, contents):
 		writer.writerows(contents)
 	csvFile.close()
 
-#write_file( 'names_mixed.csv', get_subset_contents('unique', spectra_names, positive_labels))
+
+############################Data set splits############################################
+test_sample_names = ['9933']
 
 def write_folds(subset_name='unique', folds=10):
 	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
@@ -195,12 +205,59 @@ def get_fold_indexes(subset_name='unique', folds=10):
 	fold_indexes = []
 	for i in range(folds):
 		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
-		fold_indexes.append([ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]])
+		fold_indexes.append([ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x not in test_sample_names if x in subset[j][1]])
 		start_index = end_index
 
-	fold_indexes = [x for x in fold_indexes if x] 
+	fold_indexes[-2] = fold_indexes[-2] + fold_indexes[1]
+	fold_indexes[1] = [] 
+	fold_indexes[3] = fold_indexes[3] + fold_indexes[2]
+	fold_indexes[2] = []
+	fold_indexes = [x for x in fold_indexes if x]
 	folds = len(fold_indexes)
 
 	return fold_indexes, folds
 
+def get_fold_indexes_stratified(subset_name='unique',folds=10):
+	data, labels, fixation_s, subset_ids = get_subset(subset_name, spectra, positive_labels)
+	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
+	fold_indexes = []
+	for train, test in cv.split(data, labels):
+		fold_indexes.append(subset_ids[test].tolist())
+
+	return fold_indexes, folds
+
+def get_test_indexes(subset_name='unique'):
+	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
+	test_indexes = [ subset[j][0] for j in range(len(subset)) for x in test_sample_names if x in subset[j][1] ]
+	return test_indexes	
+
+def get_scaler(data):
+	return StandardScaler().fit(data)
+
+def get_scaled_subset(subset_name, data, labels, scaler):
+	data_s, labels_s, fixation_s, subset_ids = get_subset(subset_name, data, labels)
+	data_s = scaler.transform(data_s)
+	return data_s, labels_s, fixation_s, subset_ids
+
+def get_scaled_subset_with_index(indexes, data, labels, scaler):
+	data_s, labels_s, fixation_s = get_subset_with_index(indexes, data, labels)
+	data_s = scaler.transform(data_s)
+	return data_s, labels_s
+
+#print(get_test_indexes('unique_unfixed'))
 #print(get_fold_indexes('unique_unfixed', 10))
+#write_file( 'names_mixed.csv', get_subset_contents('unique', spectra_names, positive_labels))
+#print(get_subset_with_index(get_test_indexes('unique_unfixed'), spectra, positive_labels))
+
+# ids,e = get_fold_indexes('unique', 10)
+# [print(x) for x in ids]
+# [print(positive_labels[x]) for x in ids]
+
+# print("wewe")
+# ids,e = get_fold_indexes_stratified('unique', 10)
+# [print(x) for x in ids]
+# [print(positive_labels[x]) for x in ids]
+# print("wqqq")
+# ids,e = get_fold_indexes_stratified('unique', 10)
+# [print(x) for x in ids]
+# [print(positive_labels[x]) for x in ids]
