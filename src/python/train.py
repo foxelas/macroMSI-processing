@@ -247,7 +247,7 @@ def compare_classifiers(names, subset_name, title='', n_components=10, stratifie
 
 	return best_classifier_names
 
-def compare_input_sets(names, title, n_components=10, stratified=True):
+def compare_input_sets(classifier_names, title, n_components=10, stratified=True):
 
 	performance_stats = np.empty((0, 2))
 	performance_names = []
