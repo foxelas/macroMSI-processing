@@ -19,7 +19,7 @@ p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
-    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison'})));
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'name', '', @(x) ischar(x));
@@ -40,6 +40,9 @@ addParameter(p, 'Coordinates', []);
 addParameter(p, 'Performance', []);
 addParameter(p, 'FoldPerformance', []);
 addParameter(p, 'Title', []);
+addParameter(p, 'Cmap', 'jet');
+addParameter(p, 'Overlay', []);
+addParameter(p, 'Alpha', 0.5);
 
 parse(p, plotType, varargin{:});
 plotType = p.Results.plotType;
@@ -63,6 +66,9 @@ coordinates = p.Results.Coordinates;
 performance = p.Results.Performance;
 foldPerformance= p.Results.FoldPerformance;
 figTitle = p.Results.Title;
+cmap = p.Results.Cmap;
+overlay = p.Results.Overlay;
+alpha = p.Results.Alpha;
 
 if fig < 0
     figure;
@@ -566,6 +572,45 @@ switch plotType
         xlabel('Input Dataset')
         xticks(x); xticklabels(lineNames); xtickangle(45); 
         set(gcf, 'Position', get(0, 'Screensize'));
+
+    case 'visual'
+        cmapSize = 100; % default size of 60 shows visible discretization
+        if ischar(cmap)
+
+            try
+                cmap = eval([cmap '(' num2str(cmapSize) ');']);
+            catch
+                fprintf('Colormap ''%s'' is not supported. Using ''jet''.\n',cmapName);
+                cmap = jet(cmapSize);
+            end
+        end
+        colormap(cmap);
+        
+        clf(gcf);
+        axes(gcf);
+
+        hB = imagesc(I);axis image off;
+        climF = [min(overlay(:)), max(overlay(:))];
+
+        % Add the front image on top of the back image
+        hold on;
+        hF = imagesc(overlay,climF);
+
+        % If images are different sizes, map the front image to back coordinates
+        set(hF,'XData',get(hB,'XData'),...
+            'YData',get(hB,'YData'))
+
+        % Make the foreground image transparent
+        alphadata = alpha.*(overlay > climF(1));
+        set(hF,'AlphaData',alphadata);
+
+        c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
+        c.Label.String = 'Malignancy Probability';
+        c.Label.FontSize = 10;
+        c.Label.FontWeight = 'bold';
+        c.Limits = [0,1];
+        title(figTitle)
+        set(gcf,'Visible','on');
 
 end
 

@@ -1,4 +1,6 @@
-
+load('C:\Users\elena\Google Drive\titech\research\input\saitama_v5_min_region\data.mat')
+load('C:\Users\elena\Google Drive\titech\research\input\saitama_v5_min_region\ID.mat')
+load('temp.mat')
 idd = ID(369);
 files = {data([data.MsiID] == idd.MsiID).File};    
 roiIndexes = find(idd.MsiID == [ID.MsiID]);
@@ -32,13 +34,16 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', 'none
 options = setOpt(options);
 
 %[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates, options, 0.6, [], [], 0.08, []);
-
+[M, N, ~] = size(viewImg);
 cancerProb = [ 0.6711745  0.3288255 ; 
  0.3576419  0.6423581;
  0.27323704 0.72676296;
  0.23336374 0.76663626;
  0.91281083 0.08718917;
  0.26809716 0.73190284];
+
+isPositive = [0 1 1 1 0 1];
+trueLabels = [1 1 1 1 0 0];
  
 % figure(4);
 % hold on
@@ -54,9 +59,27 @@ figure(5);
 outImg = zeros(M,N);
 for i = 1:rois
     [r, c] = find(segmentMaskI{i});
-    outImg(r, c) = cancerProb(i,2);
+    outImg(segmentMaskI{i}) = cancerProb(i,2);
+    imshow(outImg);
 end
-imshow(outImg);
+plots('visual', 1, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7, 'Title', 'Malignancy Probability');
+
+outImg = zeros(M,N);
+for i = 1:rois
+    [r, c] = find(segmentMaskI{i});
+    outImg(segmentMaskI{i}) = isPositive(i);
+    imshow(outImg);
+end
+plots('visual', 2, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7,  'Title', 'Classification');
+
+outImg = zeros(M,N);
+for i = 1:rois
+    [r, c] = find(segmentMaskI{i});
+    outImg(segmentMaskI{i}) = trueLabels(i);
+    imshow(outImg);
+end
+plots('visual', 3, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7,  'Title', 'Ground Truth');
+
 
 % options.pixelValueSelectionMethod = 'extended';
 % options.smoothingMatrixMethod = 'Cor_Sample';
