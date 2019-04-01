@@ -345,7 +345,7 @@ if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
     estimatedReflectance = max(estimatedReflectance, 0);
     estimatedReflectance = min(estimatedReflectance, 1);
     
-    estimatedReflectance = reshape(estimatedReflectance, numel(spectrum), height, width);
+    estimatedReflectance = reshape(estimatedReflectance, size(H,2), height, width);
 else   
 
     idx = any(estimatedReflectance < 0) | any(estimatedReflectance > 1);

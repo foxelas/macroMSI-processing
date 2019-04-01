@@ -479,13 +479,13 @@ switch plotType
         
     case 'cropped'
         %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        markers = {'r*', 'g*', 'm*', 'y*', 'c*'};
+        colors = jet(size(coordinates,1));
         imshow(I);
         hold on
         for i = 1:size(coordinates, 1)
             x = coordinates(i,1);
             y = coordinates(i,2);
-            plot(x, y, markers{i}, 'LineWidth', 2, 'MarkerSize', 5);
+            plot(x, y, '*', 'LineWidth', 2, 'MarkerSize', 7, 'MarkerFaceColor', colors(i,:));
         end
         hold off
         figTitle = strrepAll(strcat('Cropped area of ', plotName));
