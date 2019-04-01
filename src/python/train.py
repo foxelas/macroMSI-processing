@@ -114,6 +114,106 @@ def get_classifier(classifier_name):
 
 	return clf
 
+def train_classifier(subset_name, classifier_name, n_components=10):
+	data = dh.get_reconstructed_spectra()
+	labels = dh.get_labels()
+	reference = dh.get_measured_spectra()
+
+	clf = get_classifier(classifier_name)
+	if '/' in classifier_name:
+		dimred =  dm.get_dimred(classifier_name[classifier_name.find("/")+1:], n_components)
+	else:
+		dimred = None
+
+	fold_indexes, folds = dh.get_fold_indexes(subset_name, 10)
+	train_indexes = [y for x in fold_indexes for y in x ]
+
+	scaler1 = StandardScaler()
+	reference_data = scaler1.fit_transform(reference[train_indexes, :])
+	train_data, train_labels = dh.get_scaled_subset_with_index(train_indexes, data, labels, scaler1)
+
+	scaler2 = StandardScaler()
+	if dimred is not None: 
+		dimred = dimred.fit(reference_data)
+		train_data = dimred.transform(train_data)
+
+		#needed or not?
+		train_data = scaler2.fit_transform(train_data)
+
+	clf.fit(train_data, train_labels)
+
+	return clf, dimred, scaler1, scaler2
+
+def test_classifier(subset_name, classifier, dimred, scaler1, scaler2):
+	data = dh.get_reconstructed_spectra()
+	labels = dh.get_labels()
+	test_indexes = dh.get_test_indexes(subset_name)
+
+	test_data, test_labels = dh.get_scaled_subset_with_index(test_indexes, data, labels, scaler1)
+	print(test_indexes)
+
+	if dimred is not None: 
+		test_data = dimred.transform(test_data)
+		test_data = scaler2.transform(test_data)
+
+	predictions = classifier.predict(test_data)
+	scores = classifier.predict_proba(test_data)
+
+	return predictions, scores
+
+def run_classification_test(subset_name, classifier_name, n_components=10):
+	classifier, dimred, scaler1, scaler2 = train_classifier(subset_name, classifier_name, n_components)
+	pred_labels, scores = test_classifier(subset_name, classifier, dimred, scaler1, scaler2)
+
+	labels = dh.get_labels()
+	test_indexes = dh.get_test_indexes(subset_name)
+	test_labels = labels[test_indexes]
+	acc = accuracy_score(test_labels, pred_labels)
+	auc = roc_auc_score(test_labels, pred_labels)
+	print(test_labels)
+	print(pred_labels)
+	print(scores)
+	print(acc)
+	print(auc)
+	return pred_labels, scores, acc, auc
+
+def get_predictions(name, subset_name, test_data, n_components=10):
+	data = dh.get_reconstructed_spectra()
+	labels = dh.get_labels()
+	reference = dh.get_measured_spectra()
+
+	clf = get_classifier(name)
+	if '/' in name:
+		dimred =  dm.get_dimred(name[name.find("/")+1:], n_components)
+	else:
+		dimred = None
+
+	fold_indexes, folds = dh.get_fold_indexes(subset_name, 10)
+	train_indexes = [y for x in fold_indexes for y in x ]
+
+	sc = StandardScaler()
+	reference_data = sc.fit_transform(reference[train_indexes, :])
+	train_data, train_labels = dh.get_scaled_subset_with_index(train_indexes, data, labels, sc)
+	test_data = sc.transform(test_data)
+
+
+	if dimred is not None: 
+		dimred = dimred.fit(reference_data)
+		train_data = dimred.transform(train_data)
+		test_data = dimred.transform(test_data)
+
+		#needed or not?
+		sc2 = StandardScaler()
+		train_data = sc2.fit_transform(train_data)
+		test_data = sc2.transform(test_data)
+
+	clf.fit(train_data, train_labels)
+	predictions = clf.predict(test_data)
+	scores = clf.predict_proba(test_data)
+
+	return predictions, scores
+
+
 def cross_validate(classifier, data, labels, subset_name, reference=None, dimred=None, stratified=True):
 
 	if reference is None: 
@@ -133,7 +233,6 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 
 	for f in range(folds): 
 		test_indexes = fold_indexes[f]
-		train_indexes = []
 		train_indexes = [y for x in fold_indexes if x != test_indexes for y in x ]
 
 		sc = StandardScaler()
@@ -173,7 +272,6 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 	mean_acc = np.mean(accs)
 
 	return mean_acc, mean_auc 
-
 
 def classify_many(names, subset_name, n_components, stratified):
 	performance_stats = np.empty((0, 2))
@@ -253,36 +351,12 @@ def compare_input_sets(classifier_names, title, n_components=10, stratified=True
 	performance_names = []
 	for input_set in ('unique_unfixed', 'unique_fixed', 'unique_cut', 'unique'):
 		dh.write_file(classification_log, "Input set: " + input_set)
-		pf_stats1 = classify_many(classifier_names, input_set, '', n_components, stratified)
+		pf_stats1 = classify_many(classifier_names, input_set, n_components, stratified)
 		pf_names1 = [ ("/").join([x, input_set]) for x in classifier_names]
 		performance_stats = np.concatenate((performance_stats, pf_stats1), axis=0)
 		performance_names = performance_names + pf_names1
 
 	best_classifier_names = get_best_classifiers(performance_stats, performance_names, title, 20)
-
-
-def apply_on_dataset(input_data, input_labels, input_subset, input_name=''):
-	data, labels, fixation_s = get_subset(input_subset, input_data, input_labels)
-	print('Subset contains ', len(labels), ' observations')
-
-	compare_all_dimension_reduction(data, labels, True, input_name)
-	#dimension_reduction(data, labels, 'PCA', True, 2)
-
-	#train_data, test_data, train_labels, test_labels, sc = split_and_scale(data, labels)
-	best_knn_confs = compare_knn_classifiers(data, labels, 'KNN Classification Performance Comparison' + '(' + input_name + ')')
-	#best_knns = [fit_classifier(c, train_data, train_labels) for c in best_knn_confs]
-	best_svm_confs = compare_svm_classifiers(data, labels, 'SVM Classification Performance Comparison' + '(' + input_name + ')')
-	#best_svms = [fit_classifier(c, train_data, train_labels) for c in best_svm_confs]
-	best_clf_confs = compare_classifiers(data, labels, 'Classification Performance Comparison' + '(' + input_name + ')')
-
-	best_classifier_names = compare_input_sets(best_clf_confs, input_data, input_labels, 'Input Set Comparison' + '(' + input_name + ')')
-
-	#scaler = dh.get_scaler(dh.get_measured_spectra())
-
-	####################apply on unique estimated spectra dataset#######################
-	#current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_reconstructed_spectra(), dh.get_labels(), scaler)
-	#best_clf_confs_estimated = apply_on_dataset(estimated_spectra, positive_labels, 'unique', 'estimated')
-
 
 def run_comparison():
 	input_set = "unique"
@@ -294,8 +368,14 @@ def run_comparison():
 
 classification_log = dh.get_log_file()
 
-sys.stdout = open(classification_log, 'w+')
-run_comparison()
+#sys.stdout = open(classification_log, 'w+')
+#run_comparison()
 
+# img_spectra_mat = dh.loadmat( pjoin(out_dir, 'img_spectra.mat'))
+# print(img_spectra_mat.keys())
+# img_spectra = img_spectra_mat['estimated_2D']
+# predictions, scores = get_predictions("KNN-3-minkowski/PCA", 'unique', img_spectra)
+# dh.savemat(pjoin(out_dir, 'predictions.mat'), mdict = {"predictions": predictions, "scores": scores})
 
+predictions, scores, acc, auc = run_classification_test('unique', "LDA/PCA")
 

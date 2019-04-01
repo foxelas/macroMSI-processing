@@ -21,6 +21,9 @@ def loadmat(filename):
     data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
+def savemat(filename, mdict):
+	sio.savemat(filename, mdict)
+
 def _check_keys(dict):
     '''
     checks if entries in dictionary are mat-objects. If yes
@@ -47,97 +50,162 @@ def _todict(matobj):
 get_indexes_equal = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if x == y]
 get_indexes = lambda x, xs: [i for (y, i) in zip(xs, range(len(xs))) if y in  x]
 
+############## directories #####################
 def create_directory(dirName):
 	if not exists(dirName):
 	    makedirs(dirName)
 
-####################load matfiles#######################
+def get_base_dir():
+	base_dir  = '/media/sf_research/input/'
+	return base_dir
 
-base_dir  = '/media/sf_research/input/'
-log_dir = '/media/sf_research/macroMSI_research/logs/'
-data_dir = 'saitama_v5_min_region'
-in_dir = pjoin(base_dir, data_dir)
-out_dir = pjoin('/media/sf_research/output/', data_dir)
-create_directory(out_dir)
+def get_data_dir():
+	data_dir = 'saitama_v5_min_region'
+	return data_dir
 
+def get_out_dir():
+	data_dir = get_data_dir()
+	out_dir = pjoin('/media/sf_research/output/', data_dir)
+	create_directory(out_dir)
+	return out_dir
+
+def get_in_dir():
+	base_dir = get_base_dir()
+	data_dir = get_data_dir()
+	in_dir = pjoin(base_dir, data_dir)
+	return in_dir
+
+def get_log_dir():
+	log_dir = '/media/sf_research/macroMSI_research/logs/'
+	return log_dir
+
+in_dir = get_in_dir()
 in_mat = loadmat( pjoin(in_dir, 'in.mat'))
 print('Finished loading input matfile.')#print('Loaded mat file with headers', in_mat.keys())
+
+out_dir = get_out_dir()
 out_mat = loadmat(pjoin(out_dir, 'ReflectanceEstimationPreset', 'out.mat'))
 print('Finished loading output matfile.')
 
-####################prepare data structs#######################
-complete_spectra = in_mat['CompleteSpectra']
-darkIs = in_mat['DarkIs']
-msi_names = in_mat['MSINames']
-msis = in_mat['MSIs']
-masks = in_mat['Masks']
-spectra = in_mat['Spectra']
-spectra_names = in_mat['SpectraNames']
-whiteIs = in_mat['WhiteIs']
-
-msiN, lambdaN = complete_spectra.shape
-msi_dim = msis[0].shape
-bandN = msi_dim[0]
-rgbN = msi_dim[3]
-
-estimated_spectra = out_mat['EstimatedSpectra']
-
+in_dir = get_in_dir()
 matfile = pjoin(in_dir, 'ID.mat')
 id_mat = loadmat(matfile)
 print('Finished loading ID matfile.')
 id_struct = id_mat['ID']
-is_benign = np.array([id_struct[x].IsBenign for x in range(msiN) ])
-is_cut = np.array([id_struct[x].IsCut for x in range(msiN) ])
-is_fixed = np.array([id_struct[x].IsFixed for x in range(msiN) ])
-positive_labels = np.array([int((x + 1) % 2) for x in is_benign])
-label_dict = {0: 'Benign', 1: 'Malignant'}
-
-fixation = []
-for i in range(msiN):
-	if is_fixed[i] and not(is_cut[i]):
-		fixation.append('fixed')	
-	elif is_cut[i]:
-		fixation.append('cut')
-	else:
-		fixation.append('unfixed')
-
-samples = np.unique(np.array([id_struct[x].Sample for x in range(msiN) ])).tolist()
 
 ###################gets#####################
-def get_out_dir():
-	return out_dir
 
-def get_in_dir():
-	return in_dir
+def load_in_mat():
+	return in_mat
 
-def get_log_dir():
-	return log_dir
+def load_out_mat():
+	return out_mat
 
 def get_label_dict():
+	label_dict = {0: 'Benign', 1: 'Malignant'}
 	return label_dict
 
-def get_fixation():
-	return fixation
-
 def get_measured_spectra():
+	in_mat = load_in_mat()
+	spectra = in_mat['Spectra']
 	return spectra
 
 def get_reconstructed_spectra():
+	out_mat = load_out_mat()
+	estimated_spectra = out_mat['EstimatedSpectra']
 	return estimated_spectra
 
+def get_complete_spectra():
+	in_mat = load_in_mat()
+	complete_spectra = in_mat['CompleteSpectra']
+	return complete_spectra
+
+def get_darkIs(): 
+	in_mat = load_in_mat()
+	darkIs = in_mat['DarkIs']
+	return darkIs
+
+def get_msi_names(): 
+	in_mat = load_in_mat()
+	msi_names = in_mat['MSINames']
+	return msi_names
+
+def get_msis(): 
+	in_mat = load_in_mat()
+	msis = in_mat['MSIs']
+	return msis
+
+def get_masks(): 
+	in_mat = load_in_mat()
+	masks = in_mat['Masks']
+	return masks
+
+def get_spectra_names():
+	in_mat = load_in_mat()
+	spectra_names = in_mat['SpectraNames']
+	return spectra_names
+
+def get_whiteIs():
+	in_mat = load_in_mat()
+	whiteIs = in_mat['WhiteIs']
+	return whiteIs
+
+def get_data_dimensions():
+	complete_spectra = get_complete_spectra()
+	msis = get_msis()
+	msiN, lambdaN = complete_spectra.shape
+	msi_dim = msis[0].shape
+	bandN = msi_dim[0]
+	rgbN = msi_dim[3]
+	return msiN, lambdaN, bandN, rgbN
+
 def get_labels():
+	id_struct = get_id_struct()
+	is_benign = np.array([id_struct[x].IsBenign for x in range(len(id_struct)) ])
+	positive_labels = np.array([int((x + 1) % 2) for x in is_benign])
 	return positive_labels
 
 def get_log_file():
 	return pjoin(get_log_dir(), datetime.datetime.now().strftime("%Y-%m-%d %H_%M") + '.log')
 
+def get_id_struct():
+	return id_struct
+
+def get_fixation():
+	id_struct = get_id_struct()
+	is_cut = np.array([id_struct[x].IsCut for x in range(len(id_struct)) ])
+	is_fixed = np.array([id_struct[x].IsFixed for x in range(len(id_struct)) ])
+
+	fixation = []
+	for i in range(len(id_struct)):
+		if is_fixed[i] and not(is_cut[i]):
+			fixation.append('fixed')	
+		elif is_cut[i]:
+			fixation.append('cut')
+		else:
+			fixation.append('unfixed')
+	return fixation 
+
+def get_samples():
+	id_struct = get_id_struct()
+	samples = np.unique(np.array([id_struct[x].Sample for x in range(len(id_struct)) ])).tolist()
+	return samples
+
+def get_samples_all():
+	id_struct = get_id_struct()
+	samples = [id_struct[x].Sample for x in range(len(id_struct)) ]
+	return samples
+
 def subset_indexes(name, data):
 	subset_ids = []
 	if name == 'unique':
-		names = np.array(['_'.join([id_struct[x].SpectrumFile, id_struct[x].T]) for x in range(msiN) ])
+		id_struct = get_id_struct()
+		names = np.array(['_'.join([id_struct[x].SpectrumFile, id_struct[x].T]) for x in range(len(id_struct)) ])
+		spectra_names = get_spectra_names()
 		x, subset_ids = np.unique(np.array(spectra_names, dtype=str), return_index=True, axis=0)
 
 	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
+		fixation = get_fixation()
 		subset_ids = np.array(get_indexes_equal(name, fixation))
 
 	elif 'unique' in name:
@@ -158,6 +226,7 @@ def get_subset_with_index(indexes, data, labels):
 	else:
 		data_s = data[indexes]
 	labels_s = labels[indexes]
+	fixation = get_fixation()
 	fixation_s = [fixation[x] for x in indexes]
 
 	return data_s, labels_s, fixation_s
@@ -201,8 +270,11 @@ def write_log(filename, contents, write_options="a+"):
 test_sample_names = ['9933']
 
 def write_folds(subset_name='unique', folds=10):
+	spectra_names = get_spectra_names()
+	positive_labels = get_labels()
 	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
 
+	samples = get_samples()
 	start_index = 0
 	for i in range(folds):
 		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
@@ -211,8 +283,11 @@ def write_folds(subset_name='unique', folds=10):
 		write_file( 'names_fold' + str(i) + '.csv', fold_contents)
 
 def get_fold_indexes(subset_name='unique', folds=10):
+	spectra_names = get_spectra_names()
+	positive_labels = get_labels()
 	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
 
+	samples = get_samples()
 	start_index = 0
 	fold_indexes = []
 	for i in range(folds):
@@ -229,16 +304,26 @@ def get_fold_indexes(subset_name='unique', folds=10):
 
 	return fold_indexes, folds
 
-def get_fold_indexes_stratified(subset_name='unique',folds=10):
-	data, labels, fixation_s, subset_ids = get_subset(subset_name, spectra, positive_labels)
+def get_fold_indexes_stratified(subset_name='unique',folds=7):
+	spectra = get_measured_spectra()
+	positive_labels = get_labels()
+	subset_ids_s = subset_indexes(subset_name, spectra) 
+
+	samples_all = get_samples_all()
+	subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
+	data, labels, fixation = get_subset_with_index(subset_ids, spectra, positive_labels)
+
+
 	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
 	fold_indexes = []
 	for train, test in cv.split(data, labels):
-		fold_indexes.append(subset_ids[test].tolist())
+		fold_indexes.append([subset_ids[x] for x in test])
 
 	return fold_indexes, folds
 
 def get_test_indexes(subset_name='unique'):
+	spectra_names = get_spectra_names()
+	positive_labels = get_labels()
 	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
 	test_indexes = [ subset[j][0] for j in range(len(subset)) for x in test_sample_names if x in subset[j][1] ]
 	return test_indexes	
