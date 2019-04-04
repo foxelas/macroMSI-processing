@@ -114,7 +114,7 @@ def get_classifier(classifier_name):
 
 	return clf
 
-def train_classifier(subset_name, classifier_name, n_components=10):
+def train_classifier(subset_name, classifier_name, has_texture=False, n_components=10):
 	data = dh.get_reconstructed_spectra()
 	labels = dh.get_labels()
 	reference = dh.get_measured_spectra()
@@ -130,40 +130,44 @@ def train_classifier(subset_name, classifier_name, n_components=10):
 
 	scaler1 = StandardScaler()
 	reference_data = scaler1.fit_transform(reference[train_indexes, :])
-	train_data, train_labels = dh.get_scaled_subset_with_index(train_indexes, data, labels, scaler1)
+	train_data, train_labels, train_lbp = dh.get_scaled_subset_with_index(train_indexes, data, labels, scaler1, has_texture)
 
 	scaler2 = StandardScaler()
 	if dimred is not None: 
 		dimred = dimred.fit(reference_data)
 		train_data = dimred.transform(train_data)
 
-		#needed or not?
-		train_data = scaler2.fit_transform(train_data)
+	#train_data = dh.concat_features(train_data, train_lbp)
+	train_data = dh.concat_features( train_data)
+	train_data = scaler2.fit_transform(train_data)
 
 	clf.fit(train_data, train_labels)
 
 	return clf, dimred, scaler1, scaler2
 
-def test_classifier(subset_name, classifier, dimred, scaler1, scaler2):
+def test_classifier(subset_name, classifier, dimred, scaler1, scaler2, has_texture=False):
 	data = dh.get_reconstructed_spectra()
 	labels = dh.get_labels()
 	test_indexes = dh.get_test_indexes(subset_name)
 
-	test_data, test_labels = dh.get_scaled_subset_with_index(test_indexes, data, labels, scaler1)
+	test_data, test_labels, test_lbp = dh.get_scaled_subset_with_index(test_indexes, data, labels, scaler1, has_texture)
 	print(test_indexes)
 
 	if dimred is not None: 
 		test_data = dimred.transform(test_data)
-		test_data = scaler2.transform(test_data)
+	#test_data = dh.concat_features(test_data, test_lbp)
+	test_data = dh.concat_features( test_data)
+
+	test_data = scaler2.transform(test_data)
 
 	predictions = classifier.predict(test_data)
 	scores = classifier.predict_proba(test_data)
 
 	return predictions, scores
 
-def run_classification_test(subset_name, classifier_name, n_components=10):
-	classifier, dimred, scaler1, scaler2 = train_classifier(subset_name, classifier_name, n_components)
-	pred_labels, scores = test_classifier(subset_name, classifier, dimred, scaler1, scaler2)
+def run_classification_test(subset_name, classifier_name, has_texture=False, n_components=10):
+	classifier, dimred, scaler1, scaler2 = train_classifier(subset_name, classifier_name, has_texture, n_components)
+	pred_labels, scores = test_classifier(subset_name, classifier, dimred, scaler1, scaler2, has_texture)
 
 	labels = dh.get_labels()
 	test_indexes = dh.get_test_indexes(subset_name)
@@ -377,5 +381,5 @@ classification_log = dh.get_log_file()
 # predictions, scores = get_predictions("KNN-3-minkowski/PCA", 'unique', img_spectra)
 # dh.savemat(pjoin(out_dir, 'predictions.mat'), mdict = {"predictions": predictions, "scores": scores})
 
-predictions, scores, acc, auc = run_classification_test('unique', "LDA/PCA")
+predictions, scores, acc, auc = run_classification_test('unique', "LDA/PCA", True)
 
