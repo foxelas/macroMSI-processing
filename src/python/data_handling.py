@@ -130,7 +130,8 @@ def concat_features(feat1, feat2=None, feat3=None):
 
 def get_concat_lbp():
 	lbp_features = get_lbp()
-	concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
+	concat_lbp = concat_features(lbp_features[0], lbp_features[1])
+	#concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
 	return concat_lbp
 
 def get_complete_spectra():
@@ -313,16 +314,24 @@ def get_fold_indexes(subset_name='unique', folds=10):
 	samples = get_samples()
 	start_index = 0
 	fold_indexes = []
+	on_hold_indexes = []
 	for i in range(folds):
 		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
-		fold_indexes.append([ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x not in test_sample_names if x in subset[j][1]])
+		current_fold_indexes = [ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x not in test_sample_names if x in subset[j][1]]
+		current_labels = [positive_labels[x] for x in current_fold_indexes ]
+		if all(v == 0 for v in current_labels) or all(v == 1 for v in current_labels):
+			on_hold_indexes.append(current_fold_indexes)
+		else:
+			fold_indexes.append(current_fold_indexes)
+
 		start_index = end_index
 
-	fold_indexes[-2] = fold_indexes[-2] + fold_indexes[1]
-	fold_indexes[1] = [] 
-	fold_indexes[3] = fold_indexes[3] + fold_indexes[2]
-	fold_indexes[2] = []
 	fold_indexes = [x for x in fold_indexes if x]
+	on_hold_indexes = [x for x in on_hold_indexes if x]
+	shortest_indexes = sorted(range(len(fold_indexes)), key=lambda k: len(fold_indexes[k]))
+	shortest_on_hold_indexes = sorted(range(len(on_hold_indexes)), key=lambda k: len(on_hold_indexes[k]), reverse=True)
+	for i in range(len(on_hold_indexes)):
+		fold_indexes[shortest_indexes[i]] = fold_indexes[shortest_indexes[i]] + on_hold_indexes[shortest_on_hold_indexes[i]]
 	folds = len(fold_indexes)
 
 	return fold_indexes, folds
@@ -334,7 +343,7 @@ def get_fold_indexes_stratified(subset_name='unique',folds=7):
 
 	samples_all = get_samples_all()
 	subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
-	data, labels, fixation = get_subset_with_index(subset_ids, spectra, positive_labels)
+	data, labels, fixation, lbp_features = get_subset_with_index(subset_ids, spectra, positive_labels)
 
 
 	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
@@ -373,11 +382,9 @@ def get_scaled_subset_with_index(indexes, data, labels, scaler, has_texture=Fals
 # [print(x) for x in ids]
 # [print(positive_labels[x]) for x in ids]
 
-# print("wewe")
-# ids,e = get_fold_indexes_stratified('unique', 10)
-# [print(x) for x in ids]
-# [print(positive_labels[x]) for x in ids]
+
 # print("wqqq")
-# ids,e = get_fold_indexes_stratified('unique', 10)
+# ids,e = get_fold_indexes('unique', 10)
 # [print(x) for x in ids]
+# positive_labels = get_labels()
 # [print(positive_labels[x]) for x in ids]
