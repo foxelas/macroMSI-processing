@@ -60,7 +60,7 @@ def get_base_dir():
 	return base_dir
 
 def get_data_dir():
-	data_dir = 'saitama_v5_min_region'
+	data_dir = 'saitama_v6_min_square'
 	return data_dir
 
 def get_out_dir():
@@ -114,6 +114,24 @@ def get_reconstructed_spectra():
 	out_mat = load_out_mat()
 	estimated_spectra = out_mat['EstimatedSpectra']
 	return estimated_spectra
+
+def get_lbp():
+	out_mat = load_out_mat()
+	lbp_features = out_mat['MultiScaleLbpFeatures']
+	return lbp_features
+
+def concat_features(feat1, feat2=None, feat3=None):
+	if feat3 is not None: 
+		return np.array([np.concatenate((x,y,z),0) for (x,y,z) in zip(feat1, feat2, feat3)])
+	if feat2 is not None:
+		return np.array([np.concatenate((x,y),0) for (x,y) in zip(feat1, feat2)])
+	else:
+		return np.array(feat1)
+
+def get_concat_lbp():
+	lbp_features = get_lbp()
+	concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
+	return concat_lbp
 
 def get_complete_spectra():
 	in_mat = load_in_mat()
@@ -220,7 +238,7 @@ def subset_indexes(name, data):
 
 	return subset_ids
 
-def get_subset_with_index(indexes, data, labels):
+def get_subset_with_index(indexes, data, labels, has_texture = False):
 	if (len(data.shape) > 1):
 		data_s = data[indexes,:]
 	else:
@@ -228,8 +246,13 @@ def get_subset_with_index(indexes, data, labels):
 	labels_s = labels[indexes]
 	fixation = get_fixation()
 	fixation_s = [fixation[x] for x in indexes]
+	if has_texture:
+		lbp_features = get_concat_lbp()
+		lbp_features_s = np.array([lbp_features[x] for x in indexes])
+	else:
+		lbp_features_s = None
 
-	return data_s, labels_s, fixation_s
+	return data_s, labels_s, fixation_s, lbp_features_s
 
 def get_subset(name, data, labels):
 	subset_ids = subset_indexes(name, data)
@@ -336,10 +359,10 @@ def get_scaled_subset(subset_name, data, labels, scaler):
 	data_s = scaler.transform(data_s)
 	return data_s, labels_s, fixation_s, subset_ids
 
-def get_scaled_subset_with_index(indexes, data, labels, scaler):
-	data_s, labels_s, fixation_s = get_subset_with_index(indexes, data, labels)
+def get_scaled_subset_with_index(indexes, data, labels, scaler, has_texture=False):
+	data_s, labels_s, fixation_s, lbp_features_s = get_subset_with_index(indexes, data, labels, has_texture)
 	data_s = scaler.transform(data_s)
-	return data_s, labels_s
+	return data_s, labels_s, lbp_features_s
 
 #print(get_test_indexes('unique_unfixed'))
 #print(get_fold_indexes('unique_unfixed', 10))
