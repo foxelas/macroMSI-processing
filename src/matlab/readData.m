@@ -106,7 +106,7 @@ if ~options.skipLoading
         %% Precompute correlation smoothing Matrices 
         fprintf('Pre-computing smoothing matrices.\n');
         precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
-        samples = unique([ID.Sample]);
+        samples = unique({ID.Sample});
 
         %% Smoothing matrix from recorded spectra
         rAll = zeros(81, specN);
@@ -281,7 +281,7 @@ if ~options.skipLoading
         disp('Reading coefficients from excel file...')
         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
         Coefficients = ones(length(ID), 3, 7);
-        src = '../../input/others/coeff.xlsx';
+        src = '../../../input/others/coeff.xlsx';
         for k = 1:msiN
             % Retrieve MSI data
             g = MSIs{k};

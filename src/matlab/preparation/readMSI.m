@@ -45,11 +45,14 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
         fc = [1, 450, 465, 505, 525, 575, 605, 630];
     end   
     
+    load('saved parameters\color_correction.mat', 'illuminant_gw1');
+
     extraImages = 0;
     [hasWhiteReference, idx] = ismember(1, fc);
     whiteReference = [];
     if hasWhiteReference
-        whiteReference = im2double(imread(files{idx}));
+        whiteReference = chromadapt(imread(files{idx}), illuminant_gw1, 'ColorSpace', 'linear-rgb');
+        whiteReference = im2double(whiteReference);
         [imHeight, imWidth, ~] = size( whiteReference );
         extraImages = extraImages + 1;
     end
@@ -57,14 +60,16 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
     [hasDarkReference, idx] = ismember(0, fc);
     darkReference = [];
     if hasDarkReference
-        darkReference = im2double(imread(files{idx}));
+        darkReference = chromadapt(imread(files{idx}), illuminant_gw1, 'ColorSpace', 'linear-rgb');
+        darkReference = im2double(darkReference);
         extraImages = extraImages + 1;
     end
 
     MSIbands = length(files) - extraImages;
     MSI = zeros(MSIbands, imHeight, imWidth, 3);
     for k = 1:MSIbands
-        MSI(k, :, :, :) = im2double(imread(files{k+extraImages}));
+        msi = chromadapt(imread(files{k+extraImages}), illuminant_gw1, 'ColorSpace', 'linear-rgb');
+        MSI(k, :, :, :) = im2double(msi);
     end
     
     if (modeAll)

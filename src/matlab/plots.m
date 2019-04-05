@@ -223,8 +223,7 @@ switch plotType
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance %');
         xlim([400, 700]);
-        suptitle('Comparative plot of Wiener estimation results')
-        title(figTitle);
+        title({'Comparative plot of Wiener estimation results', figTitle});
         legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'best', 'FontSize', 12); % 'Orientation','horizontal');
         
         if (plotN > 2)
