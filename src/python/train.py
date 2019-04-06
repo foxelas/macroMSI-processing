@@ -24,6 +24,8 @@ import sys
 interactive(True)
 
 out_dir = dh.get_out_dir()
+classification_log = dh.get_log_file()
+#sys.stdout = open(classification_log, 'w+')
 
 ####################classification#######################
 
@@ -114,7 +116,7 @@ def get_classifier(classifier_name):
 
 	return clf
 
-def train_classifier(subset_name, classifier_name, has_texture=False, n_components=10):
+def train_classifier(train_indexes, classifier_name, has_texture=False, n_components=10):
 	data = dh.get_reconstructed_spectra()
 	labels = dh.get_labels()
 	reference = dh.get_measured_spectra()
@@ -122,11 +124,9 @@ def train_classifier(subset_name, classifier_name, has_texture=False, n_componen
 	clf = get_classifier(classifier_name)
 	if '/' in classifier_name:
 		dimred =  dm.get_dimred(classifier_name[classifier_name.find("/")+1:], n_components)
+		dimred2 =  dm.get_dimred(classifier_name[classifier_name.find("/")+1:], 20)
 	else:
 		dimred = None
-
-	fold_indexes, folds = dh.get_fold_indexes(subset_name, 10)
-	train_indexes = [y for x in fold_indexes for y in x ]
 
 	scaler1 = StandardScaler()
 	reference_data = scaler1.fit_transform(reference[train_indexes, :])
@@ -136,24 +136,34 @@ def train_classifier(subset_name, classifier_name, has_texture=False, n_componen
 	if dimred is not None: 
 		dimred = dimred.fit(reference_data)
 		train_data = dimred.transform(train_data)
+		#print("PCA-explained variance for specrum", dimred.explained_variance_ratio_ * 100)
+
+		if has_texture:
+			dimred2 = dimred2.fit(train_lbp)
+			train_lbp = dimred2.transform(train_lbp)
+			#print("PCA-explained variance for texture", dimred2.explained_variance_ratio_ * 100)
+	else: 
+		dimred2 = None
 
 	train_data = dh.concat_features(train_data, train_lbp)
 	train_data = scaler2.fit_transform(train_data)
 
 	clf.fit(train_data, train_labels)
 
-	return clf, dimred, scaler1, scaler2
+	return clf, dimred, scaler1, scaler2, dimred2
 
-def test_classifier(subset_name, classifier, dimred, scaler1, scaler2, has_texture=False):
+def test_classifier(test_indexes, classifier, dimred, scaler1, scaler2, dimred2, has_texture=False):
 	data = dh.get_reconstructed_spectra()
 	labels = dh.get_labels()
-	test_indexes = dh.get_test_indexes(subset_name)
 
 	test_data, test_labels, test_lbp = dh.get_scaled_subset_with_index(test_indexes, data, labels, scaler1, has_texture)
 	print(test_indexes)
 
 	if dimred is not None: 
 		test_data = dimred.transform(test_data)
+		if has_texture:
+			test_lbp = dimred2.transform(test_lbp)
+
 	test_data = dh.concat_features(test_data, test_lbp)
 
 	test_data = scaler2.transform(test_data)
@@ -161,65 +171,25 @@ def test_classifier(subset_name, classifier, dimred, scaler1, scaler2, has_textu
 	predictions = classifier.predict(test_data)
 	scores = classifier.predict_proba(test_data)
 
-	return predictions, scores
+	return predictions, scores, test_labels
 
 def run_classification_test(subset_name, classifier_name, has_texture=False, n_components=10):
-	classifier, dimred, scaler1, scaler2 = train_classifier(subset_name, classifier_name, has_texture, n_components)
-	pred_labels, scores = test_classifier(subset_name, classifier, dimred, scaler1, scaler2, has_texture)
-
-	labels = dh.get_labels()
-	test_indexes = dh.get_test_indexes(subset_name)
-	test_labels = labels[test_indexes]
-	acc = accuracy_score(test_labels, pred_labels)
-	auc = roc_auc_score(test_labels, pred_labels)
-	print(test_labels)
-	print(pred_labels)
-	print(scores)
-	print(acc)
-	print(auc)
-	return pred_labels, scores, acc, auc
-
-def get_predictions(name, subset_name, test_data, n_components=10):
-	data = dh.get_reconstructed_spectra()
-	labels = dh.get_labels()
-	reference = dh.get_measured_spectra()
-
-	clf = get_classifier(name)
-	if '/' in name:
-		dimred =  dm.get_dimred(name[name.find("/")+1:], n_components)
-	else:
-		dimred = None
-
 	fold_indexes, folds = dh.get_fold_indexes(subset_name, 10)
 	train_indexes = [y for x in fold_indexes for y in x ]
+	classifier, dimred, scaler1, scaler2, dimred2 = train_classifier(train_indexes, classifier_name, has_texture, n_components)
+	test_indexes = dh.get_test_indexes(subset_name)
+	pred_labels, scores, test_labels = test_classifier(test_indexes, classifier, dimred, scaler1, scaler2, dimred2, has_texture)
 
-	sc = StandardScaler()
-	reference_data = sc.fit_transform(reference[train_indexes, :])
-	train_data, train_labels = dh.get_scaled_subset_with_index(train_indexes, data, labels, sc)
-	test_data = sc.transform(test_data)
+	acc = accuracy_score(test_labels, pred_labels)
+	auc = roc_auc_score(test_labels, pred_labels)
+	print("True labels", test_labels)
+	print("Pred labels", pred_labels)
+	print("Pred scores", scores)
+	print("Accuracy", acc)
+	print("A.U.C", auc)
+	return pred_labels, scores, acc, auc
 
-
-	if dimred is not None: 
-		dimred = dimred.fit(reference_data)
-		train_data = dimred.transform(train_data)
-		test_data = dimred.transform(test_data)
-
-		#needed or not?
-		sc2 = StandardScaler()
-		train_data = sc2.fit_transform(train_data)
-		test_data = sc2.transform(test_data)
-
-	clf.fit(train_data, train_labels)
-	predictions = clf.predict(test_data)
-	scores = clf.predict_proba(test_data)
-
-	return predictions, scores
-
-
-def cross_validate(classifier, data, labels, subset_name, reference=None, dimred=None, stratified=True):
-
-	if reference is None: 
-		reference = data
+def cross_validate(classifier_name, subset_name, stratified=True, n_components=10, has_texture=False):
 
 	tprs = []
 	aucs = []
@@ -229,7 +199,7 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 	mean_fpr = np.linspace(0, 1, 100)
 
 	if stratified: 
-			fold_indexes, folds = dh.get_fold_indexes_stratified(subset_name, 10)
+		fold_indexes, folds = dh.get_fold_indexes_stratified(subset_name, 10)
 	else:
 		fold_indexes, folds = dh.get_fold_indexes(subset_name, 10)
 
@@ -237,27 +207,12 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 		test_indexes = fold_indexes[f]
 		train_indexes = [y for x in fold_indexes if x != test_indexes for y in x ]
 
-		sc = StandardScaler()
-		reference_data = sc.fit_transform(reference[train_indexes, :])
-		train_data, train_labels = dh.get_scaled_subset_with_index(train_indexes, data, labels, sc)
-		test_data, test_labels = dh.get_scaled_subset_with_index(test_indexes, data, labels, sc)
+		classifier, dimred, scaler1, scaler2, dimred2 = train_classifier(train_indexes, classifier_name, has_texture, n_components)
+		pred_labels, scores, test_labels = test_classifier(test_indexes, classifier, dimred, scaler1, scaler2, dimred2, has_texture)
 
-		if dimred is not None: 
-			dimred = dimred.fit(reference_data)
-			train_data = dimred.transform(train_data)
-			test_data = dimred.transform(test_data)
-
-			#needed or not?
-			sc2 = StandardScaler()
-			train_data = sc2.fit_transform(train_data)
-			test_data = sc2.transform(test_data)
-
-		classifier.fit(train_data, train_labels)
-		pred_labels = classifier.predict(test_data)
 		accs.append(accuracy_score(test_labels, pred_labels))
-		pred_probas = classifier.predict_proba(test_data)
 		# Compute ROC curve and area the curve
-		fpr, tpr, thresholds = roc_curve(test_labels, pred_probas[:, 1])
+		fpr, tpr, thresholds = roc_curve(test_labels, scores[:, 1])
 		fpr_f.append(fpr)
 		tpr_f.append(tpr)
 		tprs.append(interp(mean_fpr, fpr, tpr))
@@ -275,7 +230,7 @@ def cross_validate(classifier, data, labels, subset_name, reference=None, dimred
 
 	return mean_acc, mean_auc 
 
-def classify_many(names, subset_name, n_components, stratified):
+def classify_many(classifier_names, subset_name, stratified=True, n_components=10, has_texture=False):
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 
@@ -283,15 +238,9 @@ def classify_many(names, subset_name, n_components, stratified):
 	labels = dh.get_labels()
 	reference = dh.get_measured_spectra()
 
-	for name in names:
-		clf = get_classifier(name)
-		if '/' in name:
-			dimred =  dm.get_dimred(name[name.find("/")+1:], n_components)
-		else:
-			dimred = None
-
-		mean_acc, mean_auc = cross_validate(clf, data, labels, subset_name, reference, dimred, stratified)
-		print(name, ' with accuracy ', mean_acc,', auc ', mean_auc, '\n', flush=True)
+	for classifier_name in classifier_names:
+		mean_acc, mean_auc = cross_validate(classifier_name, subset_name, stratified, n_components, has_texture)
+		print(classifier_name, ' with accuracy ', mean_acc,', auc ', mean_auc, '\n', flush=True)
 		performance_stats = np.append(performance_stats, [(mean_acc, mean_auc)], axis=0)
 
 	return performance_stats
@@ -339,21 +288,21 @@ def get_svm_classifier_names():
 						names.append('-'.join(['SVM', kernel, str(gamma), str(shrinking)]))
 	return names
 
-def compare_classifiers(names, subset_name, title='', n_components=10, stratified=True):
+def compare_classifiers(names, subset_name, title='', n_components=10, stratified=True, has_texture=False):
 
 	classifier_names = names + ['/'.join([c, 'PCA']) for c in names]
-	performance_stats = classify_many(classifier_names, subset_name, n_components, stratified)
+	performance_stats = classify_many(classifier_names, subset_name, stratified, n_components, has_texture)
 	best_classifier_names = get_best_classifiers(performance_stats, classifier_names, title, 20)
 
 	return best_classifier_names
 
-def compare_input_sets(classifier_names, title, n_components=10, stratified=True):
+def compare_input_sets(classifier_names, title, n_components=10, stratified=True, has_texture=False):
 
 	performance_stats = np.empty((0, 2))
 	performance_names = []
 	for input_set in ('unique_unfixed', 'unique_fixed', 'unique_cut', 'unique'):
 		dh.write_file(classification_log, "Input set: " + input_set)
-		pf_stats1 = classify_many(classifier_names, input_set, n_components, stratified)
+		pf_stats1 = classify_many(classifier_names, input_set, stratified, n_components, has_texture)
 		pf_names1 = [ ("/").join([x, input_set]) for x in classifier_names]
 		performance_stats = np.concatenate((performance_stats, pf_stats1), axis=0)
 		performance_names = performance_names + pf_names1
@@ -368,10 +317,7 @@ def run_comparison():
 	compare_classifiers(get_various_classifiers_names(), input_set, 'Classification Performance Comparison' + '(' + input_set + ')', 10, True)
 	compare_input_sets(get_various_classifiers_names(), 'Input Set Comparison', 10, True)
 
-classification_log = dh.get_log_file()
-
-#sys.stdout = open(classification_log, 'w+')
-#run_comparison()
+run_comparison()
 
 # img_spectra_mat = dh.loadmat( pjoin(out_dir, 'img_spectra.mat'))
 # print(img_spectra_mat.keys())
