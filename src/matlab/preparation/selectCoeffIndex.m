@@ -20,12 +20,12 @@ load(fullfile(options.systemdir, 'system.mat'), 'wavelength'); % camera system p
 load(fullfile(options.systemdir, 'ID.mat'), 'ID'); % image data id and info struct
 load(generateName(options, 'matfilein'), 'MSIs', 'Masks', 'Spectra');
     
-G = findgroups([ID.Sample], [ID.Type]);
+G = findgroups({ID.Sample}, {ID.Type});
 for i = 1:max(G)
     rmseMin = 1;
     idxs = find(G == i);
     groupID = ID(idxs);
-    [~,coeffIdxs] = unique({groupID.IMG}); %1...N
+    [~,coeffIdxs] = unique({groupID.ROI}); %1...N
     coeffIdxs = [groupID(coeffIdxs).Index];
     
     for coeffIndex = coeffIdxs

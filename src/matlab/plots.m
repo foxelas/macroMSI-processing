@@ -42,6 +42,7 @@ addParameter(p, 'FoldPerformance', []);
 addParameter(p, 'Title', []);
 addParameter(p, 'Cmap', 'jet');
 addParameter(p, 'Overlay', []);
+addParameter(p, 'AdditionalImage', []);
 addParameter(p, 'Alpha', 0.5);
 
 parse(p, plotType, varargin{:});
@@ -68,6 +69,7 @@ foldPerformance= p.Results.FoldPerformance;
 figTitle = p.Results.Title;
 cmap = p.Results.Cmap;
 overlay = p.Results.Overlay;
+I2 = p.Results.AdditionalImage;
 alpha = p.Results.Alpha;
 
 if fig < 0
@@ -81,8 +83,10 @@ if ~isempty(saveOptions)
     savePlot = saveOptions.saveImages;
     plotName = saveOptions.plotName;
     saveInHQ = saveOptions.saveInHQ;
+    isBW = saveOptions.BW;
 else
     savePlot = false;
+    isBW = false;
 end
 
 if ~isempty(lineNames)
@@ -100,9 +104,17 @@ switch plotType
     case 'sensitivity'     
         %% Plot camera sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         sensitivityN = size(sensitivity, 2);
+        if (isBW)
+            color(1,:)=HInt2RGB(1,100); % red, darkest 
+            color(2,:)=HInt2RGB(3,64); % green, less dark 
+            color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
+        else 
+            color = hsv(3);
+            %color = flip(color);
+        end
         hold on;
         for j = 1:sensitivityN
-            plot(wavelength, sensitivity(:, j));
+            plot(wavelength, sensitivity(:, j), 'Color', color(j,:), 'LineWidth', 2);
         end
         hold off;
         title('Camera Sensitivities');
@@ -115,6 +127,7 @@ switch plotType
             fnames = {'red channel'; 'green channel'; 'blue channel'};
         end
         legend(fnames)
+        
         % End Plot camera sensitivity
         
     case 'illuminationAndSensitivity'     
@@ -125,6 +138,7 @@ switch plotType
             % bandWavelength: the names of the bands
             % illumination: the illumination light 401x7
         %}
+        
         cl = colormap(lines);
         yyaxis left;
         hold on;
@@ -161,9 +175,22 @@ switch plotType
         % wavelength: 401x1 or 81x1
         % fc: central frequencies of the bands (string cell )
         % illumination: the illumination light 401x7
+        
+        if (isBW)
+            color(7,:)=HInt2RGB(1,100); % red, darkest 
+            color(6,:)=HInt2RGB(7,82); % cyan, less dark 
+            color(5,:)=HInt2RGB(3,64); % green, less dark 
+            color(4,:)=HInt2RGB(5,53); %
+            color(3,:)=HInt2RGB(9,46); % magenta, less dark 
+            color(2,:)=HInt2RGB(2,28); % orange, less dark 
+            color(1,:)=HInt2RGB(7,10); % blue cyan, lightest
+        else 
+            color = jet(7);
+        end
+
         hold on;
         for j = 1:numel(fc)
-            plot(wavelength, illumination(:, j), 'DisplayName', [num2str(fc(j)), ' nm']);
+            plot(wavelength, illumination(:, j), 'DisplayName', [num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
         end
         hold off;
         legend;
@@ -482,10 +509,21 @@ switch plotType
         % End plot discriminant analysis results 
         saveInHQ = true;
         
-    case 'cropped'
-        %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case 'segmentation'
+        h1 = subplot(1,2,1);
+        clf(h1)
+        imoverlay_medical(rgb2gray(I), overlay, [], [], 'hot', [], h1);
+        c = colorbar('location', 'westoutside','Ticks', linspace(0,1,5), 'TickLabels', linspace(0,100,5));
+        c.Label.String = 'Channel Agreement (%)';
+        c.Label.FontSize = 15;
+        c.Label.FontWeight = 'bold';
+        c.Limits = [0,1];
+        figTitle = strjoin({'Channel ROI masks for sample', strrepAll(plotName)}, ' ');
+        title(figTitle, 'FontSize', 15)
+        
+        h2 = subplot(1,2,2);
         colors = jet(size(coordinates,1));
-        imshow(I);
+        imshow(I2);
         hold on
         for i = 1:size(coordinates, 1)
             x = coordinates(i,1);
@@ -493,31 +531,10 @@ switch plotType
             plot(x, y, '*', 'LineWidth', 2, 'MarkerSize', 7, 'MarkerFaceColor', colors(i,:));
         end
         hold off
-        figTitle = strrepAll(strcat('Cropped area of ', plotName));
-        title(figTitle);
-        
-    case 'segmentation'
-        %% Show segmentation images %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
-        bandColors = [  0,70,255   ; 
-                0,146,255  ;
-                0,255,84   ;
-                74,255,0   ;
-                240,255,0  ;
-                255,173,0  ;
-                255,79,0   ;
-                255,255,255
-              ];
-        bandColors = bandColors./255;
-        colormap(bandColors);
-        imshow(I);
-        c = colorbar('location','southoutside', 'Ticks', linspace(0,1,9),...
-             'TickLabels',{'450','465','505','525','575','605', '630', 'All', ''});
-        c.Label.String = 'Respective MSI band (nm)';
-        figTitle = strrepAll(strcat('Segmented area of ', plotName));
-        title(figTitle);
+        figTitle = strjoin({'Final ROI of sample', strrepAll(plotName)}, ' ');
+        title(figTitle, 'FontSize', 15);
         plotName = strcat(plotName, '_segments');
-        
+                
     case 'roc'
         %% Show ROC performance of classifier %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         c = colormap(lines);    
@@ -620,22 +637,31 @@ end
 
 if (savePlot && ~isempty(plotName))
     plotName = strrep(plotName, '.mat', '');
-    % plotName = strrep(plotName, ' ', ''); %         plotName = strrep(plotName, '_', '');
-    strIdxs = strfind(plotName, '\');
-    strIdx = strIdxs(end);
-    fn = plotName(1:strIdx);
+    filename = strcat(plotName, '.eps');
+    [filepath,name,ext] = fileparts(filename);
+    if (isBW) 
+        colorOpt = '-gray';
+        [filepath,name,ext] = fileparts(filename);
+        filepath = fullfile(filepath, 'bw');
+    else
+        colorOpt = '-RGB';
+    end
+    filename = fullfile(filepath, strcat(name,ext));           
     
-    if ~exist(fn, 'dir')
-        mkdir(fn);
-        addpath(fn);
+    if ~exist(filepath, 'dir')
+        mkdir(filepath);
+        addpath(filepath);
     end
     
-    set(0, 'CurrentFigure', fig);
+    %set(0, 'CurrentFigure', fig);
+    %handle = get(groot,'CurrentFigure');
     if (saveInHQ)
-        %export_fig(strcat(plotName, '.png') , '-png','-native', '-nocrop');
-        print(fig, strcat(plotName, '.png'), '-dpng', '-r600');
+        filename = strrep(filename, '.eps', '.png');
+        export_fig(filename , '-png','-native', '-nocrop');
+        %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
     else
-        export_fig(strcat(plotName, '.jpg') , '-jpg');
+        export_fig(filename , '-eps', '-transparent', '-r900',  colorOpt);
+        %export_fig(strcat(plotName, '.jpg') , '-jpg');
         %print(fig, strcat(plotName, '.jpg'), '-djpeg');
     end
 end

@@ -1,4 +1,3 @@
-
 function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryReadData)
 
 %% Execute actions at bulk
@@ -64,7 +63,7 @@ function [] = main(actions, dataset, skipLoading, showImages, saveImages, tryRea
 % options
 %     saveOptions = struct('saveImages', true, 'saveInHQ', false)
 
-close all; clc;
+close all; %clc;
 if (nargin < 1)
     promt = strcat('Chooce an action:\n',...
         '1. Show System Specifications ', '2. Reflectance Estimation ', '3. Create sRGB', '4. Dimension Reduction ', ...

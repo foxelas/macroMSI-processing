@@ -1,7 +1,6 @@
-load('C:\Users\elena\Google Drive\titech\research\input\saitama_v5_min_region\data.mat')
-load('C:\Users\elena\Google Drive\titech\research\input\saitama_v5_min_region\ID.mat')
-load('temp.mat')
-idd = ID(369);
+load('D:\temp\Google Drive\titech\research\input\saitama_v7_min_region_e\data.mat')
+load('D:\temp\Google Drive\titech\research\input\saitama_v7_min_region_e\ID.mat')
+idd = ID(98);
 files = {data([data.MsiID] == idd.MsiID).File};    
 roiIndexes = find(idd.MsiID == [ID.MsiID]);
 rois = length(roiIndexes);
@@ -21,10 +20,10 @@ for i = 1:size(coordinates, 1)
 end
 hold off
         
-dataset = 'saitama_v5_min_region';
+dataset = 'saitama_v7_min_region_e';
 skipLoading = false;
 showImages = true;
-saveImages = false;
+saveImages = true;
 tryReadData = false;
 
 saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
@@ -33,7 +32,9 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', 'none
     'showImages', showImages, 'saveOptions', saveOptions);
 options = setOpt(options);
 
-%[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates, options, 0.6, [], [], 0.08, []);
+options.saveOptions.BW =true;
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Cropped', idd.Sample);
+[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates(4,:), options, 0.5, [], 0.08, []);
 [M, N, ~] = size(viewImg);
 cancerProb = [ 0.6711745  0.3288255 ; 
  0.3576419  0.6423581;

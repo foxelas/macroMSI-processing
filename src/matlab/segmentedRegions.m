@@ -1,4 +1,4 @@
-function [totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates, options, accTheta, regionRadius, fc, thresVal, tfMean)
+function [totalMaskBinary, maskAgreement, segmentMaskI] = segmentedRegions( files, coordinates, options, accTheta, regionRadius, thresVal, tfMean)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
 %%seed position coordinates = [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
@@ -18,48 +18,31 @@ function [totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( fil
     if (nargin < 5) 
         regionRadius = 36;
     end
-    if (nargin < 6) || isempty(fc)
-        fc = [450, 465, 505, 525, 575, 605, 630];
-    end
-    if (nargin < 7) || isempty(thresVal)
+    if (nargin < 6) || isempty(thresVal)
         thresVal = [];
     end
-    if (nargin < 8) || isempty(tfMean)
+    if (nargin < 7) || isempty(tfMean)
         tfMean = false;
     end
-    
-    % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
-    bandColors = [  0,70,255   ; 
-            0,146,255  ;
-            0,255,84   ;
-            74,255,0   ;
-            240,255,0  ;
-            255,173,0  ;
-            255,79,0   ;
-            255,255,255
-          ];
-    bandColors = bandColors./255;
-        
-    bands = length(fc);
-    bandWeight = 1 / bands;       
+         
 
     % Retrieve whole MSI
     [MSI, whiteReference, ~] = readMSI(files); %     I = squeeze(MSI(1,:,:,:));    
-    g = permute(raw2msi(MSI, 'adjusted'), [2, 3, 1]);
+    g = permute(raw2msi(MSI, 'extended'), [2, 3, 1]);
     
     segmentMaskI = cell(ROIs,1);
-    [m, n, ~] = size(g);
-    totalMaskColor = zeros(m, n, 3);
+    [m, n, bands] = size(g);
+    bandWeight = 1 / bands;       
     totalMaskBinary = false(m,n);
     for roi = 1:ROIs
-        maskForFig = zeros(m, n, 3); % RGB colored mask to show which MSI band resulted in which region
+        maskAgreement = zeros(m, n); % RGB colored mask to show which MSI band resulted in which region
         mask = zeros(m, n); % Final mask for the region
         x = coordinates(roi, 1);
         y = coordinates(roi, 2);
         for i = 1:bands  
             I2 = squeeze(g(:,:,i));
             [~, maskTmp]= regionGrowing(I2, [y, x], thresVal, regionRadius, tfMean);
-            maskForFig = maskForFig + cat(3, bandColors(i,1) * maskTmp, bandColors(i,2) * maskTmp, bandColors(i,3) * maskTmp);
+            maskAgreement = maskAgreement + bandWeight * maskTmp; % cat(3, bandColors(i,1) * maskTmp, bandColors(i,2) * maskTmp, bandColors(i,3) * maskTmp);
             mask = mask + bandWeight * maskTmp; 
         end
 
@@ -70,12 +53,11 @@ function [totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( fil
             mask(patchY, patchX) = true;
         end
         segmentMaskI{roi} = mask;   
-        totalMaskColor = totalMaskColor + maskForFig;
         totalMaskBinary = totalMaskBinary + mask;
     end
     
     if (options.showImages)
-        plots('cropped', 1, 'Image', whiteReference + totalMaskBinary, 'Coordinates', coordinates);
-        plots('segmentation', 2, 'Image', whiteReference + totalMaskColor);
+        plots('segmentation', 1, 'Image', whiteReference, 'Overlay', maskAgreement, ...
+            'AdditionalImage',  whiteReference + totalMaskBinary, 'Coordinates', coordinates, 'SaveOptions', options.saveOptions);
     end
 end

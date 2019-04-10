@@ -25,6 +25,10 @@ if ~isfield(options.saveOptions, 'savedir')
     options.saveOptions.savedir = fullfile('..', '..',  '..','output', options.dataset);
 end
 
+if ~isfield(options.saveOptions, 'BW')
+    options.saveOptions.BW = false;
+end
+
 if ~isfield(options, 'skipLoading')
     options.skipLoading = true;
 end

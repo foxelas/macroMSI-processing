@@ -43,8 +43,8 @@ elseif contains(lower(options.action), 'simple')
 
 elseif contains(lower(options.action), 'preset')
         pvsms = {'extended'}; %{'extended'};
-        smms =  {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
-        nms = {'sameForChannel 0.0001'};
+        smms = {'Cor_Sample'}; %{'adaptive'}; % {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
+        nms = {'spatial 0.4 0.2'}; %{'sameForChannel 0.0001'};
         plotType = '';
         
 elseif contains(lower(options.action), 'extra') 
@@ -198,6 +198,12 @@ minError = min(mean(rmse, 2));
 fprintf('Minimum rmse = %.5f\n', minError);
 
 if contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')
+    fprintf('RMSE: avg=%.5f, std=%.5f, min=%.5f, max=%.5f\n',  mean(rmse), std(rmse), min(rmse), max(rmse));
+    fileID = fopen('..\..\logs\preset_log.txt','a+');
+    fprintf(fileID,'%s \n', options.dataset);
+    fprintf(fileID,'RMSE: avg=%.5f, std=%.5f, min=%.5f, max=%.5f\n',  mean(rmse), std(rmse), min(rmse), max(rmse));
+    fclose(fileID);
+
     goodSampleIndexes_a = arrayfun(@(x) ~any(x == [233, 274, 310, 349, 378, 512]), (1:length(rmse))');
     goodSampleIndexes_b = (rmse < mean(rmse))';
     goodSampleIndexes = goodSampleIndexes_a & goodSampleIndexes_b;

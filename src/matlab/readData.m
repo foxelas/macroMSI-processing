@@ -281,7 +281,8 @@ if ~options.skipLoading
         disp('Reading coefficients from excel file...')
         pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
         Coefficients = ones(length(ID), 3, 7);
-        src = '../../../input/others/coeff.xlsx';
+        xls = dir(fullfile(options.systemdir, 'coeff*'));
+        src = fullfile(options.systemdir, xls(1).name);
         for k = 1:msiN
             % Retrieve MSI data
             g = MSIs{k};
@@ -307,7 +308,6 @@ if ~options.skipLoading
     
     else   
         %% Read newly created files 
-        
         load(generateName(options, 'matfilein'));
         name = options.dataset;
     end

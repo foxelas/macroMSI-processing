@@ -61,14 +61,15 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
     darkReference = [];
     if hasDarkReference
         darkReference = chromadapt(imread(files{idx}), illuminant_gw1, 'ColorSpace', 'linear-rgb');
-        darkReference = im2double(darkReference);
+        darkReference = im2double(darkReference); 
         extraImages = extraImages + 1;
     end
 
     MSIbands = length(files) - extraImages;
     MSI = zeros(MSIbands, imHeight, imWidth, 3);
     for k = 1:MSIbands
-        msi = chromadapt(imread(files{k+extraImages}), illuminant_gw1, 'ColorSpace', 'linear-rgb');
+        msi = imread(files{k+extraImages});
+        msi = chromadapt(msi, illuminant_gw1, 'ColorSpace', 'linear-rgb'); %color adjustment
         MSI(k, :, :, :) = im2double(msi);
     end
     
