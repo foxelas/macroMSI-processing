@@ -1,25 +1,12 @@
 load('D:\temp\Google Drive\titech\research\input\saitama_v7_min_region_e\data.mat')
 load('D:\temp\Google Drive\titech\research\input\saitama_v7_min_region_e\ID.mat')
-idd = ID(98);
+idd = ID(85);
 files = {data([data.MsiID] == idd.MsiID).File};    
 roiIndexes = find(idd.MsiID == [ID.MsiID]);
 rois = length(roiIndexes);
 coordinates = [[ID(roiIndexes).Originx]; [ID(roiIndexes).Originy]]';
-    
-[segmentMSI, whiteMSI] = readMSI(files);
-viewImg = whiteMSI;
-figure(3); 
-imshow(viewImg)
+[segmentMSI, viewImg] = readMSI(files);
 
-colors = jet(size(coordinates,1));
-hold on
-for i = 1:size(coordinates, 1)
-    x = coordinates(i,1);
-    y = coordinates(i,2);
-    plot(x, y, '*', 'LineWidth', 2, 'MarkerSize', 5, 'MarkerFaceColor', colors(i,:));
-end
-hold off
-        
 dataset = 'saitama_v7_min_region_e';
 skipLoading = false;
 showImages = true;
@@ -32,54 +19,37 @@ options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', 'none
     'showImages', showImages, 'saveOptions', saveOptions);
 options = setOpt(options);
 
-options.saveOptions.BW =true;
-options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Cropped', idd.Sample);
-[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates(4,:), options, 0.5, [], 0.08, []);
-[M, N, ~] = size(viewImg);
-cancerProb = [ 0.6711745  0.3288255 ; 
- 0.3576419  0.6423581;
- 0.27323704 0.72676296;
- 0.23336374 0.76663626;
- 0.91281083 0.08718917;
- 0.26809716 0.73190284];
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Texture', strcat(idd.Sample, '_lbp'));
+        
+currOpt = options;
+currOpt.options.saveImages = false;
+[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates(:,:), currOpt, 0.75, [], 0.07, []); %0.8 , 0.08
 
-isPositive = [0 1 1 1 0 1];
+[M, N, ~] = size(totalMaskBinary);
+cancerProb = [0.56506547 0.43493453; 0.39944066 0.60055934; 0.27636779 0.72363221; 0.41575609 0.58424391; 0.57570235 0.42429765; 0.57063083 0.42936917];
+isPositive = [1 1 1 1 0 1];
 trueLabels = [1 1 1 1 0 0];
- 
-% figure(4);
-% hold on
-% outImg = zeros(M,N,3);
-% for i = 1:rois
-%     outImg = outImg +  cat(3, double(segmentMaskI{i}), double(segmentMaskI{i}),double(segmentMaskI{i}));
-%     imshow(outImg);
-%     pause(0.5)
-% end
-% hold off
-
-figure(5);
+options.saveOptions.saveImages = false;
 outImg = zeros(M,N);
 for i = 1:rois
     [r, c] = find(segmentMaskI{i});
     outImg(segmentMaskI{i}) = cancerProb(i,2);
-    imshow(outImg);
+    %imshow(outImg);
+    %pause;
 end
-plots('visual', 1, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7, 'Title', 'Malignancy Probability');
-
-outImg = zeros(M,N);
-for i = 1:rois
-    [r, c] = find(segmentMaskI{i});
-    outImg(segmentMaskI{i}) = isPositive(i);
-    imshow(outImg);
-end
-plots('visual', 2, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7,  'Title', 'Classification');
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Visualization', strcat('pred_', idd.Sample));
+plots('visual', 2, isPositive, 'Malignancy Probability', 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7, ...
+    'Coordinates', coordinates,'saveOptions', options.saveOptions);
 
 outImg = zeros(M,N);
 for i = 1:rois
     [r, c] = find(segmentMaskI{i});
     outImg(segmentMaskI{i}) = trueLabels(i);
-    imshow(outImg);
+    %imshow(outImg);
 end
-plots('visual', 3, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7,  'Title', 'Ground Truth');
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Visualization', strcat('gt_', idd.Sample));
+plots('visual', 3, ~[ID(roiIndexes).IsBenign], 'Ground Truth', 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 0.7, ...
+     'Coordinates', coordinates, 'saveOptions', options.saveOptions);
 
 
 % options.pixelValueSelectionMethod = 'extended';
@@ -95,34 +65,5 @@ plots('visual', 3, 'Image', viewImg, 'Overlay', outImg, 'Cmap', 'jet', 'Alpha', 
 % scores = reshape(scores(:,1), M, N);
 % figure(2);imshow(scores)
 
-% [M, N, ~] = size(whiteMSI);
-% estimated = zeros(M,N,81);
-% step = 5;
-% for i = step:(M-step)
-%     for j = step:(N-step)
-%         estimated(i,j,:) = reflectanceEstimation(squeeze(segmentMSI(:, i-step:i+step, j-step:j+step, :)), [], [], idd, options);
-% 
-%     end
-% end
 
-% currentOptions.showImages = false; 
-% 
-% roiIndexes = find(idd.RgbID == [ID.RgbID]);
-% rois = length(roiIndexes);
-% roiNames = cell(rois,1);
-% roiPositions = zeros(rois,2);
-% roiMalignancy = zeros(rois,1);
-% for i=1:rois
-%     roiNames{i} = strcat(ID(roiIndexes(i)).SpectrumFile,'_' ,ID(roiIndexes(i)).T);
-%     roiPositions(i, :) = [ID(roiIndexes(i)).Originx, ID(roiIndexes(i)).Originy];
-%     roiMalignancy(i) = ~ID(roiIndexes(i)).IsBenign;
-%     
-%     [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion(files, roiPositions(i,:), currentOptions);
-%     plots('segmentation', 2, 'Image', viewImg + segmentMaskI{1}, 'Coordinates', roiPositions(i,:));
-%     figure(3);
-%     imoverlay(rgb2gray(viewImg), double(segmentMaskI{1}), [], [], 'parula')
-%     
-%     pause; 
-% 
-% end
 

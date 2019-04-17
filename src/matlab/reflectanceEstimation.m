@@ -69,7 +69,7 @@ signalCov = [0.0290584774952317;0.0355809665018991;0.0254338785693633;0.02780028
 if strcmp(options.pixelValueSelectionMethod, 'rgb')
     load(precomputedFile, 'Coefficients');
     coeff = squeeze(Coefficients(id.CoeffID, 3, 1:7))'; %id.CoeffID %id.Index
-    coeff = [sum(coeff(1:2)), sum(coeff(3:5)), sum(coeff(6:7))];
+    coeff = [coeff(2), mean([coeff(4), coeff(5)]), mean([coeff(6), coeff(7)])];
 else
     load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
@@ -262,18 +262,33 @@ elseif contains(noiseType, 'SNR')
 elseif contains(noiseType, 'white gaussian')
     if (hasNoiseParam); variance = (randn(1, msibands) .* options.noiseParam).^2; else; variance = (randn(1, msibands) .* 0.0001).^2; end
 
-elseif strcmp(noiseType, 'fromOlympus')
-    noiseparam = [1.62215000000000e-05;1.57000000000000e-05;7.55000000000000e-06;5.03000000000000e-06;8.38000000000000e-06;0.000148000000000000;1.48000000000000e-05] * 100;
-    variance =  (noiseparam').^2 ;
-    
+elseif contains(noiseType, 'fromOlympus') 
+    variance = [0.0000162215;
+                0.0000157000;
+                0.0000075500; 
+                0.0000050300; 
+                0.0000083800; 
+                0.0001480000; 
+                0.0000148000]';   
+    if ~strcmp(options.pixelValueSelectionMethod, 'rgb'); variance =  variance .* 10^4; else; variance =  variance .* 10^2;     end
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
     
-elseif strcmp(noiseType, 'spatial') || contains(noiseType, 'spatial')
+elseif contains(noiseType, 'spatial')
     if isfield(options, 'windowDim'); windowDim = options.windowDim; else; windowDim = 5; end
     [windowKernel, windowElements] = makeKernel(windowDim, height, width);  
-    if (hasNoiseParam); variance = ones(msibands,1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2; else; variance = ones(msibands,1) * (sqrt(0.5) * 0.001 + 0.03)^2; end
-        
+    if contains(lower(noiseType), 'olympus')
+        variance = [0.0000162215;
+                    0.0000157000;
+                    0.0000075500; 
+                    0.0000050300; 
+                    0.0000083800; 
+                    0.0001480000; 
+                    0.0000148000]'; 
+        if ~strcmp(options.pixelValueSelectionMethod, 'rgb'); variance =  variance .* 10^6;    end
+    else
+        if (hasNoiseParam); variance = ones(msibands,1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2; else; variance = ones(msibands,1) * (sqrt(0.5) * 0.001 + 0.03)^2; end
+    end
 else 
     error('Not implemented');
 end
@@ -290,7 +305,7 @@ hw = height * width;
 Gres = reshape(G, msibands, hw); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
 activeRegionIdx = sub2ind([height,width], find(mask));
    
-if strcmp(noiseType, 'spatial')
+if contains(noiseType, 'spatial')
 %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
 %  Based on "A Spatially AdaptiveWiener Filter for Reflectance Estimation"[Urban2008]
 
@@ -321,7 +336,8 @@ else
     estimatedReflectance = div * Gres(:, activeRegionIdx); % 401 x 100 
 end  
 
-%% Show all estimates in the region
+%{ 
+Show all estimates in the region
 if (false)
     figure(3);
     clf(3);
@@ -339,6 +355,7 @@ if (false)
     hold off
     pause(0.2)
 end
+%}
 
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
@@ -359,7 +376,7 @@ else
     
     [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
     [nmse, ~] = min(Nmse(spectrum, estimatedReflectance));
-    estimatedReflectance = estimatedReflectance(:,rmseIdx);
+    estimatedReflectance = estimatedReflectance(:,rmseIdx)';
     [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
     minIdx = [mini, minj]; 
 end
@@ -442,8 +459,6 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
         spectra(:, (j+1):(j+k)) = repmat(r{i}, 1, k);
         j = j + k;
     end
-
-    means = mean(spectra,2);
     adaptedM = 1 / size(spectra, 2) * (spectra * spectra');
 end
 

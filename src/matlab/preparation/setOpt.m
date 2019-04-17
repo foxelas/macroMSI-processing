@@ -1,4 +1,11 @@
-function options = setOpt(options)
+function options = setOpt(options, dataset, action, showImages, saveImages, tryReadData)
+
+if (isempty(options) && nargin == 6)
+    saveOptions = struct('saveImages', saveImages, 'saveInHQ', false);
+    options = struct('tryReadData', tryReadData, 'dataset', dataset, 'action', action, ...
+        'pixelValueSelectionMethod', 'extended', 'noiseType', 'sameForChannel', ...
+        'showImages', showImages, 'saveOptions', saveOptions);
+end
 
 if ~isfield(options, 'tryReadData')
     options.tryReadData = false;
@@ -22,16 +29,9 @@ if ~isfield(options, 'saveOptions')
 end
 
 if ~isfield(options.saveOptions, 'savedir')
-    options.saveOptions.savedir = fullfile('..', '..',  '..','output', options.dataset);
+    options.saveOptions.savedir = fullfile('..', '..', '..','output', options.dataset);
 end
 
-if ~isfield(options.saveOptions, 'BW')
-    options.saveOptions.BW = false;
-end
-
-if ~isfield(options, 'skipLoading')
-    options.skipLoading = true;
-end
 
 if ~isfield(options, 'showImages')
     options.showImages = false;

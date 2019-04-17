@@ -3,12 +3,21 @@ function [] = main(actions, showImages, saveImages, dataset, tryReadData)
 %% Execute actions at bulk
 %
 % Usage: 
-% main({'ReflectanceEstimationSimple', 'LBP'}, false, true, 'saitama_v2', false)
+% main('ReflectanceEstimationSimple', false, true, 'saitama_v2', false)
 % 
-% Input:
-% 'action': string or cell array of strings, name of action to be performed 
+% Input
+%
+% actions: string or cell array of strings
+% dataset: the input dataset (default: 'saitama_v2') skipLoading: see below
+% (default: false) showImages: see below (default: false) saveImages: see
+% below (default: true)
+%
+% Options structure:
+%
+% 'action' string, name of action to be performed (default: 'ConfPlots')
 %      actions = {
-%          'SystemSpecs', 
+%          'ConfPlots', 
+%          'FixMinimumErrorPoints',
 %          'ReflectanceEstimationSystemComparison',
 %          'ReflectanceEstimationMatrixComparison',
 %          'ReflectanceEstimationMatrixSystemComparison',
@@ -17,24 +26,25 @@ function [] = main(actions, showImages, saveImages, dataset, tryReadData)
 %          'ReflectanceEstimationPreset', 
 %          'ReflectanceEstimationSimple', 
 %          'CreateSRGB',
-%          'PCA',  
-%          'LDA', 'LDA b'
-%          'SVM', 
-%          'KNN'
-%          'LBP', 'LBP_RGB'
+%          'PCA' , 
+%          'LDA',
+%          'classification', 
+%          'segmentation'
+%          'MeasuredOverlap', 
 %          'EstimatedOverlap',
 %          'ReflectanceEstimationOpposite', 
 %          'PCALDA', 
 %          'CountData'
-%          'CompleteAnalysis',
-%          'ClassificationPerformance'
+%          'CompleteAnalysis'
 %         };
-% 'showImages' shows plots during execution (default: false)
-% 'saveImages' save execution plots (default: true)
+% 'showImages' shows plots during execution
+% 'saveImages' save execution plots
 % 'dataset' string, name of the input dataset (default: 'saitama_v2')
 %  datasets = {'color_sample', 'saitama', 'saitama_v2'}
 % 'tryReadData' boolean, enables lada reading instead of loading (default:
 % false) 
+
+
 close all; %clc;
 
 if (nargin < 2)
@@ -55,9 +65,11 @@ if ~iscell(actions)
 else
     disp('Running batch execution');
 end
+
+%% Set-up of options for running
     
 for i = 1:numel(actions)
-    %Set-up of options for running
+    
     options =  setOpt([], dataset, actions{i}, showImages, saveImages, tryReadData);
     readData;
 
@@ -73,24 +85,16 @@ for i = 1:numel(actions)
     elseif contains(action, 'PCA') || contains(action, 'LDA') || contains(action, 'DimRed')
         actionDimensionReduction;
     elseif contains(action, 'SVM') ||  contains(action, 'KNN')
-       actionClassification;    
-    elseif strcmp(action, 'ClassificationPerformance')
-        actionClassificationPerformance;
+       actionClassification;      
     elseif contains(action, 'LBP')
         actionLBP;
     elseif contains(action, 'CompleteAnalysis')
         actionCompleteAnalysis;
-    elseif contains(action, 'ApplyOnRGB')
-        options.action = 'ReflectanceEstimationPreset_rgb';
-        actionReflectanceEstimationComparison;
-        options.action = 'lbp_rgb';
-        actionLBP;
     else
         disp('Nothing to do here. Aborting...');
     end
     
     tryReadData = false; %don't read again after the first time   
-    logInfo(options);
     fprintf('Finished running action.\n');
 
 end
@@ -116,6 +120,7 @@ function [outputLog] = logInfo(options)
     optionsTab = struct2table(options);
     outputLog = '-------------------------------------------\n';
     outputLog = strjoin([outputLog, 'Run on ', string(datetime), '\n'], ' ');
+    outputLog = strjoin([outputLog, string(runTime), 's elapsed.', '\n'], ' ');
     for i = 1:width(optionsTab)
         outputLog = strjoin([outputLog, optionsTab.Properties.VariableNames(i), strrep(strrep(string(optionsTab(1, i).Variables), '..', ''), '\', ' '), '\n'], '     ');
     end

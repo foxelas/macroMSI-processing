@@ -1,4 +1,4 @@
-function [totalMaskBinary, maskAgreement, segmentMaskI] = segmentedRegions( files, coordinates, options, accTheta, regionRadius, thresVal, tfMean)
+function [mask, maskAgreement, segmentMaskI] = segmentedRegions( files, coordinates, options, accTheta, regionRadius, thresVal, tfMean)
 %%SEGMENTMSIREGION applies region growing on every channel of the MSI for
 %%seed position coordinates = [x,y], based on region agreement threshold 'accTheta' and 
 %%radius 'regionRadius'
@@ -58,6 +58,6 @@ function [totalMaskBinary, maskAgreement, segmentMaskI] = segmentedRegions( file
     
     if (options.showImages)
         plots('segmentation', 1, 'Image', whiteReference, 'Overlay', maskAgreement, ...
-            'AdditionalImage',  whiteReference + totalMaskBinary, 'Coordinates', coordinates, 'SaveOptions', options.saveOptions);
+            'AdditionalImage',  whiteReference + mask, 'Coordinates', coordinates, 'SaveOptions', options.saveOptions);
     end
 end
