@@ -67,7 +67,7 @@ pause;
 currOpt = options;
 currOpt.options.saveImages = false;
 currOpt.options.showImages = false;
-[totalMaskBinary, totalMaskColor, segmentMaskI] = segmentedRegions( files, coordinates, currOpt, 0.75, [], 0.07, []); %0.8 , 0.08
+[totalMaskBinary, ~, segmentMaskI] = segmentMSIRegion( files, coordinates, currOpt, 0.75, [], 0.07); %0.8 , 0.08
 
 [M, N, ~] = size(totalMaskBinary);
 cancerProb = [0.56506547 0.43493453; 0.39944066 0.60055934; 0.27636779 0.72363221; 0.41575609 0.58424391; 0.57570235 0.42429765; 0.57063083 0.42936917];

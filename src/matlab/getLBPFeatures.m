@@ -1,18 +1,17 @@
-function [lbpFeats] = getLBPFeatures(type, files, coordinates, neighbors, maxScale, spectralNeighbors, mapping)
+function [lbpFeats] = getLBPFeatures(type, files, coordinates, maxScale, neighbors, mapping)
+%main code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
     if (nargin < 4)
-        neighbors = 8;
-    end
-    if (nargin < 5)
         maxScale = 3;
     end
-    if (nargin < 6)
-        spectralNeighbors = 2;
+    if (nargin < 5)
+        neighbors = 8;
     end
-    if (nargin < 7)
+    if (nargin < 6)
         mapping=getmapping(neighbors,'riu2');
     end
 
     msibands = 9;
+    spectralNeighbors = 2;
     ConcatLbpFeatures = cell(maxScale, 1);
     SumLbpFeatures = cell(maxScale, 1);
     MMLbpFeatures = cell(maxScale, 1);
@@ -46,21 +45,20 @@ function [lbpFeats] = getLBPFeatures(type, files, coordinates, neighbors, maxSca
                 rgblbpFeatures(k,:) = lbp(gr,scale,neighbors,mapping);
             end
         end
-        ConcatLbpFeatures{scale} = concatlbpFeatures / max(concatlbpFeatures(:));
-        SumLbpFeatures{scale} = sumlbpFeatures / max(sumlbpFeatures(:));
-        MMLbpFeatures{scale} = mmlbpFeatures / max(mmlbpFeatures(:));
-        RgbLbpFeatures{scale} = rgblbpFeatures / max(rgblbpFeatures(:));
-        
-        if strcat(type, 'CatLBP')
-            lbpFeats = ConcatLbpFeatures;
-        elseif strcat(type, 'SumLBP')
-            lbpFeats = SumLbpFeatures;
-        elseif strcat(type, 'MMLBP')
-            lbpFeats = MMLbpFeatures;
-        else 
-            lbpFeats = RgbLbpFeatures;
-        end
-
+        ConcatLbpFeatures{scale} = concatlbpFeatures;
+        SumLbpFeatures{scale} = sumlbpFeatures;
+        MMLbpFeatures{scale} = mmlbpFeatures;
+        RgbLbpFeatures{scale} = rgblbpFeatures ;        
+    end
+    
+    if strcmp(type, 'CatLBP')
+        lbpFeats = ConcatLbpFeatures;
+    elseif strcmp(type, 'SumLBP')
+        lbpFeats = SumLbpFeatures;
+    elseif strcmp(type, 'MMLBP')
+        lbpFeats = MMLbpFeatures;
+    else 
+        lbpFeats = RgbLbpFeatures;
     end
 
 end

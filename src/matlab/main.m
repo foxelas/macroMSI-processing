@@ -87,6 +87,7 @@ for i = 1:numel(actions)
         actionLBP;
     else
         disp('Nothing to do here. Aborting...');
+        return
     end
     
     tryReadData = false; %don't read again after the first time   

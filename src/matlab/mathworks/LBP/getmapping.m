@@ -112,7 +112,7 @@ end
 
 function mapping = getmapping_ver8(samples,mappingtype)
 
-disp('For Matlab version 8.0 and higher');
+%disp('For Matlab version 8.0 and higher');
 
 table = 0:2^samples-1;
 newMax  = 0; %number of patterns in the resulting LBP code
