@@ -122,7 +122,7 @@ function [outputLog] = logInfo(options)
     end
     outputLog = strjoin([outputLog, '-------------------------------------------\n\n\n\n\n\n\n']);
     logname = fullfile( '..', '..', 'logs', strcat( options.action, '_matlab.log'));
-    fileID = fopen(fullfile('..', '..', 'logs', logname), 'a');
+    fileID = fopen(logname, 'a+');
     fprintf(fileID, outputLog);
     fclose(fileID);
 

@@ -1,4 +1,8 @@
 savedir = fullfile('..', '..', '..', 'output', 'saitama_v7_min_region_e', 'ClassifierPerformance' );
+saveOptions.savedir = savedir;
+saveOptions.saveImages = true;
+saveOptions.plotName = '';
+saveOptions.saveInHQ = false;
 
 filename = fullfile('macroMSI-processing', 'logs', '2019-04-15 03_32.log');
 res = delimread(filename, ',', 'raw');
@@ -81,28 +85,50 @@ end
 class_s = cellfun(@(w,x,y) strrep(strjoin({w,x,y}, '|'), '_', ' ' ),...
     classifier(id1), featureSet(id1), inputSet(id1), 'uni', 0);
 
-auc_s = auc(id1);
-figure(5);
-yyaxis left
-scatter([1:10],  acc_s(1:10));
-ylim([0.75, 1])
-ylabel('Accuracy')
+% auc_s = auc(id1);
+% figure(5);
+% yyaxis left
+% scatter([1:10],  acc_s(1:10));
+% ylim([0.75, 1])
+% ylabel('Accuracy')
+% 
+% yyaxis right
+% scatter([1:10], auc_s(1:10));
+% ylim([0.65, 1])
+% ylabel('Area Under Curve')
+% xticklabels(class_s);
+% 
+% title('Classifier Performance')
+% xtickangle(45);
 
-yyaxis right
-scatter([1:10], auc_s(1:10));
-ylim([0.65, 1])
-ylabel('Area Under Curve')
-xticklabels(class_s);
+% plotClassificationPerformance(6, auc(acceptedId), acc(acceptedId), classifier(acceptedId), fullfile(savedir, 'Classifiers'));
+% plotClassificationPerformance(7, auc(acceptedId), acc(acceptedId), featureSet(acceptedId), fullfile(savedir, 'FeatureSet'));
+% plotClassificationPerformance(8, auc(acceptedId), acc(acceptedId), dimred(acceptedId), fullfile(savedir, 'DimRed'));
+% plotClassificationPerformance(9, auc(acceptedId), acc(acceptedId), inputSet(acceptedId), fullfile(savedir, 'InputSet'));
+% plotClassificationPerformance(10, auc(acceptedId), acc(acceptedId),  {classifier(acceptedId), featureSet(acceptedId) }, fullfile(savedir, 'Classifier+Features'));
 
-title('Classifier Performance')
-xtickangle(45);
+barAccInfo = zeros(4,3);
+lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
+cs = {'SVM', 'KNN', 'RF'};
+for ii = 1:4
+    for jj = 1:3
+        [maxAuc, maxAcc] = findMaxContaining(auc, acc, class_s, lbps{ii}, cs{jj});
+        barAccInfo(ii, jj) = maxAuc;       
+    end
+end
 
-plotClassificationPerformance(6, auc(acceptedId), acc(acceptedId), classifier(acceptedId), fullfile(savedir, 'Classifiers'));
-plotClassificationPerformance(7, auc(acceptedId), acc(acceptedId), featureSet(acceptedId), fullfile(savedir, 'FeatureSet'));
-plotClassificationPerformance(8, auc(acceptedId), acc(acceptedId), dimred(acceptedId), fullfile(savedir, 'DimRed'));
-plotClassificationPerformance(9, auc(acceptedId), acc(acceptedId), inputSet(acceptedId), fullfile(savedir, 'InputSet'));
-plotClassificationPerformance(10, auc(acceptedId), acc(acceptedId),  {classifier(acceptedId), featureSet(acceptedId) }, fullfile(savedir, 'Classifier+Features'));
+plots('classificationPerformanceBars', 11, [], 'classifier', 'LineNames', lbps, 'Performance', barAccInfo, 'SaveOptions', saveOptions);
 
+barAccInfo = zeros(4,3);
+lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
+cs = {'fixed', 'unfixed', 'mixed'};
+for ii = 1:4
+    for jj = 1:3
+        [maxAuc, maxAcc] = findMaxContaining(auc, acc, class_s, lbps{ii}, cs{jj});
+        barAccInfo(ii, jj) = maxAuc;       
+    end
+end
+plots('classificationPerformanceBars', 12, [], 'fixing', 'LineNames', lbps, 'Performance', barAccInfo, 'SaveOptions', saveOptions);
 
 function [] = plotClassificationPerformance(fig, aucVal, accVal, grouping, plotName)
 figure(fig);
@@ -139,3 +165,17 @@ end
 
 end
 
+function [maxAuc, maxAcc] = findMaxContaining(auc, acc, class_s, condition1, condition2)
+    if strcmp(condition1, 'spect')
+        condition1 = 'spect|';
+    end
+    if strcmp(condition2, 'xed')
+        condition2 = strcat('|', condition2);
+    end
+    condIds = find(contains(class_s, condition1) & contains(class_s, condition2));
+    auc_cond = auc(condIds);
+    [maxAuc, maxId] = max(auc_cond);
+    acc_cond = acc(condIds);
+    maxAcc = acc_cond(maxId);
+    fprintf('%s and %s: acc %.3f and auc %.3f \n', condition1, condition2, maxAcc, maxAuc);
+end

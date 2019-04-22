@@ -70,7 +70,7 @@ switch filename
         [~, currentName] = generateName(options, 'current', idx);
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
         directory = fileparts(dirCurrentName);
-        mkdir_custome(directory);
+        mkdir_custom(directory);
 
     case 'input'
         dirCurrentName = fullfile('..', '..', '..', 'input');

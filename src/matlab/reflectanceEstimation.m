@@ -320,7 +320,7 @@ if contains(noiseType, 'spatial')
         Kcov(b, :, :) = sdGb.^2;
     end
     
-    estimatedReflectance = zeros(length(spectrum), length(activeRegionIdx));
+    estimatedReflectance = zeros(size(H,2), length(activeRegionIdx));
     for p = 1:length(activeRegionIdx)
         [i, j] = ind2sub([height,width], activeRegionIdx(p));
         meanGij = meanG(:,i,j);

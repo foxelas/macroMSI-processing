@@ -10,7 +10,8 @@ p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
-    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual','classificationPerformance', 'lbp', 'normSensitivity', 'featureImportance'})));
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual','classificationPerformance', 'lbp', ...
+    'normSensitivity', 'featureImportance', 'classificationPerformanceBars'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
 addOptional(p, 'title', '', @(x) ischar(x));
@@ -92,7 +93,7 @@ switch plotType
         yyaxis left;
         if contains(lower(plotType), 'sensitivity')
             sensitivityN = size(sensitivity, 2);
-            if (SaveInBW)
+            if (saveInBW)
                 color(1,:)=HInt2RGB(1,100); % red, darkest 
                 color(2,:)=HInt2RGB(3,64); % green, less dark 
                 color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
@@ -567,6 +568,7 @@ switch plotType
 
     case 'visual'
 %% Visualization of malignancy score %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        titles = {'Malignancy Probability','Ground Truth'};      
         cmapSize = 100; % default size of 60 shows visible discretization
         if ischar(cmap)
 
@@ -582,43 +584,52 @@ switch plotType
         clf(gcf);
         axes(gcf);
 
-        hB = imagesc(I);axis image off;
-        climF = [min(overlay(:)), max(overlay(:))];
+        for ploti=1:2 
+            subplot(1,2,ploti);
+            
+            Icur = I{ploti};
+            overlayCur = overlay{ploti};
+            titleCur = titles{ploti};
+            curveCur = curves{ploti};
+       
+            hB = imagesc(Icur);axis image off;
+            climF = [min(overlayCur(:)), max(overlayCur(:))];
 
-        % Add the front image on top of the back image
-        hold on;
-        hF = imagesc(overlay); %, climF);
+            % Add the front image on top of the back image
+            hold on;
+            hF = imagesc(overlayCur); %, climF);
 
-        % If images are different sizes, map the front image to back coordinates
-        set(hF,'XData',get(hB,'XData'),...
-            'YData',get(hB,'YData'))
+            % If images are different sizes, map the front image to back coordinates
+            set(hF,'XData',get(hB,'XData'),...
+                'YData',get(hB,'YData'))
 
-        % Make the foreground image transparent
-        alphadata = alpha.*(overlay > climF(1));
-        set(hF,'AlphaData',alphadata);
+            % Make the foreground image transparent
+            alphadata = alpha.*(overlayCur > climF(1));
+            set(hF,'AlphaData',alphadata);
 
-        c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
-        c.Label.String = 'Malignancy Probability';
-        c.Label.FontSize = 10;
-        c.Label.FontWeight = 'bold';
-        c.Limits = [0,1];
-        title(figTitle)
-        set(gcf,'Visible','on');
-        
-        if exist('coordinates', 'var') && ~isempty(coordinates)
-            hold on
-            for i = 1:size(coordinates, 1)
-                x = coordinates(i,1);
-                y = coordinates(i,2);
-                if (curves(i) == 1) 
-                    plot(x, y,'rd', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
-                else 
-                    plot(x, y,'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+            c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
+            c.Label.String = 'Malignancy Probability';
+            c.Label.FontSize = 10;
+            c.Label.FontWeight = 'bold';
+            c.Limits = [0,1];
+            title(titleCur)
+            set(gcf,'Visible','on');
+
+            if exist('coordinates', 'var') && ~isempty(coordinates)
+                hold on
+                for i = 1:size(coordinates, 1)
+                    x = coordinates(i,1);
+                    y = coordinates(i,2);
+                    if (curveCur(i) == 1) 
+                        plot(x, y,'rd', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+                    else 
+                        plot(x, y,'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+                    end
                 end
+                hold off
             end
-            hold off
         end
-
+        
     case 'classificationPerformance'
 %% Plot classification performance comparison %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -648,6 +659,43 @@ switch plotType
          xlabel('Wavelength (nm)', 'FontSize', 12);
          plotName = fullfile(saveOptions.savedir,'Importance', 'featimp');
 
+    case 'classificationPerformanceBars'
+%% Plot bar performance %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        if (saveInBW)
+            color(1,:)=HInt2RGB(1,100); % red, darkest 
+            color(2,:)=HInt2RGB(3,64); % green, less dark 
+            color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
+        else 
+            color = hsv(3);
+            %color = flip(color);
+        end
+            
+        if contains(figTitle, 'classifier')
+            legTitle = 'Classifier';
+            cs = {'SVM', 'KNN', 'RF'};
+            plotName = fullfile(saveOptions.savedir, 'bar_auc_class');
+        elseif contains(figTitle, 'fixing')
+            legTitle = 'Tissue';
+            cs = {'Fixed', 'Unfixed', 'Mixed'};
+            plotName = fullfile(saveOptions.savedir, 'bar_auc_input');
+        end
+        
+        b = bar(categorical(lineNames), performance, 'FaceColor', 'flat');
+        for k = 1:length(cs)
+            b(k).CData = color(k,:);
+        end
+        title('Cross Validated AUC', 'FontSize', 15);
+        hleg = legend(cs, 'FontSize', 12);
+        htitle = get(hleg,'Title');
+        set(htitle,'String',legTitle)
+        ax = gca;
+        ax.FontSize = 11; 
+        ylim([0.5, 1]);
+        xlabel('Feature Vector', 'FontSize', 12);
+        ylabel('ROC AUC', 'FontSize', 12);
+
+        
     otherwise 
         error('Unsupported plot');
 end
