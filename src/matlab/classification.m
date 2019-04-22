@@ -5,6 +5,8 @@ saveOptions.plotName = '';
 saveOptions.saveInHQ = false;
 
 filename = fullfile('macroMSI-processing', 'logs', '2019-04-15 03_32.log');
+filename = fullfile('macroMSI-processing', 'logs', 'Classification_v2_log.txt');
+
 res = delimread(filename, ',', 'raw');
 res = res.raw;
 %filename = fullfile('..', '..', '..', 'output', 'saitama_v7_min_region_e', 'classification.xlsx');
@@ -82,8 +84,8 @@ for i  = 1:length(classifier)
     end
 end  
 [acc_s, id1] = sort(acc, 'descend');
-class_s = cellfun(@(w,x,y) strrep(strjoin({w,x,y}, '|'), '_', ' ' ),...
-    classifier(id1), featureSet(id1), inputSet(id1), 'uni', 0);
+class_s = cellfun(@(w,x,y,z) strrep(strjoin({w,x,y,z}, '|'), '_', ' ' ),...
+    classifier(id1), featureSet(id1), inputSet(id1), dimred(id1), 'uni', 0);
 
 % auc_s = auc(id1);
 % figure(5);
@@ -107,6 +109,7 @@ class_s = cellfun(@(w,x,y) strrep(strjoin({w,x,y}, '|'), '_', ' ' ),...
 % plotClassificationPerformance(9, auc(acceptedId), acc(acceptedId), inputSet(acceptedId), fullfile(savedir, 'InputSet'));
 % plotClassificationPerformance(10, auc(acceptedId), acc(acceptedId),  {classifier(acceptedId), featureSet(acceptedId) }, fullfile(savedir, 'Classifier+Features'));
 
+saveOptions.saveImages = false;
 barAccInfo = zeros(4,3);
 lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
 cs = {'SVM', 'KNN', 'RF'};
@@ -119,6 +122,8 @@ end
 
 plots('classificationPerformanceBars', 11, [], 'classifier', 'LineNames', lbps, 'Performance', barAccInfo, 'SaveOptions', saveOptions);
 
+r = 1
+
 barAccInfo = zeros(4,3);
 lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
 cs = {'fixed', 'unfixed', 'mixed'};
@@ -129,6 +134,19 @@ for ii = 1:4
     end
 end
 plots('classificationPerformanceBars', 12, [], 'fixing', 'LineNames', lbps, 'Performance', barAccInfo, 'SaveOptions', saveOptions);
+
+% r = 2
+% 
+% barAccInfo = zeros(4,3);
+% lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
+% cs = {'SVM', 'KNN', 'RF'};
+% for ii = 1:4
+%     for jj = 1:3
+%         [maxAuc, maxAcc] = findMaxContaining(acc, auc, class_s, lbps{ii}, cs{jj});
+%         barAccInfo(ii, jj) = maxAuc;       
+%     end
+% end
+% plots('classificationPerformanceBars', 13, [], 'fixing', 'LineNames', lbps, 'Performance', barAccInfo, 'SaveOptions', saveOptions);
 
 function [] = plotClassificationPerformance(fig, aucVal, accVal, grouping, plotName)
 figure(fig);
@@ -172,10 +190,11 @@ function [maxAuc, maxAcc] = findMaxContaining(auc, acc, class_s, condition1, con
     if strcmp(condition2, 'xed')
         condition2 = strcat('|', condition2);
     end
+    
     condIds = find(contains(class_s, condition1) & contains(class_s, condition2));
     auc_cond = auc(condIds);
     [maxAuc, maxId] = max(auc_cond);
     acc_cond = acc(condIds);
     maxAcc = acc_cond(maxId);
-    fprintf('%s and %s: acc %.3f and auc %.3f \n', condition1, condition2, maxAcc, maxAuc);
+    fprintf('%s: acc %.3f and auc %.3f \n', class_s{condIds(maxId)}, maxAcc, maxAuc);
 end
