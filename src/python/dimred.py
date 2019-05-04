@@ -94,20 +94,23 @@ def plot_feature_importance(features, importances, indices, title):
 	plt.yticks(range(len(indices)), [features[i] for i in indices])
 	plt.xlabel('Relative Importance')
 	plt.show()
+	print(out_dir)
+	print(range(len(indices)), [features[i] for i in indices])
+	print(importances[indices])
 	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
 
 def get_dimred(method, components=2):
 	if method == 'RF':		
 		##################RandomForest########
-		dimred_obj = RandomForestRegressor(random_state=1, max_depth=10, n_estimators=10)
+		dimred_obj = RandomForestRegressor(random_state=2, max_depth=10, n_estimators=10)
 
 	elif method == 'PCA': 
 		##################PCA#################
-		dimred_obj = PCA(n_components=components)
+		dimred_obj = PCA(n_components=components, random_state=2)
 
 	elif method == 'SVD': 
 		##################SVD########
-		dimred_obj = TruncatedSVD(n_components=components, random_state=42)
+		dimred_obj = TruncatedSVD(n_components=components, random_state=2)
 
 	elif method == 'FA':
 		##################FactorAnalysis########
@@ -115,7 +118,7 @@ def get_dimred(method, components=2):
 
 	elif method == 'ICA':
 		##################ICA########
-		dimred_obj = FastICA(n_components=components, random_state=1, max_iter=500, tol=0.01)
+		dimred_obj = FastICA(n_components=components, random_state=2, max_iter=500, tol=0.1)
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
@@ -132,6 +135,9 @@ def get_dimred(method, components=2):
 	elif method == 'QDA':
 		##################QDA#################
 		dimred_obj = QDA()
+
+	elif method == 'None':
+		dimred_obj = None
 
 	else:
 		print(method, ' not implemented.')
@@ -221,6 +227,9 @@ def dimension_reduction(data, data_labels, method=None, show_figures=False, comp
 		data_transformed = np.array([[x] for x in fitted_dimred.decision_function(data)])
 		plot_da(data_transformed, data_labels, 'Quadratic Discriminant Analysis' + '(' + name + ')')
 
+	elif method == 'None':
+		fitted_dimred = None
+		data_transformed = data
 	else:
 		print(method, ' not implemented.')
 		return
@@ -258,6 +267,7 @@ def compare_dimension_reduction(data, labels, show_figures=False, name=''):
 # current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_measured_spectra(), dh.get_labels(), scaler)
 # print('Subset contains ', len(current_labels), ' observations')
 
-# compare_dimension_reduction(current_data, current_labels, True, 'measured')
+#compare_dimension_reduction(dh.get_measured_spectra(),  dh.get_measured_spectra(), True, 'measured')
+#dimension_reduction(dh.get_measured_spectra(), dh.get_measured_spectra(), 'RF', True, 2, 'measured')
 
 
