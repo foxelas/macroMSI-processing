@@ -118,8 +118,8 @@ if isempty(haxes) || ~ishandle(haxes)
             cmap = jet(cmapSize);
         end
     end
-    colormap(cmap);
 end
+colormap(cmap);
 
 % To have a grayscale background, replicate image to 3-channels
 B = repmat(mat2gray(double(B),double(climB)),[1,1,3]);

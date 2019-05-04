@@ -21,10 +21,7 @@ switch filename
     case 'matfileout'
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
         directory = fileparts(dirCurrentName);
-%         if ~exist(directory, 'dir')
-%             mkdir(directory);
-%             addpath(directory);
-%         end
+        mkdir_custom(directory);
         
     case 'action detail'
         [~, currentName] = generateName(options, 'current', idx);
@@ -67,19 +64,14 @@ switch filename
         [~, currentName] = generateName(options, 'current', idx);
         dirCurrentName = fullfile(options.saveOptions.savedir, 'Cropped', currentName);
         directory = fileparts(dirCurrentName);
-        if ~exist(directory, 'dir')
-            mkdir(directory);
-            addpath(directory);
-        end
+        mkdir_custome(directory);
 
     case 'plot'
         [~, currentName] = generateName(options, 'current', idx);
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, currentName);
         directory = fileparts(dirCurrentName);
-        if ~exist(directory, 'dir')
-            mkdir(directory);
-            addpath(directory);
-        end
+        mkdir_custom(directory);
+
     case 'input'
         dirCurrentName = fullfile('..', '..', '..', 'input');
         
@@ -89,10 +81,8 @@ switch filename
     otherwise
         dirCurrentName = fullfile(options.saveOptions.savedir, options.action, filename);
         directory = fileparts(dirCurrentName);
-        if ~exist(directory, 'dir')
-            mkdir(directory);
-            addpath(directory);
-        end
+        mkdir_custome(directory);
+
 end
 
 end

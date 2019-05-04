@@ -1,32 +1,23 @@
 function [] = plots(plotType, varargin)
-%PLOTS Each time plots an informative plot based on 'plotType'
+%% PLOTS Each time plots an informative plot based on 'plotType'
 %
-%Syntax:
+% Syntax:
 %   plots(plotType, 1, curves, 'leftcamera23')
-%
-%Available plots:
-%'sensitivity',
-%'illuminationAndSensitivity'
-%'illumination'
-%'estimationComparison'
-%'allEstimations'
-%'singlemeasurement'
-%'d65'
-%'methodErrors'
+% Additional (Name,Value) arguments are available
 
 %%%%%%%%%%%%%%%%%%%%%%%%Initialize%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 p = inputParser;
 defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
-    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual'})));
+    'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual','classificationPerformance', 'lbp', ...
+    'normSensitivity', 'featureImportance', 'classificationPerformanceBars'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
-addOptional(p, 'name', '', @(x) ischar(x));
+addOptional(p, 'title', '', @(x) ischar(x));
 addParameter(p, 'Wavelength', []);
 addParameter(p, 'Sensitivity', []);
 addParameter(p, 'Illumination', []);
-addParameter(p, 'Method', '', @(x) ischar(x));
 addParameter(p, 'Fc', defaultfc);
 addParameter(p, 'PlotName', [], @(x) ischar(x));
 addParameter(p, 'LineNames', {});
@@ -39,20 +30,20 @@ addParameter(p, 'Image', []);
 addParameter(p, 'Coordinates', []);
 addParameter(p, 'Performance', []);
 addParameter(p, 'FoldPerformance', []);
-addParameter(p, 'Title', []);
 addParameter(p, 'Cmap', 'jet');
 addParameter(p, 'Overlay', []);
+addParameter(p, 'AdditionalImage', []);
 addParameter(p, 'Alpha', 0.5);
+addParameter(p, 'saveInBW', false);
 
 parse(p, plotType, varargin{:});
 plotType = p.Results.plotType;
 fig = p.Results.fig;
 curves = p.Results.curves;
-name = p.Results.name;
+figTitle = p.Results.title;
 sensitivity = p.Results.Sensitivity;
 wavelength = p.Results.Wavelength;
 illumination = p.Results.Illumination;
-method = p.Results.Method;
 fc = p.Results.Fc;
 plotName = p.Results.PlotName;
 lineNames = p.Results.LineNames;
@@ -65,10 +56,11 @@ I = p.Results.Image;
 coordinates = p.Results.Coordinates;
 performance = p.Results.Performance;
 foldPerformance= p.Results.FoldPerformance;
-figTitle = p.Results.Title;
 cmap = p.Results.Cmap;
 overlay = p.Results.Overlay;
+I2 = p.Results.AdditionalImage;
 alpha = p.Results.Alpha;
+saveInBW = p.Results.saveInBW;
 
 if fig < 0
     figure;
@@ -83,98 +75,90 @@ if ~isempty(saveOptions)
     saveInHQ = saveOptions.saveInHQ;
 else
     savePlot = false;
+    saveInHQ = false;
 end
 
-if ~isempty(lineNames)
-    lineNames = cellfun(@(x) strrep(x, '_', ' '), lineNames, 'un', 0);
-end
-if ~isempty(name)
-    name = strrep(name, '_', ' ');
-end
-if ~isempty(method)
-    method = strrep(method, '_', ' ');
-end
+if ~isempty(figTitle);  figTitle = strrep(figTitle, '_', ' '); end
 
 w = warning('off', 'all');
 switch plotType
-    case 'sensitivity'     
-        %% Plot camera sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        sensitivityN = size(sensitivity, 2);
-        hold on;
-        for j = 1:sensitivityN
-            plot(wavelength, sensitivity(:, j));
-        end
-        hold off;
-        title('Camera Sensitivities');
-        xlabel('Wavelength \lambda (nm)');
-        ylabel('Sensitivity');
-        xlim([400, 700]);
-        if (sensitivityN == 7)
-            fnames = cellstr(num2str(defaultfc'));
-        else
-            fnames = {'red channel'; 'green channel'; 'blue channel'};
-        end
-        legend(fnames)
-        % End Plot camera sensitivity
-        
-    case 'illuminationAndSensitivity'     
-        %% Plot illumination and sensitivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case {'sensitivity', 'normSensitivity', 'illumination', 'illuminationAndSensitivity'}
+%% Plot camera sensitivity and illumination %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %{
             % Arguments  ( wavelength, bandWavelength, illumination )
             % wavelength: 401x1 or 81x1
             % bandWavelength: the names of the bands
             % illumination: the illumination light 401x7
         %}
-        cl = colormap(lines);
         yyaxis left;
-        hold on;
-        for j = 1:numel(fc)
-            plot(wavelength, illumination(:, j), 'DisplayName', ['illum', num2str(fc(j)), ' nm'], 'LineStyle', '-', 'Marker', 'none', 'Color', cl(j, :));
+        if contains(lower(plotType), 'sensitivity')
+            sensitivityN = size(sensitivity, 2);
+            if (saveInBW)
+                color(1,:)=HInt2RGB(1,100); % red, darkest 
+                color(2,:)=HInt2RGB(3,64); % green, less dark 
+                color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
+            else 
+                color = hsv(3);
+                %color = flip(color);
+            end
+
+            if strcmp(plotType, 'normSensitivity'); n  = max(sensitivity(:)); else; n = 1; end
+            
+            hold on;
+            if (sensitivityN == 7)
+                fnames = cellstr(num2str(defaultfc'));
+            else
+                fnames = {'red channel'; 'green channel'; 'blue channel'};
+            end
+            for j = 1:sensitivityN
+                plot(wavelength, sensitivity(:, j) / n, 'Color', color(j,:), 'LineWidth', 4, 'DisplayName', fnames{j});
+            end
+            hold off;
+            if strcmp(plotType, 'normSensitivity'); ylabel('Normalized Sensitivity'); else; ylabel('Sensitivity'); end     
+            xlabel('Wavelength \lambda (nm)');
         end
-        hold off;
-        title('Luminous intensity');
-        xlabel('Wavelength \lambda (nm)');
-        ylabel('Luminous Intensity (cd/m^2)');
         
-        yyaxis right;
-        sensitivityN = size(sensitivity, 2);
-        if (sensitivityN == 7)
-            fnames = cellstr(num2str(defaultfc'));
-        else
-            fnames = {'red channel'; 'green channel'; 'blue channel'};
+        if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination')); yyaxis right; end
+
+        if contains(lower(plotType), 'illumination')
+            if (saveInBW)
+                color(7,:)=HInt2RGB(1,100); % red, darkest 
+                color(6,:)=HInt2RGB(7,82); % cyan, less dark 
+                color(5,:)=HInt2RGB(3,64); % green, less dark 
+                color(4,:)=HInt2RGB(5,53); %
+                color(3,:)=HInt2RGB(9,46); % magenta, less dark 
+                color(2,:)=HInt2RGB(2,28); % orange, less dark 
+                color(1,:)=HInt2RGB(7,10); % blue cyan, lightest
+            else 
+                color = jet(7);
+            end
+
+            hold on;
+            for j = 1:numel(fc)
+                plot(wavelength, illumination(:, j), 'DisplayName', [I, '_', num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
+            end
+            plot(wavelength, illumination(:,8), 'DisplayName', 'white light', 'LineStyle', ':', 'LineWidth', 3);
+            hold off;
+            xlabel('Wavelength \lambda (nm)');
+            ylabel('Luminous Intensity (cd/m^2)');
         end
-        hold on;
-        for j = 1:sensitivityN
-            plot(wavelength, sensitivity(:, j), 'DisplayName', ['sens', fnames{j}, 'nm'], 'LineWidth', 2, 'LineStyle', '-', 'Marker', 'none', 'Color', cl(j+numel(fc), :));
+        
+        if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination'))
+            title('Overlap of illumination and camera sensitivity spectrum')
+        elseif contains(lower(plotType), 'normsensitivity') 
+            title('Normalized Camera Sensitivities');
+        elseif contains(lower(plotType), 'sensitivity') 
+            title('Camera Sensitivities');
+        elseif contains(lower(plotType), 'illumination') 
+            title('Luminous intensity');
         end
-        hold off;
-        ylabel('Camera sensitivity');
-        xlim([400, 700]);
-        title('Overlap of illumination and camera sensitivity spectrum')
+
+        xlim([400, 700]);  
         legend;
-        
-        %End Plot illumination and sensitivity
-        
-    case 'illumination'
-        %% Plot illumination%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                     
-        % Arguments ( wavelength, fc, illumination )
-        % wavelength: 401x1 or 81x1
-        % fc: central frequencies of the bands (string cell )
-        % illumination: the illumination light 401x7
-        hold on;
-        for j = 1:numel(fc)
-            plot(wavelength, illumination(:, j), 'DisplayName', [num2str(fc(j)), ' nm']);
-        end
-        hold off;
-        legend;
-        xlim([400, 700]);
-        title('Luminous intensity');
-        xlabel('Wavelength \lambda (nm)');
-        ylabel('Luminous Intensity (cd/m^2)');
+        % End Plot camera sensitivity        
         
     case 'estimationComparison'       
-        %% Plot estimation comparison%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
+%% Plot estimation comparison%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
         %{
             % returns a comparative plot of the estimation curves versus the measured spectrum.
             %wavelength: vector, e.g. 401x1
@@ -189,6 +173,8 @@ switch plotType
         curveN = size(curves, 2);
         if isempty(lineNames)
             lineNames = {'MS center \lambda', 'Measured', 'Est-MSgreen', 'Est-MSrms', 'Est-MSadjusted', 'Est-MSextended', 'Est-RGB'};
+        else
+            lineNames = cellfun(@(x) strrep(x, '_', ' '), lineNames, 'un', 0);
         end
         
         if isempty(markers)
@@ -197,25 +183,23 @@ switch plotType
             end
         end
         
-        if ~exist('MSIreflectances', 'var')
-            plotN = 2;
-        else
-            plotN = 3;
-        end
+        if ~exist('MSIreflectances', 'var'); plotN = 2; else; plotN = 3; end
         
-%         % Set up figure properties:
-%         % Enlarge figure to full screen.
-%         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
+        color = colorcube(curveN+10);         
+        [~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths
         
-        figTitle = sprintf('Sample: %s',name); % sprintf('Sample: %s | Method: %s',name, method);
-        %marker = {'none', 'o', '+', '*', '.', 'none', 'o', '+', '*', '.'};
-        color = colorcube(curveN+10); %color = [ 'b', 'g' , 'k',  'c' , 'y' , 'm'];
-        
-        [~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths.
         subplot(1, plotN, [1, 2]);
         hold on
         for i = 1:curveN
-            plot(wavelength, curves(:, i) .* 100, 'Color', color(i, :), 'Marker', markers{i}, 'LineWidth', 1.3, 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
+            if  contains( lower(lineNames{i + 1}), 'rgb')
+                lineStyle = ':';
+            elseif contains( lower(lineNames{i + 1}), 'measured')
+                lineStyle = '--';
+            else 
+                lineStyle = '-';
+            end
+            plot(wavelength, curves(:, i) .* 100, 'Color', color(i, :), 'Marker', markers{i}, ...
+                'LineWidth', 1.3, 'LineStyle', lineStyle, 'DisplayName', lineNames{i + 1}); % plot estimated reflectances
         end
         plot(wavelength(peakIdx), curves(peakIdx, 1) .* 100, 'rx', 'DisplayName', lineNames{1}, 'LineWidth', 1.3); % plot measured reflectance
         hold off
@@ -223,7 +207,8 @@ switch plotType
         xlabel('Wavelength \lambda (nm)');
         ylabel('Reflectance %');
         xlim([400, 700]);
-        title({'Comparative plot of Wiener estimation results', figTitle});
+        figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
+        title(figTitle);
         legend({lineNames{2:(curveN+1)}, lineNames{1}}, 'Location', 'best', 'FontSize', 12); % 'Orientation','horizontal');
         
         if (plotN > 2)
@@ -241,7 +226,7 @@ switch plotType
         % End Plot estimation comparison
         
     case 'allEstimations'       
-        %% plots all estimated curves for all pixels in an image area%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% plots all estimated curves for all pixels in an image area%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hold on
         for i = 2:length(curves) - 1
             plot(wavelength, curves(i, :), 'm');
@@ -251,7 +236,7 @@ switch plotType
         hold off
         
         figTitle = {sprintf('Comparative plot of Wiener estimation results for a pixel area '); ...
-                    sprintf('Sample %s', name)}; %sprintf('Sample %s with %s smoothing matrix ', name, method)};
+                    sprintf('Sample %s', figTitle)}; %sprintf('Sample %s with %s smoothing matrix ', name, method)};
         figTitle = strrepAll(figTitle);
         title(figTitle);
         xlabel('Wavelength \lambda (nm)');
@@ -259,20 +244,9 @@ switch plotType
         legend(h1, {'Measured reflectance'});
         legend(h2, {'Estimated reflectance'});
         % end plots all estimated curves for all pixels in an image area
-        
-    case 'singlemeasurement'       
-        %% plot single measurement %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        hold on
-        plot(wavelength, curves, 'DisplayName', strrep(lineNames, '_', ' '), 'Color', 'm')
-        xlabel('wavelength (nm)');
-        ylabel('Reflectance ratio');
-        title('Reflectance spectrum of a point object');
-        xlim([400, 700]);
-        hold off
-        %end plot single measurement
-        
+             
     case 'd65'      
-        %% plot d65 illumination %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% plot d65 illumination %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         [lambda, illum] = illuminant('d65');
         plot(lambda, illum/max(illum), 'm', 'LineWidth', 2);
         xlabel('wavelength (nm)')
@@ -282,8 +256,8 @@ switch plotType
         %end plot d65 illumination
               
     case 'methodErrors'     
-        %% plot method errors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if contains(name, 'nmse', 'IgnoreCase', true)
+%% plot method errors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        if contains(figTitle, 'nmse', 'IgnoreCase', true)
             avge = [errors.avgrmse];
             maxe = [errors.maxrmse];
             mine = [errors.minrmse];
@@ -297,21 +271,21 @@ switch plotType
             labely = 'RMSE';
         end
         
-        if contains(name, 'System') 
+        if contains(figTitle, 'System') 
             pvsms = unique({errors.pixelValueSelectionMethod}, 'stable');
         end
         
-        if contains(name, 'Noise') 
+        if contains(figTitle, 'Noise') 
             pvsms = unique({errors.noiseType}, 'stable');
         end
         
-        if contains(name, 'Matrix')
+        if contains(figTitle, 'Matrix')
             smms = unique({errors.smoothingMatrixMethod}, 'stable');
         end 
         labelx = 'Wiener estimation variation';
 
         
-        marker = ['o', 's', 'd', '^', '*', 'h', 'p', 'v', '<', '+', '>'];
+        marker = ['o', 's', 'd', '^', '*', 'h', 'p', 'v', '<', '+', '>','o', 's', 'd', '^', '*'];
         if ((length(smms) > 1) && (length(pvsms) > 1))
             pvsmColor = parula(length(pvsms)+1);
             pvsmColor = pvsmColor(1:length(pvsms),:);
@@ -326,15 +300,15 @@ switch plotType
         for i = 1:length(pvsms)
             h(i) = plot([NaN, NaN], 'Color', pvsmColor(i, :), 'Marker', marker(i), 'DisplayName', pvsms{i});
         end
-        if contains(name, 'avg', 'IgnoreCase', true)
+        if contains(figTitle, 'avg', 'IgnoreCase', true)
             i = i + 1;
             h(i) = plot([NaN, NaN], 'ko', 'DisplayName', 'Mean and Std');
         end
-        if contains(name, 'max', 'IgnoreCase', true)
+        if contains(figTitle, 'max', 'IgnoreCase', true)
             i = i + 1;
             h(i) = plot([NaN, NaN], 'k-.', 'DisplayName', 'Max value');
         end
-        if contains(name, 'min', 'IgnoreCase', true)
+        if contains(figTitle, 'min', 'IgnoreCase', true)
             i = i + 1;
             h(i) = plot([NaN, NaN], 'k:', 'DisplayName', 'Min value');
         end
@@ -342,14 +316,15 @@ switch plotType
         
         for i = 1:length(pvsms)
             for j = 1:length(smms)
-                if contains(name, 'avg', 'IgnoreCase', true)
-                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j) ./ size(stde,2) , 'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
+                if contains(figTitle, 'avg', 'IgnoreCase', true)
+                    errorbar(j, avge((i - 1)*length(smms)+j), stde((i - 1)*length(smms)+j) ./ size(stde,2) , ...
+                        'Color', pvsmColor(i, :), 'LineWidth', 1, 'Marker', marker(i), 'MarkerSize', 10);
                 end
             end
-            if contains(name, 'max', 'IgnoreCase', true)
+            if contains(figTitle, 'max', 'IgnoreCase', true)
                 plot(1:length(smms), maxe, 'Color', pvsmColor(i, :), 'LineStyle', '-.');
             end
-            if contains(name, 'min', 'IgnoreCase', true)
+            if contains(figTitle, 'min', 'IgnoreCase', true)
                 plot(1:length(smms), mine, 'Color', pvsmColor(i, :), 'LineStyle', ':');
             end
         end
@@ -372,7 +347,7 @@ switch plotType
         %end  plot method errors
                
     case 'classificationErrors'       
-        %% Classication errors%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Classication errors%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         n = min(20, length(errors));
         accuracy = [errors(1:n).Accuracy];
         typeI = [errors(1:n).TypeI];
@@ -398,12 +373,11 @@ switch plotType
         legend('Accuracy', 'False positive rate', 'False negative rate', 'Location', 'best')
         ylabel('Classification Accuracy')
         title(strcat('Classification results (', errors(i).Validation, ' validation)'));
+                
+    case {'PCA', 'LDA', 'PCA b', 'LDA b', 'PCALDA'}     
+%% plot discriminant analysis results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        
-    case {'pca', 'lda', 'pca b', 'lda b', 'pcalda'}     
-        %% plot discriminant analysis results%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        if strcmp(plotType, 'pca') && ~isempty(latent) && ~isempty(explained)
+        if strcmp(plotType, 'PCA') && ~isempty(latent) && ~isempty(explained)
             subplot(1, 3, 1);
             plot(1:length(latent), latent, '-mx');
             xlabel('Sorted eigenvalue index');
@@ -432,7 +406,7 @@ switch plotType
         h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Benign');
         hold off
         
-        if contains(name, 'Fix', 'IgnoreCase', true)
+        if contains(figTitle, 'Fix', 'IgnoreCase', true)
             hold on
             h(3) = plot([NaN, NaN], 'Color', 'k', 'Marker', marker(1), 'DisplayName', 'Fixed');
             h(4) = plot([NaN, NaN], 'Color', 'k', 'Marker', marker(2), 'DisplayName', 'Unfixed');
@@ -442,7 +416,7 @@ switch plotType
             markers(idx) = marker(2);
         end
         
-        if contains(name, 'Sample', 'IgnoreCase', true)
+        if contains(figTitle, 'Sample', 'IgnoreCase', true)
             markers = repmat(marker(1), observations, 1);
             samples = unique(sample, 'stable');
             for i = 1:length(samples)
@@ -479,13 +453,25 @@ switch plotType
         
         legend(h, 'Location', 'best');
         set(gcf, 'Position', get(0, 'Screensize'));
-        % End plot discriminant analysis results 
         saveInHQ = true;
         
-    case 'cropped'
-        %% Show cropped section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case 'segmentation'
+%% Plot Segmentation results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        h1 = subplot(1,2,1);
+        clf(h1)
+        imoverlay_medical(rgb2gray(I), overlay, [], [], 'hot', [], h1);
+        c = colorbar('location', 'westoutside','Ticks', linspace(0,1,5), 'TickLabels', linspace(0,100,5));
+        c.Label.String = 'Channel Agreement (%)';
+        c.Label.FontSize = 15;
+        c.Label.FontWeight = 'bold';
+        c.Limits = [0,1];
+        figTitle = strjoin({'Channel ROI masks for sample', strrepAll(plotName)}, ' ');
+        title(figTitle, 'FontSize', 15)
+        
+        h2 = subplot(1,2,2);
         colors = jet(size(coordinates,1));
-        imshow(I);
+        imshow(I2);
         hold on
         for i = 1:size(coordinates, 1)
             x = coordinates(i,1);
@@ -493,31 +479,11 @@ switch plotType
             plot(x, y, '*', 'LineWidth', 2, 'MarkerSize', 7, 'MarkerFaceColor', colors(i,:));
         end
         hold off
-        figTitle = strrepAll(strcat('Cropped area of ', plotName));
-        title(figTitle);
-        
-    case 'segmentation'
-        %% Show segmentation images %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % Colors defined from https://academo.org/demos/wavelength-to-colour-relationship/
-        bandColors = [  0,70,255   ; 
-                0,146,255  ;
-                0,255,84   ;
-                74,255,0   ;
-                240,255,0  ;
-                255,173,0  ;
-                255,79,0   ;
-                255,255,255
-              ];
-        bandColors = bandColors./255;
-        colormap(bandColors);
-        imshow(I);
-        c = colorbar('location','southoutside', 'Ticks', linspace(0,1,9),...
-             'TickLabels',{'450','465','505','525','575','605', '630', 'All', ''});
-        c.Label.String = 'Respective MSI band (nm)';
-        figTitle = strrepAll(strcat('Segmented area of ', plotName));
-        title(figTitle);
+        figTitle = strjoin({'Final ROI of sample', strrepAll(plotName)}, ' ');
+        title(figTitle, 'FontSize', 15);
         plotName = strcat(plotName, '_segments');
-        
+        set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
+                
     case 'roc'
         %% Show ROC performance of classifier %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         c = colormap(lines);    
@@ -544,8 +510,36 @@ switch plotType
         title(figTitle);
         set(gcf, 'Position', get(0, 'Screensize'));
         
-    case 'performanceComparison'
+    case 'LBP'
+%% Plot LBP values on image %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        h1 = subplot(1,2,1);
+        im = imagesc(imrotate(I,90));
+        colormap('hot');
+        im.AlphaData = .8;
+        c = colorbar;
+        axis off;
+        c.Label.FontSize = 20;
+        c.Label.FontWeight = 'bold';
+        c.Label.String = 'Normalized Texture Descriptor Value';
+        title('Conventional LBP descriptor values for RGB','FontSize', 20);
+        set(gcf, 'Position', get(0, 'Screensize'));
         
+        h2 = subplot(1,2,2);
+        im = imagesc(imrotate(I2,90));
+        colormap('hot');
+        im.AlphaData = .8;
+        c = colorbar;
+        axis off;
+        c.Label.FontSize = 20;
+        c.Label.FontWeight = 'bold';
+        c.Label.String = 'Normalized Texture Descriptor Value';
+        title('SumLBP descriptor values for MSI','FontSize', 20);
+        set(gcf, 'Position', get(0, 'Screensize'));
+
+    case 'performanceComparison'
+%% Performace comparison for classifiers%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
         N = length(lineNames);
         x = 1:N;
         auc = performance(1,:)';
@@ -573,6 +567,8 @@ switch plotType
         set(gcf, 'Position', get(0, 'Screensize'));
 
     case 'visual'
+%% Visualization of malignancy score %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        titles = {'Malignancy Probability','Ground Truth'};      
         cmapSize = 100; % default size of 60 shows visible discretization
         if ischar(cmap)
 
@@ -588,29 +584,120 @@ switch plotType
         clf(gcf);
         axes(gcf);
 
-        hB = imagesc(I);axis image off;
-        climF = [min(overlay(:)), max(overlay(:))];
+        for ploti=1:2 
+            subplot(1,2,ploti);
+            
+            Icur = I{ploti};
+            overlayCur = overlay{ploti};
+            titleCur = titles{ploti};
+            curveCur = curves{ploti};
+       
+            hB = imagesc(Icur);axis image off;
+            climF = [min(overlayCur(:)), max(overlayCur(:))];
 
-        % Add the front image on top of the back image
-        hold on;
-        hF = imagesc(overlay,climF);
+            % Add the front image on top of the back image
+            hold on;
+            hF = imagesc(overlayCur); %, climF);
 
-        % If images are different sizes, map the front image to back coordinates
-        set(hF,'XData',get(hB,'XData'),...
-            'YData',get(hB,'YData'))
+            % If images are different sizes, map the front image to back coordinates
+            set(hF,'XData',get(hB,'XData'),...
+                'YData',get(hB,'YData'))
 
-        % Make the foreground image transparent
-        alphadata = alpha.*(overlay > climF(1));
-        set(hF,'AlphaData',alphadata);
+            % Make the foreground image transparent
+            alphadata = alpha.*(overlayCur > climF(1));
+            set(hF,'AlphaData',alphadata);
 
-        c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
-        c.Label.String = 'Malignancy Probability';
-        c.Label.FontSize = 10;
-        c.Label.FontWeight = 'bold';
-        c.Limits = [0,1];
-        title(figTitle)
-        set(gcf,'Visible','on');
+            c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
+            c.Label.String = 'Malignancy Probability';
+            c.Label.FontSize = 10;
+            c.Label.FontWeight = 'bold';
+            c.Limits = [0,1];
+            title(titleCur)
+            set(gcf,'Visible','on');
 
+            if exist('coordinates', 'var') && ~isempty(coordinates)
+                hold on
+                for i = 1:size(coordinates, 1)
+                    x = coordinates(i,1);
+                    y = coordinates(i,2);
+                    if (curveCur(i) == 1) 
+                        plot(x, y,'rd', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+                    else 
+                        plot(x, y,'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+                    end
+                end
+                hold off
+            end
+        end
+        
+    case 'classificationPerformance'
+%% Plot classification performance comparison %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        grouping = lineNames;
+        aucVal = performance(1,:)';
+        accVal = performance(2,:)';
+        if (size(grouping,2) > 1) 
+            gscatter(aucVal, accVal, grouping, 'rrrrcccc','.*^x+', [10, 10]);
+        else 
+            gscatter(aucVal, accVal, grouping, 'rbgck', '.x', 10);
+        end
+        xlabel('AUC');
+        ylabel('Accuracy');
+        title('Perfomance of Top Classifiers', 'FontSize', 15)
+        legend('Location','northeastoutside')
+        ylim([0.7, 0.9])
+        xlim([0.7, 0.9])
+
+    case 'featureImportance'
+%% Plot important features %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+         features = categorical({'760', '635', '620', '650', '645', '655', '665', '625', '660'});
+         importance = [0.02170081 0.03423029 0.04734384 0.07019354 0.08864051 0.1096366 0.13921365 0.14391144 0.17794282];
+         bar(features, importance);
+         title('Top 10 Important Wavelengths', 'FontSize', 15);
+         ylabel('Relative Importance', 'FontSize', 12);
+         xlabel('Wavelength (nm)', 'FontSize', 12);
+         plotName = fullfile(saveOptions.savedir,'Importance', 'featimp');
+
+    case 'classificationPerformanceBars'
+%% Plot bar performance %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        if (saveInBW)
+            color(1,:)=HInt2RGB(1,100); % red, darkest 
+            color(2,:)=HInt2RGB(3,64); % green, less dark 
+            color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
+        else 
+            color = hsv(3);
+            %color = flip(color);
+        end
+            
+        if contains(figTitle, 'classifier')
+            legTitle = 'Classifier';
+            cs = {'SVM', 'KNN', 'RF'};
+            plotName = fullfile(saveOptions.savedir, 'bar_auc_class');
+        elseif contains(figTitle, 'fixing')
+            legTitle = 'Tissue';
+            cs = {'Fixed', 'Unfixed', 'Mixed'};
+            plotName = fullfile(saveOptions.savedir, 'bar_auc_input');
+        end
+        
+        b = bar(categorical(lineNames), performance, 'FaceColor', 'flat');
+        for k = 1:length(cs)
+            b(k).CData = color(k,:);
+        end
+        title('Cross Validated AUC', 'FontSize', 15);
+        hleg = legend(cs, 'FontSize', 12);
+        htitle = get(hleg,'Title');
+        set(htitle,'String',legTitle)
+        ax = gca;
+        ax.FontSize = 11; 
+        ylim([0.5, 1]);
+        xlabel('Feature Vector', 'FontSize', 12);
+        ylabel('ROC AUC', 'FontSize', 12);
+
+        
+    otherwise 
+        error('Unsupported plot');
 end
 
 %% SaveImages%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -618,25 +705,33 @@ end
 % Get rid of tool bar and pulldown menus that are along top of figure.
 %set(gcf, 'Toolbar', 'none', 'Menu', 'none');
 
+%set(0, 'CurrentFigure', fig);
+%handle = get(groot,'CurrentFigure');
+
 if (savePlot && ~isempty(plotName))
-    plotName = strrep(plotName, '.mat', '');
-    % plotName = strrep(plotName, ' ', ''); %         plotName = strrep(plotName, '_', '');
-    strIdxs = strfind(plotName, '\');
-    strIdx = strIdxs(end);
-    fn = plotName(1:strIdx);
+    filename = strrep(plotName, '.mat', '');
     
-    if ~exist(fn, 'dir')
-        mkdir(fn);
-        addpath(fn);
-    end
+    [filepath,name,~] = fileparts(filename);
+    filepathBW = fullfile(filepath, 'bw');    
+    mkdir_custom(filepath);
+    mkdir_custom(filepathBW);
+
     
-    set(0, 'CurrentFigure', fig);
     if (saveInHQ)
-        %export_fig(strcat(plotName, '.png') , '-png','-native', '-nocrop');
-        print(fig, strcat(plotName, '.png'), '-dpng', '-r600');
+        filename = fullfile(filepath, strcat(name, '.png'));
+        export_fig(filename , '-png','-native', '-nocrop');
+        %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
     else
-        export_fig(strcat(plotName, '.jpg') , '-jpg');
-        %print(fig, strcat(plotName, '.jpg'), '-djpeg');
+        filename = fullfile(filepath, strcat(name, '.jpg'));
+        export_fig(filename , '-jpg');
+        filename = fullfile(filepath, strcat(name, '.eps'));
+        export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
+        if ~(contains(lower(plotType), 'sensitivity') || contains(plotType, 'illumination')) && ~(saveInBW)
+            filename = fullfile(filepathBW, strcat(name, '.eps'));
+            export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
+        else
+            plots(plotType, fig, [], '', 'Wavelength', wavelength, 'Illumination', illumination, 'Sensitivity', sensitivity, 'SaveOptions', saveOptions, 'saveInBW', true);
+        end
     end
 end
 warning(w);
@@ -651,4 +746,9 @@ function [outname] = strrepAll(inname)
     outname = strrep(outname, '.csv', '');
     outname = strrep(outname, '.mat', '');
 
+end
+
+function [sampleName] = simpleSampleName(name)
+    attr = strsplit(name);
+    sampleName = attr{1};
 end

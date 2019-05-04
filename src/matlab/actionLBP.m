@@ -1,28 +1,41 @@
-%code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
+maxScale = 3;
+RgbLbpFeatures = cell(maxScale, 1);
+ConcatLbpFeatures = cell(maxScale, 1);
+MMLbpFeatures = cell(maxScale, 1);
+SumLbpFeatures = cell(maxScale, 1);
 
-maxScale = 2;
-neighbors = 8;
-mapping=getmapping(neighbors,'riu2');
-
-msibands = 7;
-MultiScaleLbpFeatures = cell(maxScale, 1);
-for scale = 1:maxScale
-    
-    lbpFeatures = zeros(msiN, msibands * 10);
-    for k=1:msiN
-        
-        files = {data([data.MsiID] == ID(k).MsiID).File}; %{data(ID(k).Data).File};   
-        coordinates = [ID(k).Originx; ID(k).Originy];
-        % coordinates = out.newCoordinates(k,:);
-        msi = readMSI(files, coordinates, 5 + scale, 5 + scale, []); 
-        gg = raw2msi(msi, 'adjusted');
-
-        for i = 1:7
-            lbpFeatures(k, (i-1)*10 + (1:10)) = lbp(squeeze(gg(i,:,:)),scale,neighbors,mapping);
-        end
+groups = findgroups([ID.MsiID]);
+for g=1:max(groups)
+    k = find(groups == g,1);
+    files = {data([data.MsiID] == ID(k).MsiID).File}; %{data(ID(k).Data).File};   
+    coordinates = [ID(groups == g).Originx; ID(groups == g).Originy];
+    for lbp_operator = {'MMLBP', 'SumLBP', 'CatLBP', 'LBP'}
+        lbpFeats = getLBPFeatures(lbp_operator, files, coordinates, maxScale);
     end
-    
-    MultiScaleLbpFeatures{scale} = lbpFeatures / max(lbpFeatures(:));
+    if strcmp(lbp_operator, 'LBP')
+        RgbLbpFeatures = addToLBPStruct(RgbLbpFeatures, lbpFeats, find(groups == g), maxScale);
+    elseif strcmp(lbp_operator, 'MMLBP')
+        MMLbpFeatures = addToLBPStruct(MMLbpFeatures, lbpFeats, find(groups == g), maxScale);
+    elseif strcmp(lbp_operator, 'SumLBP')
+        SumLbpFeatures = addToLBPStruct(SumLbpFeatures, lbpFeats, find(groups == g), maxScale);
+    elseif strcmp(lbp_operator, 'CatLBP')
+        ConcatLbpFeatures = addToLBPStruct(ConcatLbpFeatures, lbpFeats, find(groups == g), maxScale);
+    else 
+        disp('Unrecognized LBP method. Aborting...')
+        return      
+    end
 
 end
-save( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'),'MultiScaleLbpFeatures', '-append');
+
+save( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'),'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures','RgbLbpFeatures', '-append');
+
+    
+function [current] = addToLBPStruct(base, lbps, ks, scales)
+    for sc=1:scales
+        for k=1:length(ks)
+            base{sc,1}(ks(k), :) = lbps{sc}(k,:); 
+        end
+    end
+    current = base;
+end
+

@@ -416,8 +416,8 @@ function [] = plotROC(selectedClassifier, options, classifier, dataset, fig, nam
     figTitle = strcat('ROC for [', selectedClassifier.Input,'+', selectedClassifier.Features ,'] dataset.',...
         'Accuracy:', num2str(selectedClassifier.Accuracy), '\pm', num2str(selectedClassifier.AccuracySD));
     options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, name}, '_')); 
-    plots('roc', fig, [], '', 'Performance', selectedClassifier.Performance , 'FoldPerformance', selectedClassifier.FoldPerformance, ...
-        'SaveOptions', options.saveOptions, 'Title', figTitle);
+    plots('roc', fig, [], figTitle, 'Performance', selectedClassifier.Performance , 'FoldPerformance', selectedClassifier.FoldPerformance, ...
+        'SaveOptions', options.saveOptions);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -466,7 +466,7 @@ function [] = compareInputs(groups, classifiers, classifier, options, validation
     
     figTitle = sprintf('%s Classifier Performance for Different Input Datasets', upper(classifier));
     options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareInput'}, '_'));
-    plots('performanceComparison', fig, [], '', 'LineNames', groups, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
+    plots('performanceComparison', fig, [], figTitle, 'LineNames', groups, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions);
     
 end
 
@@ -495,6 +495,6 @@ function [] = compareFeatures(features, classifiers, classifier, options, valida
     
     figTitle = sprintf('%s Classifier Performance for Different Feature Sets', upper(classifier));
     options.saveOptions.plotName = generateName(options, strjoin({classifier, dataset, validation, 'compareFeatures'}, '_'));
-    plots('performanceComparison', fig, [], '', 'LineNames', features, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions, 'Title', figTitle);
+    plots('performanceComparison', fig, [], figTitle, 'LineNames', features, 'Performance', [auc; accur], 'SaveOptions', options.saveOptions);
     
 end

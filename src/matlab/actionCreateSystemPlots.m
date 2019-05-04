@@ -1,9 +1,13 @@
 %% Configuration plots about illumination, sensitivity etc
-options.saveOptions.plotName = strcat(options.saveOptions.savedir, 'illuminationPlot.jpg');
+options.saveOptions.BW = false;
+parts = regexp(options.saveOptions.savedir, '\', 'split'); 
+parts(end) =  [];
+saveDir = fullfile(strjoin(parts, '\'), 'general');
+options.saveOptions.plotName = fullfile(saveDir, 'illuminationPlot');
 plots('illumination', 1, [], '', 'Wavelength', wavelength, 'Illumination', illumination, 'SaveOptions', options.saveOptions);
-options.saveOptions.plotName = strcat(options.saveOptions.savedir, 'sensitivityPlot.jpg');
-plots('sensitivity', 2, [], '', 'Wavelength', wavelength, 'Sensitivity', sensitivity, 'SaveOptions', options.saveOptions);
-options.saveOptions.plotName = strcat(options.saveOptions.savedir, 'illuminationAndSensitivityPlot.jpg');
+options.saveOptions.plotName = fullfile(saveDir, 'sensitivityPlot'); 
+plots('normSensitivity', 2, [], '', 'Wavelength', wavelength, 'Sensitivity', sensitivity, 'SaveOptions', options.saveOptions);
+options.saveOptions.plotName = fullfile(saveDir, 'illuminationAndSensitivityPlot');
 plots('illuminationAndSensitivity', 3, [], '', 'Wavelength', wavelength, 'Illumination', illumination, 'Sensitivity', sensitivity, 'SaveOptions', options.saveOptions);
 % end of Configuration plots about illumination, sensitivity etc
 

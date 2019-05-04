@@ -1,8 +1,9 @@
         %% Reconstruct sRGB from MSI
         
-        for k = [250, 270]
+        for k = [81]
             [~, sampleName] = generateName(options, 'plot', ID(k));
-            g = readMSI({data([data.MsiID] == ID(k).MsiID).File}, [], [], [], [], [0, 450, 465, 505, 525, 575, 605, 630], true);
+            [g , whiteImg ]= readMSI({data([data.MsiID] == ID(k).MsiID).File});
+            figure(5); imshow(whiteImg);
             sRGB = createSRGB(g, 'original', sampleName, ID(k), options);
         end
         

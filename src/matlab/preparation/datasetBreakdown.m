@@ -37,8 +37,8 @@ function [] = datasetBreakdown(ID,options)
     fprintf('Among fixed data:\nNormal: %d, Cancerous: %d\n',  normalFixedCount, cutCount-normalFixedCount);
     fprintf('Among cut data:\nNormal: %d, Cancerous: %d\n',  normalCutCount, cutCount-normalCutCount);
 
-    if exist('options', 'var') && ~isempty(options.savedir)
-        fileID = fopen( fullfile( options.savedir, 'data_count.txt'), 'w');
+    if exist('options', 'var') && ~isempty(options.saveOptions) && ~isempty(options.saveOptions.savedir)
+        fileID = fopen( fullfile( options.saveOptions.savedir, 'data_count.txt'), 'w');
         
         fprintf(fileID,'Breakdown of the dataset:\nTotal: %d, Unfixed: %d, Fixed: %d, Cut: %d\nNormal: %d, Cancerous: %d\n',...
             length(idx), unfixedCount,fixedCount,cutCount,normalCount,cancerCount);
