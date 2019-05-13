@@ -1,5 +1,3 @@
-
-
 targetIndex = 98;
 idd = ID(targetIndex);
 files = {data([data.MsiID] == idd.MsiID).File};    

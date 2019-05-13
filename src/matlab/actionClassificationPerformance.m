@@ -1,83 +1,119 @@
-currentLog = '2019-04-15 03_32.log';
-filename = fullfile('macroMSI-processing', 'logs', '2019-04-15 03_32.log');
-res = delimread(filename, ',', 'raw');
-res = res.raw;
+%filename = fullfile('macroMSI-processing', 'logs', '2019-04-15 03_32.log');
+%filename = fullfile('macroMSI-processing', 'logs', 'Classification_v2.log');
+% filename = fullfile('macroMSI-processing', 'logs', 'Classification_v2_rgb.log');
+filename = fullfile('..', '..', '..', 'output', 'saitama_v7_min_region_e', 'classification_only_spect.csv');
 
-classifier = res(:,1);
-inputSet = res(:,2);
-featureSet = res(:,3);
-dim1 = res(:,4);
-dim1num = res(:,5);
-dim2 = res(:,6);
-dim2num = res(:,7);
-acc = str2double(res(:,8));
-auc = str2double(res(:,9));
+fixing = { 'unfixed','fixed', 'mixed'};
+if contains(filename, 'only_spect')
+    savedir = fullfile('..', '..', '..', 'output', 'saitama_v7_min_region_e', 'ClassifierPerformanceOnlySpect' );
+    lbps = {'spect'};
+    classifiers = {'SVM', 'KNN'}; % , 'LDA' , 'QDA'
+else
+    savedir = fullfile('..', '..', '..', 'output', 'saitama_v7_min_region_e', 'ClassifierPerformance' );
+    lbps = {'spect','spect+CatLBP', 'spect+MMLBP', 'spect+SumLBP'};
+    classifiers = {'SVM', 'KNN', 'RF'};
+end
+saveOptions.savedir = savedir;
+saveOptions.saveImages = true;
+saveOptions.plotName = '';
+saveOptions.saveInHQ = false;
+[tab, dimred, class_s] = ReadClassificationData(filename);
+summary(tab)
 
-acceptedId = [];
-for i  = 1:length(classifier)
-    if strcmp(inputSet(i), 'unique_fixed')
-        inputSet{i} = 'fixed';
-    elseif strcmp(inputSet(i), 'unique_unfixed')
-        inputSet{i} = 'unfixed';
-    else 
-        inputSet{i} = 'mixed';
+if contains(filename, 'rgb')
+    currentCase = 'RGB-reconstructed Spectra';
+elseif contains(filename, 'mes')
+    currentCase = 'Measured Spectra';
+else 
+    currentCase = 'MSI-reconstructed Spectra';
+end
+if contains(filename, 'only_spect')
+    cond1 = classifiers;
+    cond2 = {'fixed', 'unfixed', 'mixed'};
+    [barAccInfo1, maxIds1] = performanceComparisonArray(tab, class_s, cond1, cond2, 'Specificity', 'BalancedAccuracy');
+    barAccInfo2 = reshape(tab(reshape(maxIds1, [1,6]), 'BalancedAccuracy').BalancedAccuracy, [2,3]);
+    plots('classificationPerformanceBars', 2, [], {strcat(['Performance for ', currentCase]), 'Accuracy', 'Specificity'}, 'LineNames', ...
+        classifiers, 'Performance', {barAccInfo2, barAccInfo1}, 'SaveOptions', saveOptions);
+        
+else 
+    disp('Classifier comparison')
+    [barAccInfo1, ~] = performanceComparisonArray(tab, class_s, lbps, classifiers, 'AUC', 'Accuracy');
+    disp('Fixing comparison')
+    [barAccInfo2, ~] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy');
+    plots('classificationPerformanceBars', 12, [], {strcat('Performance for ', currentCase), 'classifier', 'fixing'}, 'LineNames', lbps,...
+        'Performance', {barAccInfo1, barAccInfo2}, 'SaveOptions', saveOptions);
+
+    disp('Dimred comparison')
+    %lbps = {'spect|fixed','spect+CatLBP|fixed', 'spect+MMLBP|fixed',
+    %'spect+SumLBP|fixed'};
+    cs = {'PCA10+None', 'PCA10+PCA', 'PCA10+ICA'};
+    % cs = {'None+', 'PCA+', 'ICA+'};
+    [barAccInfo2, ~] = performanceComparisonArray(tab, class_s, lbps, cs, 'AUC', 'Accuracy');
+end 
+
+
+%% Function for finding perfomance parameter for all conditions
+function [barAccInfo, maxIds] = performanceComparisonArray(tab, class_s, cond1, cond2, comparison_param, additional_param)
+    barAccInfo = zeros(numel(cond1),numel(cond2));
+    maxIds = zeros(numel(cond1),numel(cond2));
+    
+    for ii = 1:numel(cond1)
+        for jj = 1:numel(cond2)
+            [barAccInfo(ii, jj), maxIds(ii, jj) ]= findMaxContaining(tab, comparison_param, additional_param, class_s, cond1{ii}, cond2{jj}, []);
+        end
     end
-    featureSet{i} = strrep(featureSet{i}, 'clbp', 'CatLBP');
-    featureSet{i} = strrep(featureSet{i}, 'slbp', 'SumLBP');
-    featureSet{i} = strrep(featureSet{i}, 'mlbp', 'MMLBP');
-
-    if ~(acc(i) < 0.75 || auc(i) < 0.75)
-        acceptedId = [acceptedId, i];
-    end
+    
 end
 
-dimred = cellfun(@(w,x,y,z) strjoin({strcat(w),strcat(y)}, '+'),...
-    dim1, dim1num, dim2, dim2num, 'uni', 0);
-
-% figure(1);
-% histogram(categorical(classifier(acceptedId)), 'Normalization', 'probability')
-% title('Acceptable classifiers by Accuracy', 'FontSize', 15);
-% xlabel('Classifiers')
-% ylabel('Probability')
-
-
-markers = cell(length(classifier),1);
-colors = cell(length(classifier),1);
-for i  = 1:length(classifier)
-    if contains(classifier(i), 'KNN')
-        classifier{i} = 'KNN';
-        markers{i} = '^';
-        colors{i} = 'b';
-    elseif contains(classifier(i), 'SVM')
-        classifier{i} = 'SVM';
-        markers{i} = 'x';
-        colors{i} = 'm';
-    else 
-        classifier{i} = 'RF';
-        markers{i} = 'o';
-        colors{i} = 'g';
+%% Function for Finding maximum AUC in performance data
+function [maxComp, maxId] = findMaxContaining( tab, comparison_param, additional_param, class_s, condition1, condition2, condition3)
+    if strcmp(condition1, 'spect')
+        condition1 = 'spect|';
     end
-end  
-[~, id1] = sort(acc, 'descend');
-class_s = cellfun(@(w,x,y) strrep(strjoin({w,x,y}, '|'), '_', ' ' ),...
-    classifier(id1), featureSet(id1), inputSet(id1), 'uni', 0);
+    if contains(condition2, 'xed')
+        condition2 = strcat('|', condition2);
+    end
+    
+    if exist('condition3', 'var') && ~isempty(condition3)
+        condIds = find(contains(class_s, condition1) & contains(class_s, condition2) & contains(class_s, condition3) & tab.Accuracy > 0.6 & tab.AUC > 0.6);  
+    else
+        condIds = find(contains(class_s, condition1) & contains(class_s, condition2)); %  & tab.Accuracy > 0.6 & tab.AUC > 0.6 & (~contains(condition2, 'SVM') | contains(classifier, 'sigmoid')) 
+    end
+    comparison_column = tab.(comparison_param);
+    comparison_column = comparison_column(condIds);
+    [maxComp, maxId] = max(comparison_column);
+    additional_column = tab.(additional_param);
+    additional_column = additional_column(condIds);
+    maxAdd = additional_column(maxId);
+    if isempty(maxComp)
+        maxAdd = 0;
+        maxComp = 0;
+    end
+    maxId = condIds(maxId);
+    fprintf('%s, %s: %s %.4f and %s %.4f \n', tab.Classifier{maxId},class_s{maxId}, comparison_param, maxComp, additional_param, maxAdd);
+end
 
-performance = [ auc(id1); acc(id1)];
-plotClassificationPerformance('performanceComparison', 5,[], 'Performance of Top Classifiers', 'LineNames', classifier(acceptedId),'Performance', ...
-    performance, 'PlotName', fullfile(savedir, 'Top_classifiers'));
+%% Function for Reading performance data
+function [tab, dimred, class_s] = ReadClassificationData(filename)
+    tab = readtable(filename);
+    tab.Properties.VariableNames(1) = {'Classifier'};
 
-performance = [auc(acceptedId); acc(acceptedId)];
-plotClassificationPerformance('classificationPerformance', 6, 'LineNames', classifier(acceptedId),'Performance', ...
-    performance, 'PlotName', fullfile(savedir, 'Classifiers'));
-plotClassificationPerformance('classificationPerformance', 7, 'LineNames', classifier(acceptedId),'Performance', ...
-    featureSet(acceptedId), 'PlotName', fullfile(savedir, 'FeatureSet'));
-plotClassificationPerformance('classificationPerformance', 8,'LineNames', classifier(acceptedId),'Performance', ...
-    dimred(acceptedId), 'PlotName', fullfile(savedir, 'DimRed'));
-plotClassificationPerformance('classificationPerformance', 9, 'LineNames', classifier(acceptedId),'Performance', ...
-    inputSet(acceptedId), 'PlotName', fullfile(savedir, 'InputSet'));
-plotClassificationPerformance('classificationPerformance', 10,'LineNames', classifier(acceptedId),'Performance', ...
-    {classifier(acceptedId), featureSet(acceptedId) }, 'PlotName', fullfile(savedir, 'Classifier+Features'));
+    for i  = 1:length(tab.Classifier)
+        if strcmp(tab.Input(i), 'unique_fixed')
+            tab.Input{i} = 'fixed';
+        elseif strcmp(tab.Input(i), 'unique_unfixed')
+            tab.Input{i} = 'unfixed';
+        else 
+            tab.Input{i} = 'mixed';
+        end
+        tab.Feature{i} = strrep(tab.Feature{i}, 'clbp', 'CatLBP');
+        tab.Feature{i} = strrep(tab.Feature{i}, 'slbp', 'SumLBP');
+        tab.Feature{i} = strrep(tab.Feature{i}, 'mlbp', 'MMLBP');
+    end
 
+    dimred = cellfun(@(w,x,y,z) strjoin({strcat(w,num2str(x)),strcat(y, num2str(z))}, '+'),...
+        tab.Dimred1, tab.NComp1, tab.Dimred2, tab.NComp2, 'uni', 0);
 
-
-
+    class_s = cellfun(@(w,x,y,z) strrep(strjoin({w,x,y,z}, '|'), '_', ' ' ),...
+        tab.Classifier, tab.Feature, tab.Input, dimred, 'uni', 0);
+end

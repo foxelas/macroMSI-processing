@@ -16,9 +16,9 @@ if (options.tryReadData)
     w = warning('off', 'all');   
     fprintf('Reading spectral data according to ID file.\n');
 
-    if  ~isfile(generateName(options, 'matfilein'))
+    if  ~isfile(generateName('matfilein', options))
         dateCreated = datetime();
-        save(generateName(options, 'matfilein'), 'dateCreated');
+        save(generateName('matfilein', options), 'dateCreated');
     end
 
     %% Read raw spectra 
@@ -46,12 +46,12 @@ if (options.tryReadData)
     CompleteSpectra = zeros(msiN, 401);
     SpectraNames = cell(msiN, 1);
     for i = 1:msiN            
-        [~, csv] =  generateName(options, 'csv', ID(i));
+        [~, csv] =  generateName( 'csv', options, ID(i));
         Spectra(i,:) = uniqueSpectra(uniqueSpectraIdxsInID(i),:);
         CompleteSpectra(i,:) = completeUniqueSpectra(uniqueSpectraIdxsInID(i),:);
         SpectraNames{i} = strcat(csv, ', ', ID(i).T);
     end 
-    save(generateName(options, 'matfilein'), 'Spectra', 'CompleteSpectra', 'SpectraNames', '-append');
+    save(generateName('matfilein', options), 'Spectra', 'CompleteSpectra', 'SpectraNames', '-append');
 
     fprintf('Reading MSI data according to ID file.\n');
     MSIs = cell(msiN,1);
@@ -71,7 +71,7 @@ if (options.tryReadData)
         currentOptions = options;
         names = cell(length(gMembers), 1);
         for j = 1:length(gMembers)
-            [plotName, name] = generateName(options, 'read', ID(gIdxs(j)));
+            [plotName, name] = generateName('read', options, ID(gIdxs(j)));
             currentOptions.saveOptions.plotName{j} = plotName;
             names{j} = name;
         end
@@ -96,8 +96,8 @@ if (options.tryReadData)
             DarkIs{jj} = segmentDark{j};
         end
     end
-    save(generateName(options, 'matfilein'), 'MSIs', 'Masks', 'MSINames', 'WhiteIs', 'DarkIs', '-append');
-    save(generateName(options, 'matfilein-v7.3'), 'MaskIs', '-v7.3');        
+    save(generateName('matfilein', options), 'MSIs', 'Masks', 'MSINames', 'WhiteIs', 'DarkIs', '-append');
+    save(generateName('matfilein-v7.3', options), 'MaskIs', '-v7.3');        
     warning(w);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -307,7 +307,7 @@ if (options.tryReadData)
 else   
     %% Read newly created files 
 
-    load(generateName(options, 'matfilein'));
+    load(generateName('matfilein', options));
     name = options.dataset;
 end
     

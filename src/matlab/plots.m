@@ -11,10 +11,10 @@ defaultfc = [450, 465, 505, 525, 575, 605, 630];
 addRequired(p, 'plotType', @(x) any(validatestring(x, {'sensitivity', 'illuminationAndSensitivity', 'illumination', 'estimationComparison', ...
     'allEstimations', 'singlemeasurement', 'd65', 'methodErrors', 'overlapSpectrum', 'overlapSpectrumSample', 'pca', 'lda', 'pca b', 'lda b', ...
     'pcalda', 'classificationErrors', 'cropped', 'segmentation', 'roc', 'performanceComparison', 'visual','classificationPerformance', 'lbp', ...
-    'normSensitivity', 'featureImportance', 'classificationPerformanceBars'})));
+    'normSensitivity', 'featureImportance', 'classificationPerformanceBars', 'reconstructionPerformanceBars'})));
 addOptional(p, 'fig', -1);
 addOptional(p, 'curves', []);
-addOptional(p, 'title', '', @(x) ischar(x));
+addOptional(p, 'title', [],  @(x) ischar(x) || iscell(x));
 addParameter(p, 'Wavelength', []);
 addParameter(p, 'Sensitivity', []);
 addParameter(p, 'Illumination', []);
@@ -90,7 +90,6 @@ switch plotType
             % bandWavelength: the names of the bands
             % illumination: the illumination light 401x7
         %}
-        yyaxis left;
         if contains(lower(plotType), 'sensitivity')
             sensitivityN = size(sensitivity, 2);
             if (saveInBW)
@@ -108,14 +107,14 @@ switch plotType
             if (sensitivityN == 7)
                 fnames = cellstr(num2str(defaultfc'));
             else
-                fnames = {'red channel'; 'green channel'; 'blue channel'};
+                fnames = {'red'; 'green'; 'blue'};
             end
             for j = 1:sensitivityN
-                plot(wavelength, sensitivity(:, j) / n, 'Color', color(j,:), 'LineWidth', 4, 'DisplayName', fnames{j});
+                plot(wavelength, sensitivity(:, j) / n, 'Color', color(j,:), 'LineWidth', 3, 'DisplayName', fnames{j});
             end
             hold off;
-            if strcmp(plotType, 'normSensitivity'); ylabel('Normalized Sensitivity'); else; ylabel('Sensitivity'); end     
-            xlabel('Wavelength \lambda (nm)');
+            if strcmp(plotType, 'normSensitivity'); ylabel('Normalized Sensitivity', 'FontSize', 17); else; ylabel('Sensitivity', 'FontSize', 17); end     
+            xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
         end
         
         if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination')); yyaxis right; end
@@ -135,26 +134,31 @@ switch plotType
 
             hold on;
             for j = 1:numel(fc)
-                plot(wavelength, illumination(:, j), 'DisplayName', [I, '_', num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
+                plot(wavelength, illumination(:, j) * 10, 'DisplayName', [ num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
             end
-            plot(wavelength, illumination(:,8), 'DisplayName', 'white light', 'LineStyle', ':', 'LineWidth', 3);
+            plot(wavelength, illumination(:,8) * 10, 'DisplayName', 'white', 'LineStyle', ':', 'LineWidth', 3);
             hold off;
-            xlabel('Wavelength \lambda (nm)');
-            ylabel('Luminous Intensity (cd/m^2)');
+            xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
+            ylabel('Luminous Intensity', 'FontSize', 17);
         end
         
         if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination'))
             title('Overlap of illumination and camera sensitivity spectrum')
         elseif contains(lower(plotType), 'normsensitivity') 
-            title('Normalized Camera Sensitivities');
+            title('Normalized Camera Sensitivities', 'FontSize', 15);
         elseif contains(lower(plotType), 'sensitivity') 
-            title('Camera Sensitivities');
+            title('Camera Sensitivities', 'FontSize', 15);
         elseif contains(lower(plotType), 'illumination') 
-            title('Luminous intensity');
+            title('Normalized Luminous Intensity', 'FontSize', 15);
         end
 
+        ax = gca;
+        ax.FontSize = 15; 
         xlim([400, 700]);  
-        legend;
+        xticks([400, 500, 600, 700]);
+        yticks([0, 0.5, 1]);
+        l = legend;
+        l.FontSize = 13;
         % End Plot camera sensitivity        
         
     case 'estimationComparison'       
@@ -568,7 +572,6 @@ switch plotType
 
     case 'visual'
 %% Visualization of malignancy score %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        titles = {'Malignancy Probability','Ground Truth'};      
         cmapSize = 100; % default size of 60 shows visible discretization
         if ischar(cmap)
 
@@ -580,31 +583,24 @@ switch plotType
             end
         end
         colormap(cmap);
-        
+
         clf(gcf);
         axes(gcf);
 
-        for ploti=1:2 
-            subplot(1,2,ploti);
-            
-            Icur = I{ploti};
-            overlayCur = overlay{ploti};
-            titleCur = titles{ploti};
-            curveCur = curves{ploti};
-       
-            hB = imagesc(Icur);axis image off;
-            climF = [min(overlayCur(:)), max(overlayCur(:))];
-
+        hB = imagesc(I);axis image off;
+        climF = [min(overlay(:)), max(overlay(:))];
+        
+        if ~strcmp(figTitle, 'Ground Truth')
             % Add the front image on top of the back image
             hold on;
-            hF = imagesc(overlayCur); %, climF);
+            hF = imagesc(overlay); %, climF);
 
             % If images are different sizes, map the front image to back coordinates
             set(hF,'XData',get(hB,'XData'),...
                 'YData',get(hB,'YData'))
 
             % Make the foreground image transparent
-            alphadata = alpha.*(overlayCur > climF(1));
+            alphadata = alpha.*(overlay > climF(1));
             set(hF,'AlphaData',alphadata);
 
             c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
@@ -612,22 +608,21 @@ switch plotType
             c.Label.FontSize = 10;
             c.Label.FontWeight = 'bold';
             c.Limits = [0,1];
-            title(titleCur)
             set(gcf,'Visible','on');
-
-            if exist('coordinates', 'var') && ~isempty(coordinates)
-                hold on
-                for i = 1:size(coordinates, 1)
-                    x = coordinates(i,1);
-                    y = coordinates(i,2);
-                    if (curveCur(i) == 1) 
-                        plot(x, y,'rd', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
-                    else 
-                        plot(x, y,'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
-                    end
+        end
+        title(figTitle)
+        if exist('coordinates', 'var') && ~isempty(coordinates)
+            hold on
+            for i = 1:size(coordinates, 1)
+                x = coordinates(i,1);
+                y = coordinates(i,2);
+                if (curves(i) == 1) 
+                    plot(x, y,'rx', 'MarkerSize', 10, 'MarkerEdgeColor', 'r', 'LineWidth', 3);
+                else 
+                    plot(x, y,'go', 'MarkerSize', 10, 'MarkerEdgeColor', 'g', 'LineWidth', 3);
                 end
-                hold off
             end
+            hold off
         end
         
     case 'classificationPerformance'
@@ -659,7 +654,7 @@ switch plotType
          xlabel('Wavelength (nm)', 'FontSize', 12);
          plotName = fullfile(saveOptions.savedir,'Importance', 'featimp');
 
-    case 'classificationPerformanceBars'
+    case {'classificationPerformanceBars' }
 %% Plot bar performance %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         if (saveInBW)
@@ -670,32 +665,59 @@ switch plotType
             color = hsv(3);
             %color = flip(color);
         end
-            
-        if contains(figTitle, 'classifier')
-            legTitle = 'Classifier';
-            cs = {'SVM', 'KNN', 'RF'};
-            plotName = fullfile(saveOptions.savedir, 'bar_auc_class');
-        elseif contains(figTitle, 'fixing')
-            legTitle = 'Tissue';
-            cs = {'Fixed', 'Unfixed', 'Mixed'};
-            plotName = fullfile(saveOptions.savedir, 'bar_auc_input');
-        end
         
-        b = bar(categorical(lineNames), performance, 'FaceColor', 'flat');
-        for k = 1:length(cs)
-            b(k).CData = color(k,:);
-        end
-        title('Cross Validated AUC', 'FontSize', 15);
-        hleg = legend(cs, 'FontSize', 12);
-        htitle = get(hleg,'Title');
-        set(htitle,'String',legTitle)
-        ax = gca;
-        ax.FontSize = 11; 
-        ylim([0.5, 1]);
-        xlabel('Feature Vector', 'FontSize', 12);
-        ylabel('ROC AUC', 'FontSize', 12);
+        plotN = length(figTitle)-1;
+        superTitle = figTitle{1};
+        figTitle = figTitle(2:end); 
+        for ploti=1:plotN 
+            subplot(plotN,1,ploti);
+            figTitleCur = figTitle{ploti};
+            performanceCur = performance{ploti};
+            hasLegend = ploti == 1;
+            if contains(figTitleCur, 'classifier')
+                legTitle = 'Classifier';
+                figTitleCur = 'Cross Validated AUC';
+                labelx = 'Feature Vector';
+                labely = 'ROC AUC';
+                cs = {'SVM', 'KNN', 'RF'};
+                lims = [70, 100];
+            elseif contains(figTitleCur, 'fixing')
+                legTitle = 'Tissue';
+                figTitleCur = 'Cross Validated AUC';
+                labelx = 'Feature Vector';
+                labely = 'ROC AUC';
+                cs = {'Unfixed', 'Fixed', 'Mixed'};
+                lims = [70, 100];
+            else 
+                legTitle = 'Tissue';
+                cs = {'Unfixed', 'Fixed', 'Mixed'};
+                labelx = 'Classifier';
+                labely = strcat([figTitleCur, '(%)']);
+                figTitleCur = '';
+                %figTitleCur = strcat(['Cross Validated ', figTitleCur]);
+                lims = [50, 100];
+            end
+            barPlot = GetBarPlot(lineNames, performanceCur * 100, color, figTitleCur, labelx, labely, cs, legTitle, lims, 9, hasLegend);
+        end 
+        suptitle(superTitle);
+        plotName = fullfile(saveOptions.savedir, superTitle);
 
         
+    case 'reconstructionPerformanceBars'
+%% Plot bar performance for reconstruction %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        if (saveInBW)
+            color(1,:)=HInt2RGB(1,100); % red, darkest 
+            color(2,:)=HInt2RGB(3,64); % green, less dark 
+            color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
+        else 
+            color = hsv(3);
+            %color = flip(color);
+        end
+        plotName = fullfile(saveOptions.savedir, 'bar_plots', 'bar_reconstruction');
+        barPlot = GetBarPlot(lineNames, performance * 100, color, figTitle, 'Malignancy', 'NRMSE(%)',...
+            {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 15], 12, true);
+            
     otherwise 
         error('Unsupported plot');
 end
@@ -722,11 +744,11 @@ if (savePlot && ~isempty(plotName))
         export_fig(filename , '-png','-native', '-nocrop');
         %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
     else
-        filename = fullfile(filepath, strcat(name, '.jpg'));
-        export_fig(filename , '-jpg');
+        filename = fullfile(filepath, strcat(name, '.png'));
+        saveas(fig , filename);
         filename = fullfile(filepath, strcat(name, '.eps'));
         export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
-        if ~(contains(lower(plotType), 'sensitivity') || contains(plotType, 'illumination')) && ~(saveInBW)
+        if ~(saveInBW)
             filename = fullfile(filepathBW, strcat(name, '.eps'));
             export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
         else
@@ -751,4 +773,26 @@ end
 function [sampleName] = simpleSampleName(name)
     attr = strsplit(name);
     sampleName = attr{1};
+end
+
+function [barPlot] = GetBarPlot(lineNames, values, color, figTitle, labelx, labely, categories, legendTitle, ylims, ticklabelsize, hasLegend)
+
+            barPlot = bar(categorical(lineNames), values, 'FaceColor', 'flat');
+            for k = 1:length(categories)
+                barPlot(k).CData = color(k,:);
+            end
+            hleg = legend(categories, 'FontSize', 9.5, 'Location', 'eastoutside');
+            htitle = get(hleg,'Title');
+            set(htitle,'String',legendTitle)
+            if ~(hasLegend)
+                hleg.Visible = 'off';
+            end
+            ax = gca;
+            ax.FontSize = ticklabelsize; 
+            ylim(ylims);
+            xlabel(labelx, 'FontSize', 12);
+            ylabel(labely, 'FontSize', 12);
+            if ~strcmp(figTitle, '')
+                title(figTitle, 'FontSize', 16); % should be after gca, set to work
+            end
 end

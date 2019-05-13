@@ -56,7 +56,7 @@ if strcmp(smoothingMatrixMethod, 'adaptive')
         alpha = defaultAlpha;
     end
     
-    defaultGamma = 2;
+    defaultGamma = 1;
     if isfield(options, 'gamma')
         gamma = options.gamma;
     else
@@ -436,7 +436,7 @@ function k = replicationTimes(d, dmax, gamma)
     if (nargin < 3)
         gamma = 1;
     end
-    k = floor((dmax / d)^1 + 0.5);
+    k = floor((dmax / d)^gamma + 0.5);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -446,11 +446,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
     r = num2cell( Spectra(idxs,:)',1);
-    if (false)
-        d = cellfun(@(x) DiscreteFrechetDist(x, rhat), r); % or reflectanceDistance
-    else
-        d = cellfun(@(x) reflectanceDistance(x, rhat), r); % or reflectanceDistance
-    end
+    d = cellfun(@(x) reflectanceDistance(x, rhat), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;

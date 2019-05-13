@@ -1,5 +1,5 @@
 %% Configuration plots about illumination, sensitivity etc
-options.saveOptions.BW = false;
+%options.saveOptions.BW = false;
 parts = regexp(options.saveOptions.savedir, '\', 'split'); 
 parts(end) =  [];
 saveDir = fullfile(strjoin(parts, '\'), 'general');
