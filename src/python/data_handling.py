@@ -60,7 +60,7 @@ def get_base_dir():
 	return base_dir
 
 def get_data_dir():
-	data_dir = 'saitama_v6_min_square'
+	data_dir = 'saitama_v7_min_region_e'
 	return data_dir
 
 def get_out_dir():
@@ -76,7 +76,7 @@ def get_in_dir():
 	return in_dir
 
 def get_log_dir():
-	log_dir = '/media/sf_research/macroMSI_research/logs/'
+	log_dir = '/media/sf_research/macroMSI-processing/logs/'
 	return log_dir
 
 in_dir = get_in_dir()
@@ -95,32 +95,154 @@ id_struct = id_mat['ID']
 
 ###################gets#####################
 
-def load_in_mat():
-	return in_mat
-
-def load_out_mat():
-	return out_mat
-
 def get_label_dict():
 	label_dict = {0: 'Benign', 1: 'Malignant'}
 	return label_dict
 
-def get_measured_spectra():
+def load_in_mat_internal():
+	return in_mat
+
+def load_out_mat_internal():
+	return out_mat
+
+in_mat_i = load_in_mat_internal()
+def load_in_mat():
+	return in_mat_i
+
+out_mat_i = load_out_mat_internal()
+def load_out_mat():
+	return out_mat_i
+
+def get_measured_spectra_internal():
 	in_mat = load_in_mat()
 	spectra = in_mat['Spectra']
 	return spectra
 
-def get_reconstructed_spectra():
+def get_reconstructed_spectra_internal():
 	out_mat = load_out_mat()
 	estimated_spectra = out_mat['EstimatedSpectra']
 	return estimated_spectra
 
-def get_lbp():
+def get_reconstructed_spectra_rgb_internal():
 	out_mat = load_out_mat()
-	lbp_features = out_mat['MultiScaleLbpFeatures']
+	estimated_spectra = out_mat['EstimatedRGBSpectra']
+	return estimated_spectra
+
+def get_conc_lbp_internal():
+	out_mat = load_out_mat()
+	lbp_features = out_mat['ConcatLbpFeatures']
 	return lbp_features
 
+def get_sum_lbp_internal():
+	out_mat = load_out_mat()
+	lbp_features = out_mat['SumLbpFeatures']
+	return lbp_features
+
+def get_multispectral_lbp_internal():
+	out_mat = load_out_mat()
+	lbp_features = out_mat['MMLbpFeatures']
+	return lbp_features
+
+def get_rgb_lbp_internal():
+	out_mat = load_out_mat()
+	lbp_features = out_mat['RgbLbpFeatures']
+	return lbp_features
+
+def get_complete_spectra_internal():
+	in_mat = load_in_mat()
+	complete_spectra = in_mat['CompleteSpectra']
+	return complete_spectra
+
+def get_darkIs_internal(): 
+	in_mat = load_in_mat()
+	darkIs = in_mat['DarkIs']
+	return darkIs
+
+def get_msi_names_internal(): 
+	in_mat = load_in_mat()
+	msi_names = in_mat['MSINames']
+	return msi_names
+
+def get_msis_internal(): 
+	in_mat = load_in_mat()
+	msis = in_mat['MSIs']
+	return msis
+
+def get_masks_internal(): 
+	in_mat = load_in_mat()
+	masks = in_mat['Masks']
+	return masks
+
+def get_spectra_names_internal():
+	in_mat = load_in_mat()
+	spectra_names = in_mat['SpectraNames']
+	return spectra_names
+
+def get_whiteIs_internal():
+	in_mat = load_in_mat()
+	whiteIs = in_mat['WhiteIs']
+	return whiteIs
+
+#######################Use of internals#########################
+estimated_spectra_i = get_reconstructed_spectra_internal()
+def get_reconstructed_spectra():
+	return estimated_spectra_i
+
+measured_spectra_i = get_measured_spectra_internal()
+def get_measured_spectra():
+	return measured_spectra_i
+
+estimated_spectra_rgb_i = get_reconstructed_spectra_rgb_internal()
+def get_reconstructed_spectra_rgb():
+	return estimated_spectra_rgb_i
+
+conc_lbp_features_i = get_conc_lbp_internal()
+def get_conc_lbp():
+	return conc_lbp_features_i
+
+sum_lbp_features_i = get_sum_lbp_internal()
+def get_sum_lbp():
+	return sum_lbp_features_i
+
+m_lbp_features_i = get_multispectral_lbp_internal()
+def get_multispectral_lbp():
+	return m_lbp_features_i
+
+rgb_lbp_features_i = get_rgb_lbp_internal()
+def get_rgb_lbp():
+	return rgb_lbp_features_i
+
+complete_spectra_i = get_complete_spectra_internal()
+def get_complete_spectra():
+	return complete_spectra_i
+
+darkIs_i = get_darkIs_internal()
+def get_darkIs(): 
+	return darkIs_i
+
+msi_names_i = get_msi_names_internal()
+def get_msi_names(): 
+	return msi_names_i
+
+msis_i = get_msis_internal()
+def get_msis(): 
+	return msis_i
+
+masks_i = get_masks_internal()
+def get_masks(): 
+	return masks_i
+
+spectra_names_i = get_spectra_names_internal()
+def get_spectra_names():
+	return spectra_names_i
+
+whiteIs_i = get_whiteIs_internal()
+def get_whiteIs():
+	return whiteIs_i
+
 def concat_features(feat1, feat2=None, feat3=None):
+	if feat1 is None and feat2 is not None:
+		return concat_features(feat2, feat3)
 	if feat3 is not None: 
 		return np.array([np.concatenate((x,y,z),0) for (x,y,z) in zip(feat1, feat2, feat3)])
 	if feat2 is not None:
@@ -128,46 +250,23 @@ def concat_features(feat1, feat2=None, feat3=None):
 	else:
 		return np.array(feat1)
 
-def get_concat_lbp():
-	lbp_features = get_lbp()
-	concat_lbp = concat_features(lbp_features[0], lbp_features[1])
+def get_concat_lbp(feature_set, rgb=False):
+	if rgb:
+		lbp_features = get_rgb_lbp()
+
+	elif "slbp" in feature_set:
+		lbp_features = get_sum_lbp()
+
+	elif "clbp" in feature_set:
+		lbp_features = get_conc_lbp()
+
+	elif "mlbp" in feature_set:
+		lbp_features = get_multispectral_lbp()
+
+	concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
 	#concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
 	return concat_lbp
 
-def get_complete_spectra():
-	in_mat = load_in_mat()
-	complete_spectra = in_mat['CompleteSpectra']
-	return complete_spectra
-
-def get_darkIs(): 
-	in_mat = load_in_mat()
-	darkIs = in_mat['DarkIs']
-	return darkIs
-
-def get_msi_names(): 
-	in_mat = load_in_mat()
-	msi_names = in_mat['MSINames']
-	return msi_names
-
-def get_msis(): 
-	in_mat = load_in_mat()
-	msis = in_mat['MSIs']
-	return msis
-
-def get_masks(): 
-	in_mat = load_in_mat()
-	masks = in_mat['Masks']
-	return masks
-
-def get_spectra_names():
-	in_mat = load_in_mat()
-	spectra_names = in_mat['SpectraNames']
-	return spectra_names
-
-def get_whiteIs():
-	in_mat = load_in_mat()
-	whiteIs = in_mat['WhiteIs']
-	return whiteIs
 
 def get_data_dimensions():
 	complete_spectra = get_complete_spectra()
@@ -215,7 +314,7 @@ def get_samples_all():
 	samples = [id_struct[x].Sample for x in range(len(id_struct)) ]
 	return samples
 
-def subset_indexes(name, data):
+def subset_indexes(name):
 	subset_ids = []
 	if name == 'unique':
 		id_struct = get_id_struct()
@@ -223,14 +322,20 @@ def subset_indexes(name, data):
 		spectra_names = get_spectra_names()
 		x, subset_ids = np.unique(np.array(spectra_names, dtype=str), return_index=True, axis=0)
 
-	elif name == 'unfixed' or name == 'fixed' or name == 'cut':
+	elif name == 'unfixed':
 		fixation = get_fixation()
 		subset_ids = np.array(get_indexes_equal(name, fixation))
 
+	elif name == 'fixed':
+		fixation = get_fixation()
+		subset_ids_f = np.array(get_indexes_equal('fixed', fixation))
+		subset_ids_c = np.array(get_indexes_equal('cut', fixation))
+		subset_ids = np.concatenate((subset_ids_f, subset_ids_c), axis=0) #axis=0
+
 	elif 'unique' in name:
 		name1, name2 = name.split('_')
-		subset_ids1 = subset_indexes(name1, data)
-		subset_ids2 = subset_indexes(name2, data)
+		subset_ids1 = subset_indexes(name1)
+		subset_ids2 = subset_indexes(name2)
 		subset_ids = np.intersect1d(subset_ids1, subset_ids2)
 
 	else: 
@@ -239,7 +344,8 @@ def subset_indexes(name, data):
 
 	return subset_ids
 
-def get_subset_with_index(indexes, data, labels, has_texture = False):
+def get_subset_with_index(indexes, data, labels, feature_set="spect", rgb=False):
+
 	if (len(data.shape) > 1):
 		data_s = data[indexes,:]
 	else:
@@ -247,8 +353,8 @@ def get_subset_with_index(indexes, data, labels, has_texture = False):
 	labels_s = labels[indexes]
 	fixation = get_fixation()
 	fixation_s = [fixation[x] for x in indexes]
-	if has_texture:
-		lbp_features = get_concat_lbp()
+	if "lbp" in feature_set:
+		lbp_features = get_concat_lbp(feature_set, rgb)
 		lbp_features_s = np.array([lbp_features[x] for x in indexes])
 	else:
 		lbp_features_s = None
@@ -264,7 +370,7 @@ def get_subset(name, data, labels):
 	return data_s, labels_s, fixation_s, subset_ids
 
 def get_subset_contents(name, data, labels):
-	subset_ids = subset_indexes(name, data)
+	subset_ids = subset_indexes(name)
 	if (len(data.shape) > 1):
 		data_s = data[subset_ids,:]
 	else:
@@ -279,15 +385,14 @@ def head(values, n = 10):
 	print('....')
 
 def write_file(filename, contents, write_options="w+"):
-
-	with open(pjoin(in_dir, filename), write_options) as csv_file:
+	with open(filename, write_options) as csv_file:
 		writer = csv.writer(csv_file)
 		writer.writerows(contents)
 	csv_file.close()
 
 def write_log(filename, contents, write_options="a+"):
 	with open(filename, write_options) as log_file:
-		log_file.write(log_file)
+		log_file.write(contents)
 	log_file.close()
 
 ############################Data set splits############################################
@@ -306,7 +411,7 @@ def write_folds(subset_name='unique', folds=10):
 		start_index = end_index
 		write_file( 'names_fold' + str(i) + '.csv', fold_contents)
 
-def get_fold_indexes(subset_name='unique', folds=10):
+def get_fold_indexes(subset_name='unique', folds=10, ignore_test=False):
 	spectra_names = get_spectra_names()
 	positive_labels = get_labels()
 	subset = get_subset_contents(subset_name, spectra_names, positive_labels)
@@ -317,7 +422,10 @@ def get_fold_indexes(subset_name='unique', folds=10):
 	on_hold_indexes = []
 	for i in range(folds):
 		end_index = math.floor(len(samples) / folds) + start_index if i != folds - 1 else len(samples)
-		current_fold_indexes = [ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x not in test_sample_names if x in subset[j][1]]
+		if ignore_test:
+			current_fold_indexes = [ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]]
+		else:
+			current_fold_indexes = [ subset[j][0] for j in range(len(subset)) for x in samples[start_index:end_index] if x not in test_sample_names if x in subset[j][1]]
 		current_labels = [positive_labels[x] for x in current_fold_indexes ]
 		if all(v == 0 for v in current_labels) or all(v == 1 for v in current_labels):
 			on_hold_indexes.append(current_fold_indexes)
@@ -336,13 +444,16 @@ def get_fold_indexes(subset_name='unique', folds=10):
 
 	return fold_indexes, folds
 
-def get_fold_indexes_stratified(subset_name='unique',folds=7):
+def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False):
 	spectra = get_measured_spectra()
 	positive_labels = get_labels()
-	subset_ids_s = subset_indexes(subset_name, spectra) 
+	subset_ids_s = subset_indexes(subset_name) 
 
 	samples_all = get_samples_all()
-	subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
+	if ignore_test:
+		subset_ids = [x for x in subset_ids_s]
+	else:
+		subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
 	data, labels, fixation, lbp_features = get_subset_with_index(subset_ids, spectra, positive_labels)
 
 
@@ -352,6 +463,8 @@ def get_fold_indexes_stratified(subset_name='unique',folds=7):
 		fold_indexes.append([subset_ids[x] for x in test])
 
 	return fold_indexes, folds
+
+
 
 def get_test_indexes(subset_name='unique'):
 	spectra_names = get_spectra_names()
@@ -368,10 +481,11 @@ def get_scaled_subset(subset_name, data, labels, scaler):
 	data_s = scaler.transform(data_s)
 	return data_s, labels_s, fixation_s, subset_ids
 
-def get_scaled_subset_with_index(indexes, data, labels, scaler, has_texture=False):
-	data_s, labels_s, fixation_s, lbp_features_s = get_subset_with_index(indexes, data, labels, has_texture)
+def get_scaled_subset_with_index(indexes, data, labels, scaler, feature_set, rgb=False):
+	data_s, labels_s, fixation_s, lbp_features_s = get_subset_with_index(indexes, data, labels, feature_set, rgb)
 	data_s = scaler.transform(data_s)
 	return data_s, labels_s, lbp_features_s
+
 
 #print(get_test_indexes('unique_unfixed'))
 #print(get_fold_indexes('unique_unfixed', 10))
@@ -381,7 +495,6 @@ def get_scaled_subset_with_index(indexes, data, labels, scaler, has_texture=Fals
 # ids,e = get_fold_indexes('unique', 10)
 # [print(x) for x in ids]
 # [print(positive_labels[x]) for x in ids]
-
 
 # print("wqqq")
 # ids,e = get_fold_indexes('unique', 10)
