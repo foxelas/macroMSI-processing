@@ -485,7 +485,7 @@ switch plotType
         hold off
         figTitle = strjoin({'Final ROI of sample', strrepAll(plotName)}, ' ');
         title(figTitle, 'FontSize', 15);
-        plotName = strcat(plotName, '_segments');
+        %plotName = strcat(plotName, '_segments');
         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
                 
     case 'roc'
@@ -747,10 +747,10 @@ if (savePlot && ~isempty(plotName))
         filename = fullfile(filepath, strcat(name, '.png'));
         saveas(fig , filename);
         filename = fullfile(filepath, strcat(name, '.eps'));
-        export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
+        %export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
         if ~(saveInBW)
             filename = fullfile(filepathBW, strcat(name, '.eps'));
-            export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
+            %export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
         else
             plots(plotType, fig, [], '', 'Wavelength', wavelength, 'Illumination', illumination, 'Sensitivity', sensitivity, 'SaveOptions', saveOptions, 'saveInBW', true);
         end
