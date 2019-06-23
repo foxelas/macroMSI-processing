@@ -363,6 +363,13 @@ def get_validation_classifiers_noRF():
 	clfs.append({"LDA", "QDA"})
 	return clfs
 
+def get_validation_classifiers_few():
+	clfs = get_svm_classifier_names({'linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'harsh_penalty'})
+	clfs.append(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
+	clfs.append({"Random Forest-20-gini-sqrt", "Random Forest-50-entropy-auto"})
+	clfs.append({"LDA", "QDA"})
+	return clfs
+
 
 def get_testing_classifiers():
 	return ["Random Forest-20-gini-sqrt",
@@ -465,6 +472,6 @@ current_run_case = 'Validation MSI'
 column_names = (",").join([current_run_case, 'Input', 'Feature', 'Dimred1', 'NComp1', 'Dimred2', 'NComp2', 'Accuracy', 'AUC', \
 				'Specificity', 'Sensitivity', 'FPR', 'FNR', 'BalancedAccuracy', 'F1', '\n' ])
 dh.write_log(classification_log, column_names)
-compare_validation_performance(get_validation_classifiers_noRF(), 'Validation_Classifiers', True, False, True, \
-	{'unique', 'unique_unfixed', 'unique_fixed'},  {'spect'}, \
-	{'None', 'PCA', 'ICA'}, {'None'}, {10, 20, 26, None}, {None})
+compare_validation_performance(get_validation_classifiers_few(), 'Validation_Classifiers', True, False, False, \
+	{'unique', 'unique_unfixed', 'unique_fixed'},  { 'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect' }, \
+	{'None', 'PCA', 'ICA'}, {'None', 'PCA', 'ICA'}, {10, 20, None}, {10, 20, None})
