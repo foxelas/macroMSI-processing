@@ -4,31 +4,43 @@ ConcatLbpFeatures = cell(maxScale, 1);
 MMLbpFeatures = cell(maxScale, 1);
 SumLbpFeatures = cell(maxScale, 1);
 
-groups = findgroups([ID.MsiID]);
-for g=1:max(groups)
-    k = find(groups == g,1);
-    files = {data([data.MsiID] == ID(k).MsiID).File}; %{data(ID(k).Data).File};   
-    coordinates = [ID(groups == g).Originx; ID(groups == g).Originy];
+for k=1:msiN
+    infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+    load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
+        'roiSeeds', 'measuredSpectrum', 'poiWhite');
     for lbp_operator = {'MMLBP', 'SumLBP', 'CatLBP', 'LBP'}
-        lbpFeats = getLBPFeatures(lbp_operator, files, coordinates, maxScale);
+        lbpFeats = getLBPFeatures(lbp_operator, options, k, maxScale);
+        
+        if strcmp(lbp_operator, 'LBP')
+            RgbLbpFeatures = addToLBPStruct(RgbLbpFeatures, lbpFeats, k, maxScale);
+        elseif strcmp(lbp_operator, 'MMLBP')
+            MMLbpFeatures = addToLBPStruct(MMLbpFeatures, lbpFeats, k, maxScale);
+        elseif strcmp(lbp_operator, 'SumLBP')
+            SumLbpFeatures = addToLBPStruct(SumLbpFeatures, lbpFeats, k, maxScale);
+        elseif strcmp(lbp_operator, 'CatLBP')
+            ConcatLbpFeatures = addToLBPStruct(ConcatLbpFeatures, lbpFeats, k, maxScale);
+        else 
+            disp('Unrecognized LBP method. Aborting...')
+            return      
+        end
     end
-    if strcmp(lbp_operator, 'LBP')
-        RgbLbpFeatures = addToLBPStruct(RgbLbpFeatures, lbpFeats, find(groups == g), maxScale);
-    elseif strcmp(lbp_operator, 'MMLBP')
-        MMLbpFeatures = addToLBPStruct(MMLbpFeatures, lbpFeats, find(groups == g), maxScale);
-    elseif strcmp(lbp_operator, 'SumLBP')
-        SumLbpFeatures = addToLBPStruct(SumLbpFeatures, lbpFeats, find(groups == g), maxScale);
-    elseif strcmp(lbp_operator, 'CatLBP')
-        ConcatLbpFeatures = addToLBPStruct(ConcatLbpFeatures, lbpFeats, find(groups == g), maxScale);
-    else 
-        disp('Unrecognized LBP method. Aborting...')
-        return      
-    end
-
+   
 end
 
-save( fullfile(options.saveOptions.savedir, 'ReflectanceEstimationPreset', 'out.mat'),'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures','RgbLbpFeatures', '-append');
+filename = mkdir_custom(fullfile(options.saveOptions.savedir, '8-Features', 'out.mat'));
+if exist(filename, 'file')
+    save( filename,'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures','RgbLbpFeatures', '-append');
+else
+    save( filename,'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures','RgbLbpFeatures');
+end
 
+if (options.showImages)
+    for g=1:max([ID.Group])
+        infile = fullfile(options.systemdir, 'infiles', strcat('group_', num2str(g), '.mat'));
+        load(infile, 'poiName', 'raw', 'whiteReference', 'specimenMask');
+         visualizeLBP(raw,whiteReference, specimenMask, g, options.saveOptions);
+    end
+end
     
 function [current] = addToLBPStruct(base, lbps, ks, scales)
     for sc=1:scales

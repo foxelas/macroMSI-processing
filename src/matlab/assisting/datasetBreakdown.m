@@ -45,7 +45,7 @@ function [] = datasetBreakdown(ID,options)
     fprintf('Breakdown of the dataset:\nTotal: %d, Unfixed: %d, Fixed: %d, Cut: %d\nNormal: %d, Cancerous: %d\n',...
             length(idx), unfixedCount,fixedCount,cutCount,normalCount,cancerCount);
     fprintf('Among unfixed data:\nNormal: %d, Cancerous: %d\n ', normalUnfixedCount,cancerUnfixedCount);
-    fprintf('Among fixed data:\nNormal: %d, Cancerous: %d\n',  normalFixedCount, cutCount-normalFixedCount);
+    fprintf('Among fixed data:\nNormal: %d, Cancerous: %d\n',  normalFixedCount, fixedCount-normalFixedCount);
     fprintf('Among cut data:\nNormal: %d, Cancerous: %d\n',  normalCutCount, cutCount-normalCutCount);
 
     if exist('options', 'var') && ~isempty(options.saveOptions) && ~isempty(options.saveOptions.savedir)

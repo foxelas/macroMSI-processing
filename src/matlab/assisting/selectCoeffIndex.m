@@ -16,9 +16,11 @@ options.smoothingMatrixMethod = 'Cor_Sample';
 options.noiseType = 'givenSNR';
 options.noiseParam = 20;
 
-load(generateName('system', options), 'wavelength'); % camera system parameters
+disp('Searching for reference coefficient...')
+
+%load(generateName('system', options), 'wavelength'); % camera system parameters
 load(generateName('id', options), 'ID'); % image data id and info struct
-load(generateName('matfilein', options), 'MSIs', 'Masks', 'Spectra');
+load(generateName('matfilein', options), 'poiRAWs', 'Spectra');
     
 G = findgroups({ID.Sample}, {ID.Type});
 for i = 1:max(G)
@@ -34,7 +36,7 @@ for i = 1:max(G)
 
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
-            [est, rmse] = reflectanceEstimation(MSIs{k}, Masks{k}, Spectra(k,:), idk, options);
+            [est, rmse] = reflectanceEstimation(poiRAWs{k,1}, poiRAWs{k,2}, Spectra(k,:), idk, options);
             avgRmse = avgRmse + rmse;
         end
         if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0 ) || any(est(:) > 1 ))

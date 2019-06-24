@@ -1,4 +1,4 @@
-function [lbpFeats] = getLBPFeatures(type, files, coordinates, maxScale, neighbors, mapping)
+function [lbpFeats] = getLBPFeatures(type, options, k, maxScale, neighbors, mapping)
 %main code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
     if (nargin < 4)
         maxScale = 3;
@@ -16,35 +16,32 @@ function [lbpFeats] = getLBPFeatures(type, files, coordinates, maxScale, neighbo
     SumLbpFeatures = cell(maxScale, 1);
     MMLbpFeatures = cell(maxScale, 1);
     RgbLbpFeatures = cell(maxScale, 1);
-
-    if ~(size(coordinates,2) == 2);  coordinates = coordinates'; end
-    rois = size(coordinates, 1);
+    
     for scale = 1:maxScale
         riubins = (neighbors + 2);
-        concatlbpFeatures = zeros(rois, msibands * riubins);
-        sumlbpFeatures = zeros(rois, riubins);
-        mmlbpFeatures = zeros(rois, 4 * riubins);
-        rgblbpFeatures = zeros(rois, riubins);
+        concatlbpFeatures = zeros(1, msibands * riubins);
+        sumlbpFeatures = zeros(1, riubins);
+        mmlbpFeatures = zeros(1, 4 * riubins);
+        rgblbpFeatures = zeros(1, riubins);
 
-        for k = 1:rois
-            coor = coordinates(k,:);
+        infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+        load(infile,  'poiRAW','poiWhite');
+        msi = raw2msi(poiRAW, 'extended');
+        rgb = poiWhite;
 
-            [msi, rgb] = readMSI(files, coor, 5 + scale, 5 + scale, []); 
-            msi = raw2msi(msi, 'extended');
-
-            if strcmp(type, 'CatLBP') || strcmp(type, 'SumLBP')
-                for i = 1:msibands
-                    lbps = lbp(squeeze(msi(i,:,:)),scale,neighbors,mapping);
-                    if strcmp(type, 'CatLBP'); concatlbpFeatures(k, (i-1)*10 + (1:10)) = lbps; end
-                    if strcmp(type, 'SumLBP'); sumlbpFeatures(k,:) = sumlbpFeatures(1,:) + lbps; end
-                end
-            elseif strcmp(type, 'MMLBP')
-                mmlbpFeatures(k,:) = lbp(msi, scale, neighbors, mapping);
-            elseif strcmp(type, 'LBP')
-                gr = rgb2gray(rgb);
-                rgblbpFeatures(k,:) = lbp(gr,scale,neighbors,mapping);
+        if strcmp(type, 'CatLBP') || strcmp(type, 'SumLBP')
+            for i = 1:msibands
+                lbps = lbp(squeeze(msi(i,:,:)),scale,neighbors,mapping);
+                if strcmp(type, 'CatLBP'); concatlbpFeatures((i-1)*10 + (1:10)) = lbps; end
+                if strcmp(type, 'SumLBP'); sumlbpFeatures = sumlbpFeatures + lbps; end
             end
+        elseif strcmp(type, 'MMLBP')
+            mmlbpFeatures = lbp(msi, scale, neighbors, mapping);
+        elseif strcmp(type, 'LBP')
+            gr = rgb2gray(rgb);
+            rgblbpFeatures = lbp(gr,scale,neighbors,mapping);
         end
+        
         ConcatLbpFeatures{scale} = concatlbpFeatures;
         SumLbpFeatures{scale} = sumlbpFeatures;
         MMLbpFeatures{scale} = mmlbpFeatures;

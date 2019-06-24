@@ -1,25 +1,33 @@
 %Start of reflectance estimation comparison
+options.action = 'Refest_Preset_plusrgb';
+
 %% Comparison settings
 [smms, pvsms, nms, plotType] = getComparisonSets(options);
 plusRGBAnalysis =  contains(lower(options.action), 'plusrgb');
 hasRGBAnalysis = strcmp(options.pixelValueSelectionMethod, 'rgb') || contains(lower(options.action), 'rgb');
-isNoComparison = (contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple')) && ~contains(lower(options.action), 'plusrgb');
+isNoComparison = (contains(lower(options.action), 'preset') || contains(lower(options.action), 'simple'));
 [lineNames, methodsN, pixelValueSelectionMethods, smoothingMatrixMethods, noiseTypes, smmsN, pvsmsN, nmsN] = getLineNames(pvsms, smms, nms);
 
 %% Comparison
 w = warning('off', 'all');
 
 tic;
-rmse = zeros(methodsN, msiN);
-nmse = zeros(methodsN, msiN);
 estimatedSpectra = zeros(size(Spectra));
-errFixingInfo = struct('rmse', [], 'fixing', [], 'malignancy', []);
+estimatedRGBSpectra = zeros(size(Spectra));
+errFixingInfo = struct('RMSE', [], 'NMSE', [], 'fixing', [], 'malignancy', []);
+errFixingInfoRGB = struct('RMSE', [], 'NMSE', [], 'fixing', [], 'malignancy', []);
+
 for k = 1:msiN
     % Retrieve MSI data
-    msi = MSIs{k};
-    mask = Masks{k};
-    measured = Spectra(k,:);
-    if (hasRGBAnalysis); rgb = readRGBImage(WhiteIs{k}); end
+    
+    infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+    load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
+        'roiSeeds', 'measuredSpectrum', 'poiWhite');
+        
+    msi = poiRAW;
+    mask = poiSegmentMask;
+    measured = measuredSpectrum;
+    if (hasRGBAnalysis); rgb = readRGBImage(poiWhite); end
         
     % Estimation
     estimated = zeros(methodsN, length(wavelength));
@@ -27,31 +35,27 @@ for k = 1:msiN
     for j = 1:methodsN
         [options, optionsRgb]= updateOptions(options, j, pvsms, smms, nms);
         
-        if (hasRGBAnalysis && ~plusRGBAnalysis) %Case with only RGB
-            [estimated(j,:), rmse(j, k), nmse(j, k), ~] = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb);
+        if (hasRGBAnalysis) %Case with only RGB
+            [estRGB, rmseRGB, nmseRGB, ~] = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb);
+            estimatedRGBSpectra(k,:) = estRGB;
+            errFixingInfoRGB(k) = struct('RMSE', rmseRGB, 'NMSE', nmseRGB, 'fixing', ID(k).Type, 'malignancy', ~ID(k).IsBenign);
 
-        elseif (~hasRGBAnalysis) %Case with only MSI 
-            [estimated(j,:), rmse(j, k), nmse(j, k), ~] = reflectanceEstimation(msi, mask, measured, ID(k), options);                 
-
-        else % Case with both RGB and MSI 
-            [estRGB, ~, ~, ~] = reflectanceEstimation(rgb, mask, measured, ID(k), optionsRgb);
-            [estimated(j,:), rmse(j, k), nmse(j, k), ~] = reflectanceEstimation(msi, mask, measured, ID(k), options);                 
         end
+        [estimated(j,:), rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options);                 
         
         if (isNoComparison)
             estimatedSpectra(k,:) = estimated(j,:);
-            errFixingInfo(k) = struct('rmse', rmse(j, k), 'fixing', ID(k).Type, 'malignancy', ~ID(k).IsBenign);
+            errFixingInfo(k) = struct('RMSE', rmse, 'NMSE', nmse, 'fixing', ID(k).Type, 'malignancy', ~ID(k).IsBenign);
         end
       
     end
     
     if (options.showImages)       
         if (~plusRGBAnalysis) ; lines = [measured; estimated]; else;  lines = [measured; estimated; estRGB]; end   
-        options.saveOptions.plotName = generateName('plot', options, ID(k));   
-        plots('estimationComparison', 1, lines', 'Reflectance Estimation Comparison', 'Wavelength', wavelength, 'Method', ... 
-            strcat(options.smoothingMatrixMethod, ' +  ', options.noiseType), ...
-            'SaveOptions', options.saveOptions, 'LineNames', lineNames);
-        
+        options.saveOptions.plotName = fullfile(options.saveOptions.savedir, '5-ReflectanceEstimation', options.action,...
+        strcat( options.action, '_', num2str(ID(k).Index)));  
+        plotReconstructedCurves(lines', lineNames, wavelength, 'Reflectance Estimation Comparison',...
+            1,options.saveOptions);        
         pause(0.1)
     end
     
@@ -62,11 +66,24 @@ warning(w);
 errors = GetErrorInfoStruct(rmse, nmse, pixelValueSelectionMethods, smoothingMatrixMethods, noiseTypes);
 
 if (isNoComparison)
+    fprintf('%s\n', options.noiseType);
     % show NRMSE error per set
+    options.action = strjoin({options.action, options.noiseType}, '_');
+    if strcmp(options.smoothingMatrixMethod, 'adaptive')
+        options.action = strjoin({options.action, 'adaptive'}, '_');
+    end
+    nrmse = showNRMSE([errFixingInfo.RMSE], Spectra, ID);
+    titl = 'MSI-Reconstruction NRMSE';
+    options.saveOptions.plotName = fullfile(options.saveOptions.savedir, '6-ReflectanceEstimationPerformance', options.action, titl);
+    plotReconstructionPerformanceBars(nrmse,{'benign', 'malignant'},titl,2,options.saveOptions);
+    writeOutput(options, errFixingInfo, estimatedSpectra, false);
+    nrmse = showNRMSE([errFixingInfoRGB.RMSE], Spectra, ID);
     
-    nrmse = showNRMSE(rmse, Spectra, ID);
-    plots('reconstructionPerformanceBars', 1, [], 'Reconstruction NRMSE', 'LineNames', {'benign', 'malignant'}, 'Performance', nrmse, 'SaveOptions', options.saveOptions)
-    writeOutput(options, errFixingInfo, estimatedSpectra, hasRGBAnalysis && ~plusRGBAnalysis);
+    titl = 'RGB-Reconstruction NRMSE';
+    options.saveOptions.plotName = fullfile(options.saveOptions.savedir, '6-ReflectanceEstimationPerformance', options.action, titl);
+    plotReconstructionPerformanceBars(nrmse,{'benign', 'malignant'},titl,3,options.saveOptions);
+    writeOutput(options, errFixingInfoRGB, estimatedRGBSpectra, true);
+
 else
     writetable(struct2table(errors), strcat('../../logs/reflectance_estimation_comparison_', options.dataset,'_log.xlsx'));
 
@@ -202,17 +219,7 @@ function [smms, pvsms, nms, plotType] = getComparisonSets(options)
     elseif contains(lower(options.action), 'preset')
             pvsms = {'extended'}; %{'extended'};
             smms = {'Cor_Sample'}; %{'adaptive'}; % {'Cor_Sample'}; %{'Cor_Malignancy'};  {'Cor_All'}
-            if strcmp(options.dataset, 'saitama_v7_min_square_e')
-                nms = {'spatial olympus'}; %{'sameForChannel 0.0001'};
-            elseif strcmp(options.dataset, 'saitama_v7_min_region_e')
-                 nms = {'spatial olympus'};
-            elseif strcmp(options.dataset, 'saitama_v6_min_square_e')
-                 nms = {'spatial olympus'};
-            elseif strcmp(options.dataset, 'saitama_v6_min_region_e')
-                 nms = {'spatial olympus'};
-            else
-                nms = {'spatial olympus'};
-            end
+            nms =  {'sameForChannel 0.1'}; %{'sameForChannel 0.1'}; %{'fromOlympus'};%{'spatial olympus'};
             plotType = '';
 
     elseif contains(lower(options.action), 'extra') 
@@ -234,16 +241,16 @@ function nrmseArray = showNRMSE(rmse, measured, ID)
         for malignancy = 0:1
             i = i + 1;
             nrmseArray(i) = GetNRMSE(measured, rmse, [ID.IsBenign] ~= malignancy & strcmp({ID.Type}, state));
-            fprintf('NRMSE for malignancy %d  and state %s = %.4f\n',malignancy, state{1}, nrmseArray(i));               
+            %fprintf('NRMSE for malignancy %d  and state %s = %.4f\n',malignancy, state{1}, nrmseArray(i));               
         end
         nrmse = GetNRMSE(measured, rmse, strcmp({ID.Type}, state));
-        fprintf('NRMSE for %s = %.4f\n', state{1}, nrmse);
+        %fprintf('NRMSE for %s = %.4f\n', state{1}, nrmse);
     end
    nrmseArray = reshape(nrmseArray,[2, 3]); 
    
     for malignancy = 0:1
         nrmse = GetNRMSE(measured, rmse, [ID.IsBenign] ~= malignancy);
-        fprintf('NRMSE overall for malignancy %d = %.4f\n',malignancy, nrmse);
+        %fprintf('NRMSE overall for malignancy %d = %.4f\n',malignancy, nrmse);
     end
     
     nrmse = mean(rmse) /  ( max(measured(:)) - min(measured(:)));
@@ -265,17 +272,18 @@ function [] = writeOutput(options, errFixingInfo, estimatedSpectra, hasRGBAnalys
         writetable(struct2table(errFixingInfo), strcat('../../logs/reflectance_estimation_comparison_', options.dataset,'_log.xlsx'), 'Sheet', 'MSI');
         EstimatedSpectra = estimatedSpectra;
     end
-    if exist(options.outName, 'file')
+    filename = mkdir_custom(fullfile(options.saveOptions.savedir, '5-ReflectanceEstimation', options.action, 'refest.mat'));
+    if exist(filename, 'file')
         if (hasRGBAnalysis)
-            save(strrep(options.outName, '_rgb', ''), 'EstimatedRGBSpectra','-append');
+            save(filename, 'EstimatedRGBSpectra','-append');
         else
-            save(strrep(options.outName, '_rgb', ''), 'EstimatedSpectra', '-append');
+            save(filename, 'EstimatedSpectra', '-append');
         end
     else
         if (hasRGBAnalysis)
-            save(strrep(options.outName, '_rgb', ''), 'EstimatedRGBSpectra');
+            save(filename, 'EstimatedRGBSpectra');
         else
-            save(strrep(options.outName, '_rgb', ''), 'EstimatedSpectra');
+            save(filename, 'EstimatedSpectra');
         end
     end
 end

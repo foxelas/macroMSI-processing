@@ -33,8 +33,12 @@ if (saveOptions.saveImages)
             export_fig(filename , '-png','-native', '-nocrop');
             %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
         else
-            filename = fullfile(filepath, strcat(name, '.png'));
-            saveas(fig , filename);
+            filename = fullfile(filepath, name);
+            if (isfield(saveOptions, 'cropBorders') && saveOptions.cropBorders)
+                export_fig(filename , '-png','-native');
+            else
+                saveas(fig, filename, 'png');
+            end
             if (saveOptions.saveInBW)
                 filename = fullfile(filepathBW, strcat(name, '.eps'));
                 %export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');

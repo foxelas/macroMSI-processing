@@ -73,7 +73,9 @@ isPositive = [1 1 1 1 0 1];
 trueLabels = [1 1 1 1 0 0];
 options.saveOptions.saveImages = false;
 outImgClass = zeros(M,N);
-for i = 1:rois
+
+[~, orderedRois] = sort(cellfun(@(x) sum(x(:)), segmentMasks), 'descend');
+for i = 1:orderedRois
     [r, c] = find(segmentMaskI{i});
     outImgClass(segmentMaskI{i}) = cancerProb(i,2);
     %imshow(outImg);
