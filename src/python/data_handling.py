@@ -60,7 +60,7 @@ def get_base_dir():
 	return base_dir
 
 def get_data_dir():
-	data_dir = 'saitama_v7_min_region_e'
+	data_dir = 'saitama_v8_min_region_bright'
 	return data_dir
 
 def get_out_dir():
@@ -84,7 +84,7 @@ in_mat = loadmat( pjoin(in_dir, 'in.mat'))
 print('Finished loading input matfile.')#print('Loaded mat file with headers', in_mat.keys())
 
 out_dir = get_out_dir()
-out_mat = loadmat(pjoin(out_dir, 'ReflectanceEstimationPreset', 'out.mat'))
+out_mat = loadmat(pjoin(out_dir, '8-Features', 'out.mat'))
 print('Finished loading output matfile.')
 
 in_dir = get_in_dir()
@@ -153,35 +153,35 @@ def get_complete_spectra_internal():
 	complete_spectra = in_mat['CompleteSpectra']
 	return complete_spectra
 
-def get_darkIs_internal(): 
-	in_mat = load_in_mat()
-	darkIs = in_mat['DarkIs']
-	return darkIs
+# def get_darkIs_internal(): 
+# 	in_mat = load_in_mat()
+# 	darkIs = in_mat['DarkIs']
+# 	return darkIs
 
-def get_msi_names_internal(): 
-	in_mat = load_in_mat()
-	msi_names = in_mat['MSINames']
-	return msi_names
+# def get_msi_names_internal(): 
+# 	in_mat = load_in_mat()
+# 	msi_names = in_mat['MSINames']
+# 	return msi_names
 
-def get_msis_internal(): 
-	in_mat = load_in_mat()
-	msis = in_mat['MSIs']
-	return msis
+# def get_msis_internal(): 
+# 	in_mat = load_in_mat()
+# 	msis = in_mat['MSIs']
+# 	return msis
 
-def get_masks_internal(): 
-	in_mat = load_in_mat()
-	masks = in_mat['Masks']
-	return masks
+# def get_masks_internal(): 
+# 	in_mat = load_in_mat()
+# 	masks = in_mat['Masks']
+# 	return masks
 
 def get_spectra_names_internal():
 	in_mat = load_in_mat()
 	spectra_names = in_mat['SpectraNames']
 	return spectra_names
 
-def get_whiteIs_internal():
-	in_mat = load_in_mat()
-	whiteIs = in_mat['WhiteIs']
-	return whiteIs
+# def get_whiteIs_internal():
+# 	in_mat = load_in_mat()
+# 	whiteIs = in_mat['WhiteIs']
+# 	return whiteIs
 
 #######################Use of internals#########################
 estimated_spectra_i = get_reconstructed_spectra_internal()
@@ -216,29 +216,29 @@ complete_spectra_i = get_complete_spectra_internal()
 def get_complete_spectra():
 	return complete_spectra_i
 
-darkIs_i = get_darkIs_internal()
-def get_darkIs(): 
-	return darkIs_i
+# darkIs_i = get_darkIs_internal()
+# def get_darkIs(): 
+# 	return darkIs_i
 
-msi_names_i = get_msi_names_internal()
-def get_msi_names(): 
-	return msi_names_i
+# msi_names_i = get_msi_names_internal()
+# def get_msi_names(): 
+# 	return msi_names_i
 
-msis_i = get_msis_internal()
-def get_msis(): 
-	return msis_i
+# msis_i = get_msis_internal()
+# def get_msis(): 
+# 	return msis_i
 
-masks_i = get_masks_internal()
-def get_masks(): 
-	return masks_i
+# masks_i = get_masks_internal()
+# def get_masks(): 
+# 	return masks_i
 
 spectra_names_i = get_spectra_names_internal()
 def get_spectra_names():
 	return spectra_names_i
 
-whiteIs_i = get_whiteIs_internal()
-def get_whiteIs():
-	return whiteIs_i
+# whiteIs_i = get_whiteIs_internal()
+# def get_whiteIs():
+# 	return whiteIs_i
 
 def concat_features(feat1, feat2=None, feat3=None):
 	if feat1 is None and feat2 is not None:

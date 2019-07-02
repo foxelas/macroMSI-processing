@@ -1,6 +1,7 @@
-function [] = mkdir_custom(filepath)
-    if ~exist(filepath, 'dir')
-        mkdir(filepath);
-        addpath(filepath);
+function [filepath] = mkdir_custom(filepath)
+    filedir = fileparts(filepath);
+    if ~exist(filedir, 'dir')
+        mkdir(filedir);
+        addpath(filedir);
     end
 end
