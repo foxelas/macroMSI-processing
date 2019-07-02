@@ -39,13 +39,11 @@ smoothingMatrixMethod = options.smoothingMatrixMethod;
 pixelValueSelectionMethod = options.pixelValueSelectionMethod;
 noiseType = options.noiseType;
 
-if strcmp(smoothingMatrixMethod, 'markovian')
-    defaultRho = 0.99;
-    if isfield(options, 'rho')
-        rho = options.rho;
-    else 
-        rho = defaultRho;
-    end
+defaultRho = 0.99;
+if isfield(options, 'rho')
+    rho = options.rho;
+else 
+    rho = defaultRho;
 end
 
 if strcmp(smoothingMatrixMethod, 'adaptive')
@@ -227,14 +225,14 @@ switch smoothingMatrixMethod
         else 
             error('Unsupported type')
         end
-        
+	
     case 'adaptive'
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
         adaptiveOptions = options;
         adaptiveOptions.showImages = false;
-        adaptiveOptions.smoothingMatrixMethod = 'Cor_All';
+        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
         rhat = reflectanceEstimation(MSI, mask, spectrum, id, adaptiveOptions);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma);
+        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma, alpha);
        
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
@@ -269,12 +267,13 @@ elseif contains(noiseType, 'fromOlympus')
                 0.0000050300; 
                 0.0000083800; 
                 0.0001480000; 
-                0.0000148000]';   
+                0.0000148000]';  
+    if (hasNoiseParam); variance = variance .* options.noiseParam; end
     if ~strcmp(options.pixelValueSelectionMethod, 'rgb'); variance =  variance .* 10^4; else; variance =  variance .* 10^2;     end
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
     
-elseif contains(noiseType, 'spatial')
+elseif contains(noiseType, 'spatial') || contains(noiseType, 'spatiospectral')
     if isfield(options, 'windowDim'); windowDim = options.windowDim; else; windowDim = 5; end
     [windowKernel, windowElements] = makeKernel(windowDim, height, width);  
     if contains(lower(noiseType), 'olympus')
@@ -285,9 +284,18 @@ elseif contains(noiseType, 'spatial')
                     0.0000083800; 
                     0.0001480000; 
                     0.0000148000]'; 
+        if (hasNoiseParam); variance = variance .* options.noiseParam; end
         if ~strcmp(options.pixelValueSelectionMethod, 'rgb'); variance =  variance .* 10^6;    end
     else
-        if (hasNoiseParam); variance = ones(msibands,1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2; else; variance = ones(msibands,1) * (sqrt(0.5) * 0.001 + 0.03)^2; end
+        if (hasNoiseParam)
+            if length(options.noiseParam) == 2
+                variance = ones(msibands,1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2; 
+            else
+                variance = ones(msibands,1) * (options.noiseParam)^2; 
+            end
+        else
+            variance = ones(msibands,1) * (sqrt(0.5) * 0.001 + 0.03)^2;
+        end
     end
 else 
     error('Not implemented');
@@ -302,10 +310,38 @@ Kn = diag(variance); %different at every channel
 % Covariance matrix of the additive noise ends
 
 hw = height * width;
+wavelengths = size(H,2);
 Gres = reshape(G, msibands, hw); % msi = im2double(diag(coeff) * double(im2uint16(G(:,row,col))) );
 activeRegionIdx = sub2ind([height,width], find(mask));
+estimatedReflectances = zeros(wavelengths, length(activeRegionIdx));
    
-if contains(noiseType, 'spatial')
+if contains(noiseType, 'spatiospectral')
+	
+	markovian = getMarkovian(windowDim^2, rho);
+    I = eye(windowDim^2);
+	kronProd = kron(I, H);
+	kronNoise = kron(I, Kn);
+    %kronNoise = repmat(Kn, windowDim^2, windowDim^2);
+    sigma = var(G,0,'all');
+    xx = sigma^2 .* markovian;
+    ff = kron(xx, M);
+	selector = zeros(wavelengths, wavelengths * windowDim^2);
+	selector(:,(ceil(windowDim^2 /2) - 1) * wavelengths + (1:wavelengths)) = eye(wavelengths);
+    nom = selector * ff * kronProd';
+    denom = kronProd * ff * kronProd' + kronNoise;
+    C =  nom / denom;
+    halfWindow = floor(windowDim / 2);
+	for p = 1:length(activeRegionIdx)
+        idx = activeRegionIdx(p);
+        [ii, jj] = ind2sub([height, width], idx);
+        if (ii > halfWindow && ii < (height - halfWindow) && jj > halfWindow && jj < (width - halfWindow) )
+            windowedImage = G(:,ii-halfWindow:ii+halfWindow,jj-halfWindow:jj+halfWindow);
+            gg = reshape(windowedImage, [msibands * windowDim * windowDim, 1]);
+            estimatedReflectances(:, p) = C * gg;
+        end
+	end
+		
+elseif contains(noiseType, 'spatial')
 %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
 %  Based on "A Spatially AdaptiveWiener Filter for Reflectance Estimation"[Urban2008]
 
@@ -320,7 +356,6 @@ if contains(noiseType, 'spatial')
         Kcov(b, :, :) = sdGb.^2;
     end
     
-    estimatedReflectance = zeros(size(H,2), length(activeRegionIdx));
     for p = 1:length(activeRegionIdx)
         [i, j] = ind2sub([height,width], activeRegionIdx(p));
         meanGij = meanG(:,i,j);
@@ -328,13 +363,14 @@ if contains(noiseType, 'spatial')
         Kij = diag(Kcov(:,i,j));
         W = multiplyToInverse(Kij, Kij + Kn); % same as kInWindow * inv(kInWindow + Kn)
         What = multiplyToInverse(MH, HMH + Kij - W * Kij, hasSVDTol, tol);
-        estimatedReflectance(:, p) = What * W * centeredGij + What * meanGij;  
+        estimatedReflectances(:, p) = What * W * centeredGij + What * meanGij;  
     end
     
 else    
     div = multiplyToInverse(MH , HMH + Kn, hasSVDTol, tol); % M 401x401, H' 401x7, inv() 7x7
-    estimatedReflectance = div * Gres(:, activeRegionIdx); % 401 x 100 
+    estimatedReflectances = div * Gres(:, activeRegionIdx); % 401 x 100 
 end  
+
 
 %{ 
 Show all estimates in the region
@@ -359,26 +395,39 @@ end
 
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
-    estimatedReflectance = max(estimatedReflectance, 0);
-    estimatedReflectance = min(estimatedReflectance, 1);
+    estimatedReflectances = max(estimatedReflectances, 0);
+    estimatedReflectances = min(estimatedReflectances, 1);
     
-    estimatedReflectance = reshape(estimatedReflectance, size(H,2), height, width);
+    estimatedReflectance = reshape(estimatedReflectances, size(H,2), height, width);
 else   
 
-    idx = any(estimatedReflectance < 0) | any(estimatedReflectance > 1);
-    if any(estimatedReflectance(:) < 0 ) || any(estimatedReflectance(:) > 1 )
-        estimatedReflectance = max(estimatedReflectance, 0);
-        estimatedReflectance = min(estimatedReflectance, 1);
-        warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!(ID index = %d)', id.Index);
+    idx = ~(any(estimatedReflectances < 0) | any(estimatedReflectances > 1));
+    if sum(idx) > 1
+        estimatedReflectances = estimatedReflectances(:,idx);
     else
-        estimatedReflectance = estimatedReflectance(:,~idx);
+        estimatedReflectances = max(estimatedReflectances, 0);
+        estimatedReflectances = min(estimatedReflectances, 1);
+        warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!(ID index = %d)', id.Index);
     end
     
-    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
-    [nmse, ~] = min(Nmse(spectrum, estimatedReflectance));
-    estimatedReflectance = estimatedReflectance(:,rmseIdx)';
+%     estimatedReflectances( :, ~any(estimatedReflectances,1) ) = [];  %columns
+%     estimatedReflectance = mean(estimatedReflectances,2)';
+%     rmse = Rmse(spectrum, estimatedReflectance');
+%     nmse = Nmse(spectrum, estimatedReflectance');
+%     minIdx =[];
+    
+    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectances));
+    [nmse, ~] = min(Nmse(spectrum, estimatedReflectances));
+    estimatedReflectance = estimatedReflectances(:,rmseIdx)';
     [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
     minIdx = [mini, minj]; 
+    
+%     f = figure(1);
+%     clf(f);
+%     hold on 
+%     plot(spectrum)
+%     plot(estimatedReflectance)
+%     hold off
 end
 % Perform the estimation for all pixels in an image area ends
 
@@ -390,9 +439,19 @@ function rmse = Rmse(r_measured, r_estimated)
         % Root Mean Square Error
         [N, M] = size(r_estimated);
         rmse = zeros(1, M);
-        for i = 1:M
-            rmse(i) = sqrt((r_measured - r_estimated(:,i))'*(r_measured - r_estimated(:,i))/ N);
+%         fig = figure(1);
+%         clf(fig)
+%         hold on
+        for i = 1:M         
+            if all(r_estimated(:, i)) == 0
+                rmse(i) = 100;
+            else
+                rmse(i) = sqrt((r_measured - r_estimated(:,i))'*(r_measured - r_estimated(:,i))/ N);
+%                 plot(r_estimated(:,i))
+            end
         end
+%         plot(r_measured, '-.b')
+%         hold off
 end
 
 function nmse = Nmse(r_measured, r_estimated)
@@ -441,12 +500,12 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma)
+function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma, alpha)
 
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
     r = num2cell( Spectra(idxs,:)',1);
-    d = cellfun(@(x) reflectanceDistance(x, rhat'), r); % or reflectanceDistance
+    d = cellfun(@(x) reflectanceDistance(x, rhat'), r, alpha); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;

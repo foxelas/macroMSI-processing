@@ -15,6 +15,7 @@ function [] = plotMontage(left,right,fig,saveOptions)
     
     imshowpair(left,right,'montage');
     saveOptions.cropBorders = true;
+    pause(0.1)
     savePlot(fig, saveOptions);
     
     warning('on');

@@ -20,7 +20,7 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 	
 	if contains(lower(plotType), 'sensitivity')
 		sensitivityN = size(sensitivity, 2);
-		if (saveInBW)
+		if (saveOptions.saveInBW)
 			color(1,:)=HInt2RGB(1,100); % red, darkest 
 			color(2,:)=HInt2RGB(3,64); % green, less dark 
 			color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
@@ -29,7 +29,7 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 			%color = flip(color);
 		end
 
-		if strcmp(plotType, 'normSensitivity'); n  = max(sensitivity(:)); else; n = 1; end
+		n  = max(sensitivity(:));
 		
 		hold on;
 		if (sensitivityN == 7)
@@ -41,14 +41,16 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 			plot(wavelength, sensitivity(:, j) / n, 'Color', color(j,:), 'LineWidth', 3, 'DisplayName', fnames{j});
 		end
 		hold off;
-		if strcmp(plotType, 'normSensitivity'); ylabel('Normalized Sensitivity', 'FontSize', 17); else; ylabel('Sensitivity', 'FontSize', 17); end     
-		xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
+		ylabel('Sensitivity [a.u.]', 'FontSize', 15);    
+		xlabel('Wavelength (nm)', 'FontSize', 15);
+        ylim([0,1]);
+        yticks([0, 0.5, 1]);
 	end
 	
 	if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination')); yyaxis right; end
 
 	if contains(lower(plotType), 'illumination')
-		if (saveInBW)
+		if (saveOptions.saveInBW)
 			color(7,:)=HInt2RGB(1,100); % red, darkest 
 			color(6,:)=HInt2RGB(7,82); % cyan, less dark 
 			color(5,:)=HInt2RGB(3,64); % green, less dark 
@@ -61,33 +63,25 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 		end
 
 		hold on;
+        fc = [450, 465, 505, 525, 575, 605, 630];      
 		for j = 1:numel(fc)
-			plot(wavelength, illumination(:, j) * 10, 'DisplayName', [ num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
+			plot(wavelength, illumination(:, j), 'DisplayName', [ num2str(fc(j)), ' nm'], 'Color', color(j,:), 'LineWidth', 2);
 		end
-		plot(wavelength, illumination(:,8) * 10, 'DisplayName', 'white', 'LineStyle', ':', 'LineWidth', 3);
+		plot(wavelength, illumination(:,8), 'DisplayName', 'white', 'LineStyle', ':', 'LineWidth', 3);
 		hold off;
-		xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
-		ylabel('Luminous Intensity', 'FontSize', 17);
+		xlabel('Wavelength (nm)', 'FontSize', 15);
+		ylabel('Luminous Intensity [mW/sr/m^2]', 'FontSize', 5);
 	end
 	
-	if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination'))
-		title('Overlap of illumination and camera sensitivity spectrum')
-	elseif contains(lower(plotType), 'normsensitivity') 
-		title('Normalized Camera Sensitivities', 'FontSize', 15);
-	elseif contains(lower(plotType), 'sensitivity') 
-		title('Camera Sensitivities', 'FontSize', 15);
-	elseif contains(lower(plotType), 'illumination') 
-		title('Normalized Luminous Intensity', 'FontSize', 15);
-	end
-
 	ax = gca;
 	ax.FontSize = 15; 
 	xlim([400, 700]);  
-	xticks([400, 500, 600, 700]);
-	yticks([0, 0.5, 1]);
+	xticks([400, 500, 600, 700]);	
 	l = legend;
 	l.FontSize = 13;
 	
+    saveOptions.saveImages = true;
+    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', plotType);
 	savePlot(fig, saveOptions);
 
 end
