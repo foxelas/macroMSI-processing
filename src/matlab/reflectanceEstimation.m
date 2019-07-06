@@ -505,7 +505,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma, alpha)
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
     r = num2cell( Spectra(idxs,:)',1);
-    d = cellfun(@(x) reflectanceDistance(x, rhat'), r, alpha); % or reflectanceDistance
+    d = cellfun(@(x) reflectanceDistance(x, rhat', alpha), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;
