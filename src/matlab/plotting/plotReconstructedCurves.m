@@ -25,6 +25,7 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 
 	% each column of 'spectrum' is that data for a plot line
 	curveN = size(reflectanceSpectra, 2);
+    
 	if isempty(curveNames)
 		curveNames = {'MS center \lambda', 'Measured', 'Est-MSgreen', 'Est-MSrms', 'Est-MSadjusted', 'Est-MSextended', 'Est-RGB'};
 	else
@@ -42,25 +43,33 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 	
 	hold on
 	for i = 1:curveN
-		if  contains( lower(curveNames{i + 1}), 'rgb')
+        if (curveN > 1); currentCurvName = curveNames{i + 1}; else; currentCurvName= curveNames{i}; end
+		if contains( lower(currentCurvName), 'rgb')
 			lineStyle = ':';
-		elseif contains( lower(curveNames{i + 1}), 'measured')
+        elseif contains( lower(currentCurvName), 'measured')
 			lineStyle = '--';
 		else 
 			lineStyle = '-';
-		end
-		plot(wavelength, reflectanceSpectra(:, i) .* 100, 'Color', color(i, :), 'Marker', markers{i}, ...
-			'LineWidth', 1.3, 'LineStyle', lineStyle, 'DisplayName', curveNames{i + 1}); % plot estimated reflectances
-	end
-	plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', curveNames{1}, 'LineWidth', 1.3); % plot measured reflectance
+        end
+        if (curveN > 1); clrs = color(i, :); else; clrs = 'b'; end
+		plot(wavelength, reflectanceSpectra(:, i) .* 100, 'Color', clrs, 'Marker', markers{i}, ...
+			'LineWidth', 1.3, 'LineStyle', lineStyle, 'DisplayName', currentCurvName); % plot estimated reflectances
+    end
+    if (curveN > 1)
+        plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', curveNames{1}, 'LineWidth', 1.3); % plot measured reflectance
+    end
 	hold off
 	
-	xlabel('Wavelength \lambda (nm)');
-	ylabel('Reflectance %');
+	xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
+	ylabel('Reflectance %', 'FontSize', 15);
 	xlim([400, 700]);
-	figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
-	title(figTitle);
-	legend({curveNames{2:(curveN+1)}, curveNames{1}}, 'Location', 'best', 'FontSize', 12); % 'Orientation','horizontal');
+	%figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
+	%title(figTitle);
+    if (curveN > 1)
+        legend({curveNames{2:(curveN+1)}, curveNames{1}}, 'Location', 'best', 'FontSize', 15); % 'Orientation','horizontal');
+    else
+        legend(curveNames{1}, 'Location', 'northwest', 'FontSize', 15); % 'Orientation','horizontal');
+    end
 
     saveOptions.cropBorders = true;
 	savePlot(fig, saveOptions);

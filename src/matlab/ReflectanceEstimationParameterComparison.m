@@ -1,18 +1,39 @@
 sigma1range = 10.^(-5:0.2:0);
 sigma2range = 10.^(-5:0.2:0);
+olympusSigmaRange = kron( 10.^(-4:-3), [1, 5]);
 sigma1n = length(sigma1range);
 sigma2n = length(sigma2range);
 aRange = 0:0.2:1;
 an = length(aRange);
 gammaRange = 0.5:0.5:3;
+powerRange = -1:1;
 gamman = length(gammaRange);
 
 options.pixelValueSelectionMethod = 'extended';
-n = 1051;
+
+idx = 0;
+for rho = [0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
+    for windowDim = [ 3, 5, 9 ]
+        for sigma = olympusSigmaRange
+            idx = idx + 1;
+        end
+    end
+end  
+for i = sigma1range
+    idx = idx + 1;
+end
+for i = sigma1range
+    for j = sigma2range
+        idx = idx + 1;
+    end
+end    
+n = idx;
+
 reconstructions = zeros(msiN, n, 81);
 evaluation = zeros(msiN, n, 3);
 settings = struct('rho', [], 'windowDim', [], 'noiseType', {}, 'smoothingMatrixMethod', {}, 'noiseParam', {});
-%w = warning('off', 'all');
+w = warning('off', 'all');
+
 
 for k = 1:msiN
     
@@ -27,9 +48,9 @@ for k = 1:msiN
     measured = measuredSpectrum;
     
     idx = 0;
-    for rho = [0.6, 0.9, 0.95, 0.97, 0.985]
+    for rho = [0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
         for windowDim = [ 3, 5, 9 ]
-            for sigma = kron( 10.^(-5:-3), [1, 5])
+            for sigma = olympusSigmaRange
                 idx = idx + 1;
                 settings(idx).rho = rho;
                 settings(idx).windowDim = windowDim;
@@ -49,33 +70,58 @@ for k = 1:msiN
                 evaluation(k, idx, :) = [rmse, nmse, gfc];
             end
         end
-    end
+    end  
     
-    for i = 1:sigma1n
+%     for rho = [0.6, 0.9, 0.95, 0.97, 0.985]
+%         for windowDim = [ 3, 5, 9 ]
+%             for i = 1:sigma1n
+%                 idx = idx + 1;
+%                 settings(idx).rho = rho;
+%                 settings(idx).windowDim = windowDim;
+%                 settings(idx).noiseType = 'spatiospectral';
+%                 settings(idx).smoothingMatrixMethod = 'Cor_Sample';
+%                 settings(idx).noiseParam = {sigma1range(i)};
+%                 
+%                 options.rho = rho;
+%                 options.windowDim = windowDim; 
+%                 options.noiseType = 'spatiospectralolympus';
+%                 options.smoothingMatrixMethod = 'Cor_Sample';
+%                 options.noiseParam = sigma1range(i);
+%      
+%                 [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
+%                 gfc = GoodnessOfFit(estimated, measured);
+%                 reconstructions(k, idx, :) = estimated;
+%                 evaluation(k, idx, :) = [rmse, nmse, gfc];
+%             end
+%         end
+%     end  
+    
+    for i = sigma1range
         idx = idx + 1;
         settings(idx).noiseType = 'sameForChannel';
         settings(idx).smoothingMatrixMethod = 'Cor_Sample';
-        settings(idx).noiseParam = {sigma1range(i)};
+        settings(idx).noiseParam = {i};
                 
         options.noiseType = 'sameForChannel';
         options.smoothingMatrixMethod = 'Cor_Sample';
-        options.noiseParam = sigma1range(i);
+        options.noiseParam = i;
         [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
         gfc = GoodnessOfFit(estimated, measured);
         reconstructions(k, idx, :) = estimated;
         evaluation(k, idx, :) = [rmse, nmse, gfc];
     end
     
-    for i = 1:sigma1n
-        for j = 1:sigma2n
+    for i = sigma1range
+        for j = sigma2range
             idx = idx + 1;
             settings(idx).noiseType = 'spatial';
             settings(idx).smoothingMatrixMethod = 'Cor_Sample';
-            settings(idx).noiseParam = {sigma1range(i) , sigma2range(j)};
-        
+            settings(idx).noiseParam = {i , j};
+            
             options.noiseType = 'spatial';
             options.smoothingMatrixMethod = 'Cor_Sample';
-            options.noiseParam = [sigma1range(i) , sigma2range(j)];
+            
+            options.noiseParam = [i ,j];
             [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
             gfc = GoodnessOfFit(estimated, measured);
             reconstructions(k, idx, :) = estimated;
@@ -83,44 +129,43 @@ for k = 1:msiN
         end
     end
     
-    for i = -3:3
-        idx = idx + 1;
-        
-        settings(idx).noiseType = 'fromOlympus';
-        settings(idx).smoothingMatrixMethod = 'Cor_Sample';
-        settings(idx).noiseParam = {10^i};
-            
-        options.noiseType = 'fromOlympus';
-        options.noiseParam = 10^i;
-        
-        [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
-        gfc = GoodnessOfFit(estimated, measured);
-        reconstructions(k, idx, :) = estimated;
-        evaluation(k, idx, :) = [rmse, nmse, gfc];
-    end
+%     for i = powerRange
+%         idx = idx + 1;
+%         settings(idx).noiseType = 'fromOlympus';
+%         settings(idx).smoothingMatrixMethod = 'Cor_Sample';
+%         settings(idx).noiseParam = {10^i};
+%             
+%         options.noiseType = 'fromOlympus';
+%         options.noiseParam = 10^i;
+%         
+%         [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
+%         gfc = GoodnessOfFit(estimated, measured);
+%         reconstructions(k, idx, :) = estimated;
+%         evaluation(k, idx, :) = [rmse, nmse, gfc];
+%     end
     
-    for a = aRange
-        for gamma = gammaRange
-            for i = -3:3              
-                idx = idx + 1;
-                settings(idx).noiseType = 'fromOlympus';
-                settings(idx).smoothingMatrixMethod = 'adaptive';
-                settings(idx).noiseParam = {a, gamma, 10^i};
-
-                options.alpha = a;
-                options.gamma = gamma;
-                options.smoothingMatrixMethod = 'adaptive';
-                options.noiseType = 'fromOlympus';
-                options.noiseParam = 10^i;
-
-                [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
-                gfc = GoodnessOfFit(estimated, measured);
-                reconstructions(k, idx, :) = estimated;
-                evaluation(k, idx, :) = [rmse, nmse, gfc];
-            end
-        end
-    end
-    
+%     for a = aRange
+%         for gamma = gammaRange
+%             for i = powerRange              
+%                 idx = idx + 1;
+%                 settings(idx).noiseType = 'fromOlympus';
+%                 settings(idx).smoothingMatrixMethod = 'adaptive';
+%                 settings(idx).noiseParam = {a, gamma, 10^i};
+% 
+%                 options.alpha = a;
+%                 options.gamma = gamma;
+%                 options.smoothingMatrixMethod = 'adaptive';
+%                 options.noiseType = 'fromOlympus';
+%                 options.noiseParam = 10^i;
+% 
+%                 [estimated, rmse, nmse, ~] = reflectanceEstimation(msi, mask, measured, ID(k), options); 
+%                 gfc = GoodnessOfFit(estimated, measured);
+%                 reconstructions(k, idx, :) = estimated;
+%                 evaluation(k, idx, :) = [rmse, nmse, gfc];
+%             end
+%         end
+%     end
+%     
 end
 warning(w);
 
@@ -132,7 +177,7 @@ for i = 1:size(reconstructions, 2)
     settings(i).gfc = evaluationMeans(i,3);
 end
 
-savefile = fullfile(options.saveOptions.savedir, 'RecostructionComparison', 'reconstructionComparison.mat');
+savefile = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'reconstructionComparison.mat');
 save(savefile, 'reconstructions', 'evaluation', 'settings', 'evaluationMeans');
 
 
@@ -182,7 +227,28 @@ plotGFC(sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$',...
 best = settings(idx(1:10));
 
 plotReconstructionGIF(Spectra, reconstructions);
-    
+
+bestSpatioSpect = 3; 
+bestSimple = 504;
+
+fig = figure(1);
+gfcSimple = evaluation(:,bestSimple,3);
+histogram(gfcSimple, 7);
+ax  = get(gca);
+ax.FontSize = 18;
+xlabel('Goodness-Of-Fit Criterion', 'FontSize', 20);
+ylabel('Number of POIs', 'FontSize', 20);
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'simpleHist');
+savePlot(fig, options.saveOptions);
+fig = figure(2);
+gfcbestSpatioSpect = evaluation(:,bestSpatioSpect,3);
+histogram(gfcbestSpatioSpect, 7);
+ax  = get(gca);
+ax.FontSize = 18;
+xlabel('Goodness-Of-Fit Criterion', 'FontSize', 20);
+ylabel('Number of POIs', 'FontSize', 20);
+options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'spatiospectHist');
+savePlot(fig, options.saveOptions);
     
 function gfc = GoodnessOfFit(reconstructed, measured)
     gfc = abs(reconstructed * measured') / ( sqrt(sum(reconstructed.^2)) * sqrt(sum(measured.^2)));
