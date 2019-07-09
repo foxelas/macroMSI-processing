@@ -27,7 +27,9 @@ function [] = plotNMSE2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig,saveOptions
     yticks(x2);
     zlabel(ylab, 'FontSize', 30);
     %title(figTitle, 'FontSize', 15);
-    colorbar('Location', 'northoutside')
+    c = colorbar('Location', 'northoutside');
+    c.LimitsMode = 'manual';
+    c.Limits = [0,0.1];   
     pause;
     savePlot(fig, saveOptions);
     

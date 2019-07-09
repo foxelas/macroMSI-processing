@@ -38,26 +38,28 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 		end
 	end
 		
-	color = colorcube(curveN+10);         
+	color = colorcube(curveN+3); 
+    color = color(3:end-1, :);
+    
 	[~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths
 	
 	hold on
 	for i = 1:curveN
-        if (curveN > 1); currentCurvName = curveNames{i + 1}; else; currentCurvName= curveNames{i}; end
+        currentCurvName= curveNames{i};
 		if contains( lower(currentCurvName), 'rgb')
 			lineStyle = ':';
+            clrs = 'k';
         elseif contains( lower(currentCurvName), 'measured')
 			lineStyle = '--';
+            clrs = 'g';
 		else 
 			lineStyle = '-';
+            clrs = color(i, :);
         end
-        if (curveN > 1); clrs = color(i, :); else; clrs = 'b'; end
 		plot(wavelength, reflectanceSpectra(:, i) .* 100, 'Color', clrs, 'Marker', markers{i}, ...
-			'LineWidth', 1.3, 'LineStyle', lineStyle, 'DisplayName', currentCurvName); % plot estimated reflectances
+			'LineWidth', 2, 'LineStyle', lineStyle, 'DisplayName', currentCurvName); % plot estimated reflectances
     end
-    if (curveN > 1)
-        plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', curveNames{1}, 'LineWidth', 1.3); % plot measured reflectance
-    end
+    plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', 'Channel Wavelength', 'LineWidth', 1.3); % plot measured reflectance
 	hold off
 	
 	xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
@@ -65,12 +67,11 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 	xlim([400, 700]);
 	%figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
 	%title(figTitle);
-    if (curveN > 1)
-        legend({curveNames{2:(curveN+1)}, curveNames{1}}, 'Location', 'best', 'FontSize', 15); % 'Orientation','horizontal');
-    else
-        legend(curveNames{1}, 'Location', 'northwest', 'FontSize', 15); % 'Orientation','horizontal');
-    end
-
+    legend([curveNames,'Channel Wavelength'], 'Location', 'EastOutside', 'FontSize', 15); % 'Orientation','horizontal');
+    
+    %Optional
+    set(gcf, 'Position', get(0, 'Screensize'));
+    
     saveOptions.cropBorders = true;
 	savePlot(fig, saveOptions);
 

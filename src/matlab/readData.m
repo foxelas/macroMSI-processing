@@ -4,8 +4,7 @@ disp('Initialization.')
 load(fullfile(options.systemdir, 'system.mat')); % camera system parameters
 load(fullfile(options.systemdir, 'data.mat')); % image data
 load(fullfile(options.systemdir, 'ID.mat')); % image data id and info struct
-precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
-load(precomputedFile);
+%load(fullfile(options.systemdir, 'precomputedParams.mat')); %pre-set parameters
 
 if (contains(dataset, 'bright'))
     ID = IDbrights;

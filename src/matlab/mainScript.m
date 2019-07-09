@@ -1,8 +1,8 @@
 %% main 
 close all; clc; 
 
-showImages = true;
-saveImages = true; %true;
+showImages = false;
+saveImages = false; %true;
 dataset = 'saitama_v8_min_region_bright';
 tryReadData = false; %true;
     
@@ -14,10 +14,10 @@ readData; %% redo intial bg removal with labels  etc the images are corrupt
 
 
 
-ReflectanceEstimationParameterComparison;
+%ReflectanceEstimationParameterComparison;
 
 
 % options.action = 'Refest_Preset_plusrgb';
-%actionReflectanceEstimationComparison;
+actionReflectanceEstimationComparison;
 
 

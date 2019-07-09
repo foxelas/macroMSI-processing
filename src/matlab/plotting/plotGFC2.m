@@ -35,7 +35,9 @@ function [] = plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig,saveOptions)
     %title(figTitle, 'FontSize', 15);
     %g = surf(xy, 0.99*ones(size(y)));
     %g.EdgeColor = [0.4660 0.6740 0.1880];
-    colorbar('Location', 'northoutside')
+    c = colorbar('Location', 'northoutside');
+    c.LimitsMode = 'manual';
+    c.Limits = [0.9,1];    
     hold off
     
     pause;

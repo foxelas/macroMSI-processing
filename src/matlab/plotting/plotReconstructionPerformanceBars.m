@@ -20,7 +20,7 @@ function [] = plotReconstructionPerformanceBars(performance,lineNames,figTitle,f
         %color = flip(color);
     end
     barPlot = GetBarPlot(lineNames, performance * 100, color, figTitle, 'Malignancy', 'NRMSE(%)',...
-        {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 15], 12, true);
+        {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 10], 12, true);
     
     savePlot(fig, saveOptions);
 
