@@ -147,8 +147,16 @@ def get_classifier(classifier_name):
 		clf = DecisionTreeClassifier(criterion=b)
 
 	elif 'Random Forest' in classifier_name:
-		a, b, c, d = classifier_name.split('-') 
-		clf = RandomForestClassifier(n_estimators=int(b), criterion=c, max_features=d, n_jobs=-1, random_state=2)
+		a, b, c, d, e, f = classifier_name.split('-') 
+		d = None if (d == 'none') else float(d)
+		e = None if (e == 'none') else int(e)
+		if f == 'with_penalty':
+			f = 'balanced'
+		elif f == 'harsh_penalty':
+			f = {0:1.5, 1:1.0}
+		else:
+			f = {0:1.0 , 1:1.0}
+		clf = RandomForestClassifier(n_estimators=int(b), criterion=c, max_features=d, max_depth=e, class_weight=f, n_jobs=-1, random_state=2)
 
 	elif 'Naive Bayes' in classifier_name:
 		clf = GaussianNB()
@@ -311,7 +319,7 @@ def get_svm_classifier_names(kernels=None, Cs=None, gammas=None, shrinkings=None
 	if Cs is None: 
 		Cs = {0.25, 0.5, 1.0, 2.0, 5.0}
 	if gammas is None:
-		gammas = {'auto', 'scale', 0.5, 1, 2}
+		gammas = {'auto', 'scale'}
 	if shrinkings is None: 
 		shrinkings = {True, False}
 	if penalties is None:
@@ -326,18 +334,24 @@ def get_svm_classifier_names(kernels=None, Cs=None, gammas=None, shrinkings=None
 							names.append('-'.join(['SVM', kernel, str(C), str(gamma), str(shrinking), has_penalty]))
 	return names
 
-def get_rf_classifier_names(estimators=None, criteria=None, features=None): 
+def get_rf_classifier_names(estimators=None, criteria=None, features=None, depth = None, penalties=None): 
 	if estimators is None:
-		estimators = {10, 20, 50, 100}
+		estimators = {20, 50, 100}
 	if criteria is None:
 		criteria = {'gini', 'entropy'}
 	if features is None: 
-		features = {'auto', 'sqrt', 'log2'}
+		features = {'none', 'sqrt', 'log2'}
+	if depth is None: 
+		depth = {'none', 20}
+	if penalties is None:
+		penalties = {'no_penalty', 'with_penalty', 'harsh_penalty'}
 	names = []
 	for n_estimators in estimators:
 		for criterion in criteria:
 				for max_features in features:
-						names.append('-'.join(['Random Forest', str(n_estimators), criterion, max_features]))
+					for max_depth in depth:
+						for has_penalty in penalties:
+							names.append('-'.join(['Random Forest', str(n_estimators), criterion, max_features, str(max_depth), has_penalty]))
 	return names
 
 
@@ -363,11 +377,11 @@ def get_validation_classifiers_noRF():
 	clfs.append({"LDA", "QDA"})
 	return clfs
 
-def get_validation_classifiers_few():
-	clfs = get_svm_classifier_names({'linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'harsh_penalty'})
-	clfs.append(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
-	clfs.append({"Random Forest-20-gini-sqrt", "Random Forest-50-entropy-auto"})
-	clfs.append({"LDA", "QDA"})
+def get_validation_classifiers_withRF():
+	clfs = get_svm_classifier_names()
+	clfs.append(get_knn_classifiers_names())
+	clfs.append(get_rf_classifier_names())
+	#clfs.append({"LDA", "QDA"})
 	return clfs
 
 
@@ -472,6 +486,6 @@ current_run_case = 'Validation MSI'
 column_names = (",").join([current_run_case, 'Input', 'Feature', 'Dimred1', 'NComp1', 'Dimred2', 'NComp2', 'Accuracy', 'AUC', \
 				'Specificity', 'Sensitivity', 'FPR', 'FNR', 'BalancedAccuracy', 'F1', '\n' ])
 dh.write_log(classification_log, column_names)
-compare_validation_performance(get_validation_classifiers_few(), 'Validation_Classifiers', True, False, False, \
+compare_validation_performance(get_validation_classifiers_withRF(), 'Validation_Classifiers', True, False, False, \
 	{'unique', 'unique_unfixed', 'unique_fixed'},  { 'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect' }, \
 	{'None', 'PCA', 'ICA'}, {'None', 'PCA', 'ICA'}, {10, 20, None}, {10, 20, None})
