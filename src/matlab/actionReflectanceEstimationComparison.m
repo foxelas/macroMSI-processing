@@ -5,7 +5,7 @@ w = warning('off', 'all');
 
 methods = { 'MSI-Simple', 'MSI-SpatioSpectral', 'MSI-Spatial', 'RGB-Simple' }; 
 methodsN = length(methods); 
-estimatedSpectra = zeros(msiN, length(wavelength), methodsN);
+multipleReconstructions = zeros(msiN, length(wavelength), methodsN);
 nmses = zeros(msiN, methodsN);
 gfcs = zeros(msiN, methodsN);
 
@@ -23,7 +23,7 @@ for k = 1:msiN
     options.sigma2 = sigma2;
 	
 	[reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions( msi, rgb, mask, measured, ID(k), options, methods);
-    estimatedSpectra(k,:,:) = reconstructedArray; 
+    multipleReconstructions(k,:,:) = reconstructedArray; 
 	nmses(k,:) = nmseArray;
     gfcs(k,:) = gfcArray;
 	
@@ -37,23 +37,21 @@ gfcTable = array2table(gfcs,...
 'VariableNames', cellfun(@(x) strrep(x, '-', ''), methods, 'un', 0));
 errorInfo = GetErrorInfoStruct(nmses, gfcs);
 
-options.showImages = true; 
-options.saveOptions.saveImages = true;
 for i = 1:methodsN
 	nmseBars = getNmseForBarPlot(nmses(:, i), ID, methods{i}, options);
     options.saveOptions.plotName = fullfile(options.saveOptions.savedir, '6-ReflectanceEstimationPerformance', strcat('hist_', methods{i}));
     plotGFCHistogram(gfcs(:,i), 1, options.saveOptions);
 end
 
-filename = mkdir_custom(fullfile(options.saveOptions.savedir, '5-ReflectanceEstimation', 'refest.mat'));
 msiId = find(strcmp(methods, 'MSI-Simple'));
-EstimatedSpectra =  reconstructedArray(:,msiId); 
+EstimatedSpectra =  multipleReconstructions(:,:,msiId); 
 rgbId = find(strcmp(methods, 'RGB-Simple'));
-EstimatedRGBSpectra = reconstructedArray(:, rgbId); 
+EstimatedRGBSpectra = multipleReconstructions(:,:, rgbId); 
+filename = mkdir_custom(fullfile(options.saveOptions.savedir, '8-Features', 'out.mat'));
 if exist(filename, 'file')
-    save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo', '-append');
+    save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo', 'multipleReconstructions', 'methods', '-append');
 else 
-    save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo');
+    save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo', 'multipleReconstructions', 'methods');
 end
 %End of reflectance estimation comparison
 

@@ -11,7 +11,7 @@ function [lbpFeats] = getLBPFeatures(type, options, k, maxScale, neighbors, mapp
     end
 
     msibands = 9;
-    spectralNeighbors = 2;
+    %spectralNeighbors = 2;
     ConcatLbpFeatures = cell(maxScale, 1);
     SumLbpFeatures = cell(maxScale, 1);
     MMLbpFeatures = cell(maxScale, 1);

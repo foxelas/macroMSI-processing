@@ -11,13 +11,9 @@ options =  setOpt([], dataset, showImages, saveImages, tryReadData);
 readData; %% redo intial bg removal with labels  etc the images are corrupt 
 %plotMeasuredSpectra(ID, Spectra, 1, options.saveOptions);
 %load('D:\temp\Google Drive\titech\research\output\saitama_v8_min_region_bright\RecostructionComparison\reconstructionComparison.mat')
-
-
-
 %ReflectanceEstimationParameterComparison;
+%actionReflectanceEstimationComparison;
 
-
-% options.action = 'Refest_Preset_plusrgb';
-actionReflectanceEstimationComparison;
+%actionLBP;
 
 
