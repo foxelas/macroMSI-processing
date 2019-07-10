@@ -44,5 +44,4 @@ function [] = visualizeLBP(raw,whiteReference,specimenMask, g, saveOptions)
 
     
     end
-
 end 

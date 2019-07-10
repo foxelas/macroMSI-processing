@@ -89,5 +89,3 @@ function nmseBars = getNmseForBarPlot(nmses, ID, method, options)
     fprintf('NRMSE overall = %.4f\n', sum(nmseBars(:)));
 	
 end
-
-

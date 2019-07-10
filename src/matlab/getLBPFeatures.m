@@ -57,5 +57,4 @@ function [lbpFeats] = getLBPFeatures(type, options, k, maxScale, neighbors, mapp
     else 
         lbpFeats = RgbLbpFeatures;
     end
-
 end

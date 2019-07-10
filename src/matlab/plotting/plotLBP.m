@@ -34,4 +34,3 @@ function [] = plotLBP( lbpImage, figTitle, fig,saveOptions)
     savePlot(fig, saveOptions);  
 
 end
-
