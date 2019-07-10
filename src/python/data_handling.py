@@ -91,7 +91,7 @@ in_dir = get_in_dir()
 matfile = pjoin(in_dir, 'ID.mat')
 id_mat = loadmat(matfile)
 print('Finished loading ID matfile.')
-id_struct = id_mat['ID']
+id_struct = id_mat['IDbrights']
 
 ###################gets#####################
 

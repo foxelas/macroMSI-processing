@@ -486,6 +486,6 @@ current_run_case = 'Validation MSI'
 column_names = (",").join([current_run_case, 'Input', 'Feature', 'Dimred1', 'NComp1', 'Dimred2', 'NComp2', 'Accuracy', 'AUC', \
 				'Specificity', 'Sensitivity', 'FPR', 'FNR', 'BalancedAccuracy', 'F1', '\n' ])
 dh.write_log(classification_log, column_names)
-compare_validation_performance(get_validation_classifiers_few(), 'Validation_Classifiers', True, False, False, \
+compare_validation_performance(get_validation_classifiers_withRF(), 'Validation_Classifiers', True, False, False, \
 	{'unique', 'unique_unfixed', 'unique_fixed'},  { 'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect' }, \
 	{'None', 'PCA', 'ICA'}, {'None', 'PCA', 'ICA'}, {10, 20, None}, {10, 20, None})
