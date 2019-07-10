@@ -208,6 +208,7 @@ def train_classifier(train_indexes, classifier_name, feature_set, reduction1='No
 	train_data = dh.concat_features(train_spect, train_lbp)
 	train_data = scaler2.fit_transform(train_data)
 
+	#print(clf) 
 	clf.fit(train_data, train_labels)
 
 	return clf, dimred1, dimred2, scaler1, scaler2
@@ -373,14 +374,14 @@ def get_validation_classifiers():
 
 def get_validation_classifiers_noRF():
 	clfs = get_svm_classifier_names({'rbf','linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'with_penalty', 'harsh_penalty'})
-	clfs.append(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
-	clfs.append({"LDA", "QDA"})
+	clfs.extend(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
+	clfs.extend({"LDA", "QDA"})
 	return clfs
 
 def get_validation_classifiers_withRF():
 	clfs = get_svm_classifier_names()
-	clfs.append(get_knn_classifiers_names())
-	clfs.append(get_rf_classifier_names())
+	clfs.extend(get_knn_classifiers_names())
+	clfs.extend(get_rf_classifier_names())
 	#clfs.append({"LDA", "QDA"})
 	return clfs
 
