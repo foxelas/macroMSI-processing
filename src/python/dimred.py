@@ -10,8 +10,9 @@ from sklearn.feature_selection import SelectFromModel
 from sklearn.ensemble import RandomForestRegressor
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-from matplotlib import interactive, is_interactive
+from matplotlib import interactive, is_interactive, rcParams
 import matplotlib.pyplot as plt
+rcParams.update({'font.size': 20})
 
 
 interactive(True)
@@ -22,9 +23,9 @@ label_dict = dh.get_label_dict()
 ####################dimension reduction#######################
 # Dimension reduction is trained based on the measured set 
 
-def plot_da(X, X_labels, title):
+def plot_da(X, X_labels, tag, title):
 	fig = plt.figure()
-	tag = title.strip('Analysis')
+	#tag = title.strip('Analysis')
 	n_components = X.shape[1]
 
 	if n_components == 1 : #When X is reduced to 1 dimension
@@ -38,7 +39,7 @@ def plot_da(X, X_labels, title):
 		plt.xlabel('Samples')
 		plt.ylabel(tag)
 
-	elif n_components == 2 : #when X is reduced to 2 dimensions
+	elif n_components == 2  or n_components > 3: #when X is reduced to 2 dimensions
 		for label, marker, color in zip(range(2), ('s', 'o'), ('green', 'red')):
 			plt.scatter(x=X[:,0][X_labels == label], 
 						y=X[:,1][X_labels == label] * -1, #To flip the plot
@@ -64,16 +65,16 @@ def plot_da(X, X_labels, title):
 		ax.set_zlabel(tag + '3')
 
 	else:
-		print('Unsupported plot type for input with greater than 3 dimensions.')
+		print('Unsupported plot type for these dimensions.')
 		return 
 
 	leg = plt.legend(loc='upper right', fancybox=True)
 	leg.get_frame().set_alpha(0.7)
-	plt.title(title)
+	#plt.title(title)
 	plt.grid()
 	plt.tight_layout
 	plt.show()
-	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + '.png'), bbox_inches='tight')
+	plt.savefig(pjoin(out_dir, 'dimension_reduction', title + tag + '.png'), dpi=200, bbox_inches='tight')
 
 
 def plot_da_components(X, X_labels, title):
@@ -106,7 +107,10 @@ def get_dimred(method, components=2):
 
 	elif method == 'PCA': 
 		##################PCA#################
-		dimred_obj = PCA(n_components=components, random_state=2)
+		if (components == -1):
+			dimred_obj = PCA(random_state=2)
+		else:
+			dimred_obj = PCA(n_components=components, random_state=2)
 
 	elif method == 'SVD': 
 		##################SVD########
@@ -118,7 +122,10 @@ def get_dimred(method, components=2):
 
 	elif method == 'ICA':
 		##################ICA########
-		dimred_obj = FastICA(n_components=components, random_state=2, max_iter=500, tol=0.1)
+		if (components == -1):
+			dimred_obj = FastICA(random_state=2, max_iter=500, tol=0.1)
+		else:
+			dimred_obj = FastICA(n_components=components, random_state=2, max_iter=500, tol=0.1)
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
@@ -144,6 +151,12 @@ def get_dimred(method, components=2):
 		return	
 
 	return dimred_obj
+
+def _get_ica_map(ica):
+    """Get ICA topomap for components"""
+    fast_dot = np.dot
+    maps = fast_dot(ica.components_, ica.mixing_)
+    return maps
 
 def dimension_reduction(data, data_labels, method=None, show_figures=False, components=2, name=''):
 
@@ -173,22 +186,22 @@ def dimension_reduction(data, data_labels, method=None, show_figures=False, comp
 		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
 			print("PCA-explained variance ", fitted_dimred.explained_variance_ratio_)
-			plot_da(data_transformed, data_labels,'Principal Component Analysis' + '(' + name + ')')
+			plot_da(data_transformed, data_labels,'PC', name)
 
 	elif method == 'SVD': 
 		##################SVD########
 		fitted_dimred = dimred_obj.fit(data)
 		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'SVD Component Analysis' + '(' + name + ')') 
-			plot_da_components(data_transformed, data_labels, 'SVD Components' + '(' + name + ')')
+			plot_da(data_transformed, data_labels, 'SVD C', name) 
+			plot_da_components(data_transformed, data_labels, 'SVD Component Analysis' + '(' + name + ')')
 
 	elif method == 'FA':
 		##################FactorAnalysis########
 		fitted_dimred = dimred_obj.fit(data, data_labels)
 		data_transformed = fitted_dimred.transform(data) #with labels 
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Factor Analysis' + '(' + name + ')') 
+			plot_da(data_transformed, data_labels, 'FA' , name ) 
 			plot_da_components(data_transformed, data_labels, 'Factor Analysis Components' + '(' + name + ')')
 
 	elif method == 'ICA':
@@ -196,7 +209,11 @@ def dimension_reduction(data, data_labels, method=None, show_figures=False, comp
 		fitted_dimred = dimred_obj.fit(data)
 		data_transformed=fitted_dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Independent Component Analysis' + '(' + name + ')')
+			#print(_get_ica_map(fitted_dimred))
+			#print(fitted_dimred.components_ , fitted_dimred.components_.shape)
+			#print(fitted_dimred.mixing_)
+			#print(fitted_dimred.get_params())
+			plot_da(data_transformed, data_labels, 'IC', name)
 
 	elif method == 'ISOMAP':
 		##################ISOMAP########
@@ -204,7 +221,7 @@ def dimension_reduction(data, data_labels, method=None, show_figures=False, comp
 		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
 			plot_da_components(data_transformed, data_labels, 'ISOMAP Components' + '(' + name + ')')
-			plot_da(data_transformed, data_labels, 'ISOMAP Component Analysis' + '(' + name + ')') 
+			plot_da(data_transformed, data_labels, 'ISOMAP C', name) 
 
 	elif method == 't-SNE':
 		##################t-SNE########
@@ -212,20 +229,20 @@ def dimension_reduction(data, data_labels, method=None, show_figures=False, comp
 		data_transformed = fitted_dimred.fit_transform(data)
 		if show_figures:
 			plot_da_components(data_transformed, data_labels, 't-SNE Components' + '(' + name + ')')
-			plot_da(data_transformed, data_labels, 't-SNE Component Analysis' + '(' + name + ')') 
+			plot_da(data_transformed, data_labels, 't-SNE C', name) 
 
 	elif method == 'LDA':
 		##################LDA#################
 		fitted_dimred = dimred_obj.fit(data, data_labels)
 		data_transformed = fitted_dimred.transform(data)
 		if show_figures:
-			plot_da(data_transformed, data_labels, 'Linear Discriminant Analysis' + '(' + name + ')')
+			plot_da(data_transformed, data_labels, 'LD', name)
 
 	elif method == 'QDA':
 		##################QDA#################
 		fitted_dimred = dimred_obj.fit(data, data_labels)
 		data_transformed = np.array([[x] for x in fitted_dimred.decision_function(data)])
-		plot_da(data_transformed, data_labels, 'Quadratic Discriminant Analysis' + '(' + name + ')')
+		plot_da(data_transformed, data_labels, 'QD', name)
 
 	elif method == 'None':
 		fitted_dimred = None
@@ -253,21 +270,27 @@ def fit_and_reduce(train, test, train_labels, method=None, n_components=2):
 
 def compare_dimension_reduction(data, labels, show_figures=False, name=''):
 	dimension_reduction(data, labels, 'RF', show_figures, 2, name)
-	dimension_reduction(data, labels, 'PCA', show_figures, 2, name)
+	dimension_reduction(data, labels, 'PCA', show_figures, 10, name)
 	dimension_reduction(data, labels, 'SVD', show_figures, 3, name)
 	dimension_reduction(data, labels, 'FA', show_figures, 3, name)
-	dimension_reduction(data, labels, 'ICA', show_figures, 3, name)
+	dimension_reduction(data, labels, 'ICA', show_figures, 10, name)
 	dimension_reduction(data, labels, 'ISOMAP', show_figures, 3, name)
 	dimension_reduction(data, labels, 't-SNE', show_figures, 3, name)
 	dimension_reduction(data, labels, 'LDA', show_figures, 1, name)
 	dimension_reduction(data, labels, 'QDA', show_figures, 1, name)
 
+def compare_pca_ica(data, labels, show_figures=False, name=''):
+	dimension_reduction(data, labels, 'PCA', show_figures, 20, name)
+	dimension_reduction(data, labels, 'ICA', show_figures, 20, name)
 
 # scaler = dh.get_scaler(dh.get_measured_spectra())
 # current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_measured_spectra(), dh.get_labels(), scaler)
 # print('Subset contains ', len(current_labels), ' observations')
 
-#compare_dimension_reduction(dh.get_measured_spectra(),  dh.get_measured_spectra(), True, 'measured')
+compare_pca_ica(dh.get_measured_spectra(),  dh.get_labels(), True, 'measured')
+#compare_pca_ica(dh.get_reconstructed_spectra(),  dh.get_labels(), True, 'reconstructed')
+#compare_pca_ica(dh.get_concat_lbp('mmlbp'),  dh.get_labels(), True, 'mmlbp')
+
 #dimension_reduction(dh.get_measured_spectra(), dh.get_measured_spectra(), 'RF', True, 2, 'measured')
 
 

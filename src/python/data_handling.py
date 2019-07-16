@@ -91,7 +91,7 @@ in_dir = get_in_dir()
 matfile = pjoin(in_dir, 'ID.mat')
 id_mat = loadmat(matfile)
 print('Finished loading ID matfile.')
-id_struct = id_mat['ID']
+id_struct = id_mat['IDbrights']
 
 ###################gets#####################
 
@@ -263,7 +263,7 @@ def get_concat_lbp(feature_set, rgb=False):
 	elif "mlbp" in feature_set:
 		lbp_features = get_multispectral_lbp()
 
-	concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
+	concat_lbp = concat_features(lbp_features[0], lbp_features[1])
 	#concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
 	return concat_lbp
 

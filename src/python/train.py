@@ -21,13 +21,14 @@ from matplotlib import interactive, is_interactive
 import sys
 import warnings
 from sklearn.exceptions import ConvergenceWarning
+import time
 
 warnings.filterwarnings('error')
 
 interactive(True)
 
 out_dir = dh.get_out_dir()
-classification_log = dh.get_log_file()
+
 #sys.stdout = open(classification_log, 'w+')
 
 ####################classification#######################
@@ -39,7 +40,10 @@ def get_classifier_stats(y_test, y_pred):
 	precision = tp / (tp + fp) if (tp + fp) > 0 else float('nan')
 	false_positive_rate = fp / (fp + tn) if (fp + tn) > 0 else float('nan')
 	false_negative_rate = fn / (fn + tp) if (fn + tp) > 0 else float('nan')
-	f1 = f1_score(y_test, y_pred)
+	try:
+		f1 = f1_score(y_test, y_pred)
+	except:
+		f1 = float('nan')
 	accuracy = accuracy_score(y_test, y_pred)  #(tp + tn) / (tp + tn + fp + fn)
 	bal_accuracy = (sensitivity + specificity) / 2
 	auc = roc_auc_score(y_test, y_pred)
@@ -124,17 +128,15 @@ def get_classifier(classifier_name):
 		a, b, c, d, e, f = classifier_name.split('-') 
 		c = float(c)
 		d = d if (d == 'auto' or d == 'scale') else float(d)
-		if f == 'with_penalty':
-			f = 'balanced'
-		elif f == 'harsh_penalty':
+		if f == 'harsh_penalty':
 			f = {0:1.5, 1:1.0}
 		else:
-			f = {0:1.0 , 1:1.0}
+			f = 'balanced'
 		clf = SVC(kernel=b, C=c, gamma=d, shrinking=(e==True), probability=True, random_state=2, class_weight=f)
 
 	elif 'KNN' in classifier_name:
-		a, b, c =  classifier_name.split('-')
-		clf = KNN(n_neighbors=int(b), weights="distance", algorithm = 'auto', metric=c, n_jobs=-1)
+		a, b, c, d =  classifier_name.split('-')
+		clf = KNN(n_neighbors=int(b), weights=d, algorithm = 'auto', metric=c, n_jobs=-1)
 
 	elif 'QDA' in classifier_name:
 		clf = QDA()
@@ -147,8 +149,14 @@ def get_classifier(classifier_name):
 		clf = DecisionTreeClassifier(criterion=b)
 
 	elif 'Random Forest' in classifier_name:
-		a, b, c, d = classifier_name.split('-') 
-		clf = RandomForestClassifier(n_estimators=int(b), criterion=c, max_features=d, n_jobs=-1, random_state=2)
+		a, b, c, d, e, f = classifier_name.split('-') 
+		d = None if (d == 'none') else d
+		e = None if (e == 'none') else int(e)
+		if f == 'harsh_penalty':
+			f = {0:1.5, 1:1.0}
+		else:
+			f = 'balanced'
+		clf = RandomForestClassifier(n_estimators=int(b), criterion=c, max_features=d, max_depth=e, class_weight=f, n_jobs=-1, random_state=2)
 
 	elif 'Naive Bayes' in classifier_name:
 		clf = GaussianNB()
@@ -200,6 +208,7 @@ def train_classifier(train_indexes, classifier_name, feature_set, reduction1='No
 	train_data = dh.concat_features(train_spect, train_lbp)
 	train_data = scaler2.fit_transform(train_data)
 
+	#print(clf) 
 	clf.fit(train_data, train_labels)
 
 	return clf, dimred1, dimred2, scaler1, scaler2
@@ -236,6 +245,77 @@ def test_classifier(test_indexes, classifier, feature_set, dimred1, dimred2, sca
 
 	return predictions, scores, test_labels
 
+def get_fold_data(subset_name, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb=False, ignore_test=False):
+	if stratified: 
+		fold_indexes, folds = dh.get_fold_indexes_stratified(subset_name, 5, ignore_test)
+	else:
+		fold_indexes, folds = dh.get_fold_indexes(subset_name, 5, ignore_test)
+	
+	labels = dh.get_labels()
+	reference = dh.get_measured_spectra()
+	if with_rgb:
+		data = dh.get_reconstructed_spectra_rgb()
+	else:
+		data = dh.get_reconstructed_spectra()
+
+	train_data_per_fold = []
+	train_labels_per_fold = []
+	test_data_per_fold = []
+	test_labels_per_fold = []
+
+	for f in range(folds): 
+		test_indexes = fold_indexes[f]
+		train_indexes = [y for x in fold_indexes if x != test_indexes for y in x ]
+
+		dimred1 = dm.get_dimred(reduction1, n_components1)
+		dimred2 = dm.get_dimred(reduction2, n_components2)
+
+		scaler1 = StandardScaler()
+		reference_data = scaler1.fit_transform(reference[train_indexes, :])
+		train_spect, train_labels, train_lbp = dh.get_scaled_subset_with_index(train_indexes, data, labels, scaler1, feature_set, with_rgb)
+
+		scaler2 = StandardScaler()
+		if "spect" in feature_set and reduction1 is not 'None':
+			dimred1 = dimred1.fit(reference_data, train_labels)
+			train_spect = dimred1.transform(train_spect)
+		else:
+			dimred1=None
+
+		if "spect" not in feature_set:
+			train_spect=None
+
+		if "lbp" in feature_set and reduction2 is not 'None':
+			dimred2 = dimred2.fit(train_lbp, train_labels)
+			train_lbp = dimred2.transform(train_lbp)
+		else:
+			dimred2=None
+
+		if "lbp" not in feature_set:
+			train_lbp=None
+
+		train_data = dh.concat_features(train_spect, train_lbp)
+		train_data = scaler2.fit_transform(train_data)
+
+		test_spect, test_labels, test_lbp = dh.get_scaled_subset_with_index(test_indexes, data, labels, scaler1, feature_set, with_rgb)
+		if "spect" in feature_set and dimred1 is not None:
+			test_spect = dimred1.transform(test_spect)
+		if "spect" not in feature_set:
+			test_spect = None 
+
+		if "lbp" in feature_set and dimred2 is not None:
+			test_lbp = dimred2.transform(test_lbp)
+		if "lbp" not in feature_set:
+			test_lbp = None
+
+		test_data = dh.concat_features(test_spect, test_lbp)
+		test_data = scaler2.transform(test_data)
+
+		train_data_per_fold.append(train_data) 
+		train_labels_per_fold.append(train_labels) 
+		test_data_per_fold.append(test_data) 
+		test_labels_per_fold.append(test_labels) 
+
+	return folds, train_data_per_fold, train_labels_per_fold, test_data_per_fold, test_labels_per_fold
 
 def cross_validate(classifier_name, subset_name, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb=False, ignore_test=False):
 
@@ -274,6 +354,48 @@ def cross_validate(classifier_name, subset_name, stratified, feature_set, reduct
 	mean_stats = np.mean(stats, axis=0)
 	return mean_stats
 
+def cross_validate_with_prepared_folds(classifier_name, folds, train_data_per_fold, train_labels_per_fold, test_data_per_fold, test_labels_per_fold):
+
+	tprs = []
+	fpr_f = []
+	tpr_f = []
+	aucs = []
+	mean_fpr = np.linspace(0, 1, 100)
+	stats = []
+
+	for f in range(folds): 
+		train_data = train_data_per_fold[f]
+		train_labels = train_labels_per_fold[f]
+		test_data = test_data_per_fold[f]
+		test_labels = test_labels_per_fold[f]
+		classifier = get_classifier(classifier_name)
+		classifier.fit(train_data, train_labels)
+		pred_labels = classifier.predict(test_data)
+		scores = classifier.predict_proba(test_data)
+
+		classifier_params = classifier.get_params()
+		if 'n_neighbors' in classifier_params:
+			dist, neighbor_ids  = classifier.kneighbors(test_data, classifier_params['n_neighbors'])
+			dist = np.mean(dist, axis=1)
+			scores[:,0] = dist.transpose()
+			scores[:,1] = (1 - dist).transpose()
+
+		classifier_stats = get_classifier_stats(test_labels, pred_labels)
+		stats.append(classifier_stats)
+
+		# Compute ROC curve and area the curve
+		fpr, tpr, thresholds = roc_curve(test_labels, scores[:, 1], pos_label=1)
+		fpr_f.append(fpr)
+		tpr_f.append(tpr)
+		tprs.append(interp(mean_fpr, fpr, tpr))
+		tprs[-1][0] = 0.0
+		aucs.append(classifier_stats[auc_id()])
+
+	mean_tpr = np.mean(tprs, axis=0)
+	mean_tpr[-1] = 1.0
+	std_auc = np.std(aucs)
+	mean_stats = np.mean(stats, axis=0)
+	return mean_stats
 
 def apply_cross_validation(classifier_names, subset_name, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb=False, ignore_test=False):
 	performance_stats = np.empty((0, 8))
@@ -288,21 +410,53 @@ def apply_cross_validation(classifier_names, subset_name, stratified, feature_se
 		except UserWarning:
 			print("Variables are collinear in discriminant_analysis.")
 		except RuntimeWarning: 
-			print("Overflow or other errors.")
-		#except ValueError:
-		#	print("Too few data for Dimension Reduction.")
+		 	print("Overflow or other errors.")
+		except ValueError:
+			print("Too few data for Dimension Reduction.")
 	return performance_stats, performance_names
 
+def apply_cross_validation_with_prepared_folds(classifier_names, subset_name, stratified, feature_set, reduction1, n_components1, reduction2, \
+	n_components2, with_rgb=False, ignore_test=False):
+	performance_stats = np.empty((0, 8))
+	performance_names = []
 
-def get_knn_classifiers_names(near_neighbors=None, distances=None):
+	try:
+		folds, train_data_per_fold, train_labels_per_fold, test_data_per_fold, test_labels_per_fold = get_fold_data(subset_name, stratified, \
+			feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb, ignore_test)
+
+		for classifier_name in classifier_names:
+
+			try:
+				cv_stats = cross_validate_with_prepared_folds(classifier_name, folds, train_data_per_fold, train_labels_per_fold, test_data_per_fold, test_labels_per_fold) 
+				performance_stats = np.append(performance_stats, [cv_stats], axis=0)
+				performance_names.append((",").join([classifier_name,subset_name,feature_set,reduction1, str(n_components1), reduction2, str(n_components2)]))
+			except RuntimeWarning: 
+			 	print("Overflow or other errors.")
+			except ValueError:
+				print("Too few data for Dimension Reduction.")
+			except UserWarning:
+				print("Variables are collinear in discriminant_analysis.")
+		
+	except ConvergenceWarning:
+		print('Dimred did not converge.')
+	except UserWarning:
+		print("n_components is too large.")
+
+
+	return performance_stats, performance_names
+
+def get_knn_classifiers_names(near_neighbors=None, distances=None, weights=None):
 	if near_neighbors is None: 
 		near_neighbors = {1, 3, 5}
 	if distances is None: 
 		distances = {'minkowski', 'euclidean', 'correlation', 'chebyshev', 'hamming', 'cityblock'}
+	if weights is None: 
+		weights = {'uniform', 'distance'}
 	names = []
 	for neighbors in near_neighbors: 
 		for distance in distances:
-			names.append('-'.join(['KNN', str(neighbors), distance]))
+			for weight in weights:
+				names.append('-'.join(['KNN', str(neighbors), distance, weight]))
 	return names
 
 def get_svm_classifier_names(kernels=None, Cs=None, gammas=None, shrinkings=None, penalties=None):
@@ -326,18 +480,24 @@ def get_svm_classifier_names(kernels=None, Cs=None, gammas=None, shrinkings=None
 							names.append('-'.join(['SVM', kernel, str(C), str(gamma), str(shrinking), has_penalty]))
 	return names
 
-def get_rf_classifier_names(estimators=None, criteria=None, features=None): 
+def get_rf_classifier_names(estimators=None, criteria=None, features=None, depth = None, penalties=None): 
 	if estimators is None:
-		estimators = {10, 20, 50, 100}
+		estimators = {20, 50, 100}
 	if criteria is None:
 		criteria = {'gini', 'entropy'}
 	if features is None: 
-		features = {'auto', 'sqrt', 'log2'}
+		features = {'none', 'sqrt', 'log2'}
+	if depth is None: 
+		depth = {'none', 20}
+	if penalties is None:
+		penalties = {'no_penalty', 'with_penalty', 'harsh_penalty'}
 	names = []
 	for n_estimators in estimators:
 		for criterion in criteria:
 				for max_features in features:
-						names.append('-'.join(['Random Forest', str(n_estimators), criterion, max_features]))
+					for max_depth in depth:
+						for has_penalty in penalties:
+							names.append('-'.join(['Random Forest', str(n_estimators), criterion, max_features, str(max_depth), has_penalty]))
 	return names
 
 
@@ -359,17 +519,22 @@ def get_validation_classifiers():
 
 def get_validation_classifiers_noRF():
 	clfs = get_svm_classifier_names({'rbf','linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'with_penalty', 'harsh_penalty'})
-	clfs.append(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
-	clfs.append({"LDA", "QDA"})
+	clfs.extend(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
+	clfs.extend({"LDA", "QDA"})
 	return clfs
 
-def get_validation_classifiers_few():
-	clfs = get_svm_classifier_names({'linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'harsh_penalty'})
-	clfs.append(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
-	clfs.append({"Random Forest-20-gini-sqrt", "Random Forest-50-entropy-auto"})
-	clfs.append({"LDA", "QDA"})
+def get_validation_classifiers_withRF():
+	clfs = get_svm_classifier_names({ 'rbf', 'poly'}, { 0.5, 1.0, 2.0}, {'auto'}, {True}, {'balanced','harsh_penalty'})
+	clfs.extend(get_knn_classifiers_names({3, 5},  { 'euclidean', 'correlation', 'chebyshev'}, {'uniform', 'distance'}))
+	clfs.extend(get_rf_classifier_names({20, 100}, {'gini', 'entropy'}, {'sqrt', 'log2'} , {'none'}, {'balanced','harsh_penalty'}))
+	#clfs.append({"LDA", "QDA"})
 	return clfs
 
+def get_validation_classifiers_additional():
+	clfs = get_svm_classifier_names({ 'rbf', 'linear'}, { 0.25, 0.5, 1.0, 2.0, 3.0}, {'auto'}, {True}, {'balanced','harsh_penalty'})
+	clfs.extend(get_rf_classifier_names({ 200, 500}, {'gini', 'entropy'}, {'sqrt', 'log2'} , {'none'}, {'balanced','harsh_penalty'}))
+	#clfs.append({"LDA", "QDA"})
+	return clfs
 
 def get_testing_classifiers():
 	return ["Random Forest-20-gini-sqrt",
@@ -412,18 +577,17 @@ def compare_validation_performance(classifier_names, title, stratified=True, wit
 						for n_components2 in n_components2_sets:
 							if (not(reduction1 is 'None' and n_components1 is not None)) \
 							 and (not(reduction2 is 'None' and n_components2 is not None)) \
-							 and (not(input_set is 'spect' and reduction2 is not 'None')):
-								try:
-									clf_stats, clf_names = apply_cross_validation(classifier_names, input_set, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb, ignore_test)
-									[dh.write_log(classification_log, ",".join([x, ",".join([str(yy) for yy in y]) ,"\n"])) for (x, y) in zip(clf_names, clf_stats)]
-									print('Finished without error.')
+							 and (not(input_set is 'spect' and reduction2 is not 'None' and n_components2 is not None)):
+								start_time = time.time()									
+								clf_stats, clf_names = apply_cross_validation_with_prepared_folds(classifier_names, input_set, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb, ignore_test)
+								#clf_stats, clf_names = apply_cross_validation(classifier_names, input_set, stratified, feature_set, reduction1, n_components1, reduction2, n_components2, with_rgb, ignore_test)
+								[dh.write_log(classification_log, ",".join([x, ",".join([str(yy) for yy in y]) ,"\n"])) for (x, y) in zip(clf_names, clf_stats)]
+								print("--- %s seconds ---" % (time.time() - start_time))
 
-								except ConvergenceWarning:
-									print('Dimred did not converge.')
-								# except ValueError:
-								# 	print('Dimred components are too many.')
+
 								# except UserWarning:
-								# 	print('Too many components.')
+								#  	print('Too many components.')
+
 	print('Finished.')
 
 
@@ -471,7 +635,16 @@ def compare_testing_performance(input_set="unique", with_rgb=False,\
 current_run_case = 'Validation MSI'
 column_names = (",").join([current_run_case, 'Input', 'Feature', 'Dimred1', 'NComp1', 'Dimred2', 'NComp2', 'Accuracy', 'AUC', \
 				'Specificity', 'Sensitivity', 'FPR', 'FNR', 'BalancedAccuracy', 'F1', '\n' ])
+
+classification_log = dh.get_log_file()
 dh.write_log(classification_log, column_names)
-compare_validation_performance(get_validation_classifiers_few(), 'Validation_Classifiers', True, False, False, \
-	{'unique', 'unique_unfixed', 'unique_fixed'},  { 'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect' }, \
-	{'None', 'PCA', 'ICA'}, {'None', 'PCA', 'ICA'}, {10, 20, None}, {10, 20, None})
+#get_validation_classifiers_RF_SVM
+compare_validation_performance(get_validation_classifiers_additional(), 'Validation_Classifiers', True, False, False, \
+	{ 'unique_unfixed', 'unique_fixed'},  { 'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect' }, \
+	{ 'PCA', 'ICA'}, { 'PCA', 'ICA'}, {10, 20}, {10, 20})
+
+classification_log = dh.get_log_file()
+dh.write_log(classification_log, column_names)
+compare_validation_performance(get_validation_classifiers_additional(), 'Validation_Classifiers', True, True, False, \
+	{'unique', 'unique_unfixed', 'unique_fixed'},  { 'spect+slbp', 'spect' }, \
+	{ 'PCA', 'ICA'}, { 'PCA', 'ICA'}, {10, 20}, {10, 20})
