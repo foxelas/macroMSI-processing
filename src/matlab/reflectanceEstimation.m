@@ -324,7 +324,11 @@ if contains(noiseType, 'spatiospectral')
     %kronNoise = repmat(Kn, windowDim^2, windowDim^2);
     %sigma2 = var(G,0,'all')^2;    
     %sigma2 = options.sigma2;
-    sigma2  = 0.001;
+    sigma2  = 0.001; %for brights
+    %sigma2 = 0.0075; %for darks
+%     loads = load(fullfile(options.systemdir, 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
+%     sigma2 = loads.sigma .^2;
+%     clear('loads');
     xx = sigma2 .* markovian;
     ff = kron(xx, M);
 	selector = zeros(wavelengths, wavelengths * windowDim^2);

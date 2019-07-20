@@ -38,33 +38,25 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
 
     clf(gcf);
     axes(gcf);
-
-    hB = imagesc(Ibase);axis image off;
-    climF = [min(Ioverlay(:)), max(Ioverlay(:))];
-
-    if ~strcmp(figTitle, 'Ground Truth')
-        % Add the front image on top of the back image
-        hold on;
-        hF = imagesc(Ioverlay); %, climF);
-
-        % If images are different sizes, map the front image to back coordinates
-        set(hF,'XData',get(hB,'XData'),...
-            'YData',get(hB,'YData'))
-
-        % Make the foreground image transparent
-        alphadata = alpha.*(Ioverlay > climF(1));
-        set(hF,'AlphaData',alphadata);
-        
-        if ~hideColorbar
-            c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
-            c.Label.String = 'Malignancy Probability';
-            c.Label.FontSize = 10;
-            c.Label.FontWeight = 'bold';
-            c.LimitsMode = 'manual';
-            c.Limits = [0,1];
-            set(gcf,'Visible','on');
-        end
+    
+    imshow(Ibase)
+    hold on 
+    h = imagesc(Ioverlay);
+    set(gca, 'CLim', [0 1]);
+    colormap(cmap);
+    hold off
+    alphaI = Ioverlay > 0;
+    set(h, 'AlphaData', alphaI * 0.5);
+    if ~hideColorbar
+        c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
+        c.Label.String = 'Malignancy Probability';
+        c.Label.FontSize = 10;
+        c.Label.FontWeight = 'bold';
+        c.Limits = [0,1];
+        c.LimitsMode = 'manual';
+        set(gcf,'Visible','on');
     end
+        
     title(figTitle)
     if ~isempty(coordinates)
         hold on

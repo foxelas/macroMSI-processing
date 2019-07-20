@@ -1,4 +1,4 @@
-function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel)
+function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel, mask)
 %CREATESGB generates the sRGB based on the MSI reflectances
 %   Use: sRGB = createSRGB( g, 'out.jpg', [50, 465, 505, 525, 575, 605,
 %   630], 'd65');
@@ -9,103 +9,66 @@ function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel)
 %   on an color adaptation model
 
 wavelength = 380:5:780;
-[w, r, c, ~] = size(I);
-
-
+[~, r, c, ~] = size(I);
+if nargin < 6 
+    mask = ones(r,c);
+end
 % load color matching functions
 [lambdaMatch, xFcn, yFcn, zFcn] = colorMatchFcn('1931_FULL');
-CMF = interp1(lambdaMatch, [xFcn; yFcn; zFcn]', wavelength', 'pchip', 0);
+[~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
+CMF = [xFcn(wavelengthIdx); yFcn(wavelengthIdx); zFcn(wavelengthIdx)]';
+%CMF = interp1(lambdaMatch, [xFcn; yFcn; zFcn]', wavelength', 'pchip', 0);
 
 % Illumination
-[lambdaMatch, d65] = illuminant('d65');
-d65 = interp1(lambdaMatch, d65, wavelength', 'nearest');
+[lambdaMatch, d65full] = illuminant('d65');
+[~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
+d65 = d65full(wavelengthIdx);
+%d65 = interp1(lambdaMatch, d65, wavelength', 'nearest');
 
 options.smoothingMatrixMethod = 'Cor_All';
 options.pixelValueSelectionMethod = 'extended';            
 options.noiseType = 'spatiospectralolympus';
 options.rho = 0.6;
 options.windowDim = 3;
-options.noiseParam = 0.0001;   
+options.noiseParam =  0.000001; % 0.0001;   
 
+% options.noiseType = 'fromOlympus';
+% options.noiseParam = 0.001;  
+            
 reflectance = reflectanceEstimation(I, [], [], id, options);
 reflectance = permute(reflectance, [2, 3, 1]);
 
+XYZideal = bsxfun(@times, CMF, d65);    
+%Compute the normalisation factor k
+reflectance = reshape(reflectance, r*c, numel(wavelength));
+XYZobj = [reflectance * XYZideal(:,1), reflectance * XYZideal(:,2), reflectance * XYZideal(:,3)];
+k = 1 / sum(XYZideal(:,2));
+XYZobj_col = k * XYZobj; 
+    
 if strcmp(method, 'original')
-       
-    XYZ = bsxfun(@times, CMF, d65);
+          
+    sRGB_col = xyz2srgbCustom(XYZobj_col);
+    sRGB = reshape(sRGB_col, r,  c, 3);
     
-    %Compute the normalisation factor k
-    reflectance = reshape(reflectance, r*c, numel(wavelength));
-    XYZrecon = reflectance * XYZ;
-    XYZrecon = reshape(XYZrecon, [r, c, 3]);
-    %k = 1 / sum(XYZ(:, 2));
-    %XYZrecon = k * XYZrecon;
-    XYZrecon =  XYZrecon / max(XYZrecon(:));
+elseif strcmp(method, 'medium') 
+    sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756]; 
+    %sourceXYZ = squeeze(XYZobj_col(sub2ind([r, c], 620, 761), :))';
+    targetXYZ = [1.09846607; 1.00000000; 0.35582280]; %d65 white
+    Madapt = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
     
-    % Convert the XYZ values to sRGB.
-    
-    C = makecform('XYZ2Lab');
-    Lab = applycform(XYZrecon, C);
-    Lab16 = uint16(Lab./100.*((2^16) - 1));
-    
-    sRGB = xyz2rgb(XYZrecon, 'WhitePoint','d65');
+    sRGBadapt = (Madapt * XYZobj_col')';
+    sRGB = reshape(sRGBadapt, r,  c, 3);
 
-    sRGB2 = reshape(xyz2srgbCustom( reshape(XYZrecon , r*c, 3)), [r,c,3]);
-    
-elseif strcmp(method, 'tutorial')
-    
-    % Radiance
-    radiances = bsxfun(@times, reshape(reflectance, [r * c, numel(wavelength)]), d65');
-    
-    XYZ = (CMF' * radiances')';
-    XYZ = reshape(XYZ, r,  c, 3);
-    XYZ = max(XYZ, 0);
-    XYZ = XYZ / max(XYZ(:)); %normalization [0,1]
-    
-%     if exist('adaptationModel', 'var')
-%         targetXYZ = [0.95047; 1.00000; 1.08883]; %d65 white
-%         sourceXYZ = [0.0725; 0.0418; 0.1583];
-%         M = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
-%         
-%     else
-%         % convert this XYZ representation of the image to the default RGB colour representation sRGB (IEC_61966-2-1),
-%         % Forward transformation from 1931 CIE XYZ values to sRGB values (Eqn 6 in
-%         % IEC_61966-2-1.pdf).
-%         M = [3.2406, -1.5372, -0.4986; ...
-%             -0.9689, 1.8758, 0.0414; ...
-%             0.0557, -0.2040, 1.0570];
-%     end
-%     
-%     sRGB = (M * XYZ')';
-%     
-%     % Gamma correction
-%     a = 0.055;
-%     t = 0.0031308;
-%     gamma = 2.4;
-%     
-%     for i = 1:r * c
-%         for j = 1:3
-%             if (sRGB(i, j) <= t)
-%                 sRGB(i, j) = 12.92 * sRGB(i, j);
-%             else
-%                 sRGB(i, j) = (1 + a) * sRGB(i, j)^(1 / gamma) - a;
-%             end
-%         end
-%     end
-%     
-%     % Reshape to recover shape of original input.
-%     sRGB = reshape(sRGB, [r, c, 3]);
-    
-    sRGB = XYZ2sRGB_exgamma(XYZ);
+else
+    warning('Not implemented')
+end
 
-    %clip values to [0,1]
-    sRGB = max(sRGB, 0);
-    sRGB = min(sRGB, 1);
-    
-    figure(1);
-    imshow(sRGB, 'Border', 'tight');
-    title('sRGB image resulting from the MSI image')
-    
+figure(1);
+sRGB = sRGB .* mask;
+imshow(sRGB);
+title('sRGB from MSI data')
+
+%{
 %     % Plot Chromacity chart
 %     x = bsxfun(@(x, s) x./s, XYZ(:, 1), sum(XYZ, 2));
 %     y = bsxfun(@(x, s) x./s, XYZ(:, 2), sum(XYZ, 2));
@@ -114,16 +77,6 @@ elseif strcmp(method, 'tutorial')
 %     hold on
 %     scatter(x, y, 10);
 %     hold off
-else
-    warning('Not implemented')
-end
-
-figure(1);
-imshow(sRGB);
-title('sRGB from MSI data')
-% figure(2);
-% imshow(sRGB_gamma)
-% title('Gamma corrected sRGB from MSI data')
 
 
 % if ~(isempty(outName))
@@ -160,7 +113,7 @@ title('sRGB from MSI data')
 % if ~(isempty(outName))
 %     saveas(v, strcat(outName, '_binnedspectrum.jpg'));
 % end
-
+%}
 end
 
 % ================================================
@@ -174,16 +127,33 @@ function [RGB] = xyz2srgbCustom(XYZ)
 if (size(XYZ,2)~=3)
 disp('XYZ must be n by 3'); return;
 end
-M = [3.2406 -1.5372 -0.4986; -0.9689 1.8758 0.0415;
-0.0557 -0.2040 1.0570];
+M = [3.2404542, -1.5371385, -0.4985314;...
+    -0.9692660,  1.8760108,  0.0415560;...
+    0.0556434, -0.2040259,  1.0572252];
 RGB = (M*XYZ')';
-RGB(RGB>0) = 0;
-RGB(RGB<1) = 1;
-index = (RGB<=0.0031308);
-RGB = RGB + (index).*(12.92*RGB);
-
-RGB = RGB + (1-index).*(1.055*RGB .^ (1/2.4)-0.055);
-RGB=ceil(RGB*255);
 RGB(RGB<0) = 0;
-RGB(RGB>255) = 255;
+RGB(RGB>1) = 1;
+index = (RGB<=0.00304);
+RGB = RGB + (index).*(12.92*RGB);
+RGB = RGB + (1-index).*(1.055*RGB .^ (1/2.4)-0.055);
+
+end
+
+
+function xy = XYZ2xy(xyz)
+%xy = XYZ2xy(xyz)
+% Converts CIE XYZ to xy chromaticity.
+
+X = xyz(1);
+Y = xyz(2);
+s = sum(xyz);
+xy = [X/s; Y/s];
+
+end
+
+function xyz = xy2XYZ(xy,Y)
+%xyz = xy2XYZ(xy,Y)
+% Converts xyY chromaticity to CIE XYZ.
+x = xy(1); y = xy(2);
+xyz = [Y/y*x; Y; Y/y*(1-x-y)];
 end

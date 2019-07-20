@@ -19,8 +19,9 @@ function [] = plotReconstructionPerformanceBars(performance,lineNames,figTitle,f
         color = hsv(3);
         %color = flip(color);
     end
+    isStacked = true;
     barPlot = GetBarPlot(lineNames, performance * 100, color, figTitle, 'Malignancy', 'NRMSE(%)',...
-        {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 10], 12, true);
+        {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 10], 12, true, isStacked);
     
     savePlot(fig, saveOptions);
 
