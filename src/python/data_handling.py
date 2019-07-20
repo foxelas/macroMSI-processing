@@ -8,6 +8,10 @@ import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
+def get_data_dir():
+	data_dir = 'saitama_v8_min_region_bright'
+	#data_dir = 'saitama_v8_min_region_dark'
+	return data_dir
 
 def loadmat(filename):
     '''
@@ -59,9 +63,6 @@ def get_base_dir():
 	base_dir  = '/media/sf_research/input/'
 	return base_dir
 
-def get_data_dir():
-	data_dir = 'saitama_v8_min_region_bright'
-	return data_dir
 
 def get_out_dir():
 	data_dir = get_data_dir()
@@ -120,7 +121,10 @@ def get_measured_spectra_internal():
 
 def get_reconstructed_spectra_internal():
 	out_mat = load_out_mat()
-	estimated_spectra = out_mat['EstimatedSpectra']
+	#estimated_spectra = out_mat['EstimatedSpectra']
+	estimated_spectra_arrays = out_mat['multipleReconstructions']
+	estimated_spectra = estimated_spectra_arrays[:,:,1]
+	#estimated_spectra = get_measured_spectra_internal()
 	return estimated_spectra
 
 def get_reconstructed_spectra_rgb_internal():
@@ -263,6 +267,7 @@ def get_concat_lbp(feature_set, rgb=False):
 	elif "mlbp" in feature_set:
 		lbp_features = get_multispectral_lbp()
 
+	#concat_lbp = concat_features(lbp_features[0])
 	concat_lbp = concat_features(lbp_features[0], lbp_features[1])
 	#concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
 	return concat_lbp
