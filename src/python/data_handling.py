@@ -8,16 +8,17 @@ import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, StratifiedKFold
 
+scales = 2; 
+
+def get_scales_in_use(): 
+	return str(scales)
+
+def get_data_dir():
+	data_dir = 'saitama_v8_min_region_bright'
+	#data_dir = 'saitama_v8_min_region_dark'
+	return data_dir
 
 def loadmat(filename):
-    '''
-    this function should be called instead of direct spio.loadmat
-    as it cures the problem of not properly recovering python dictionaries
-    from mat files. It calls the function check keys to cure all entries
-    which are still mat-objects
-    
-    from: `StackOverflow <http://stackoverflow.com/questions/7008608/scipy-io-loadmat-nested-structures-i-e-dictionaries>`_
-    '''
     data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
@@ -25,19 +26,12 @@ def savemat(filename, mdict):
 	sio.savemat(filename, mdict)
 
 def _check_keys(dict):
-    '''
-    checks if entries in dictionary are mat-objects. If yes
-    todict is called to change them to nested dictionaries
-    '''
     for key in dict:
         if isinstance(dict[key], sio.matlab.mio5_params.mat_struct):
             dict[key] = _todict(dict[key])
     return dict        
 
 def _todict(matobj):
-    '''
-    A recursive function which constructs from matobjects nested dictionaries
-    '''
     dict = {}
     for strg in matobj._fieldnames:
         elem = matobj.__dict__[strg]
@@ -59,9 +53,6 @@ def get_base_dir():
 	base_dir  = '/media/sf_research/input/'
 	return base_dir
 
-def get_data_dir():
-	data_dir = 'saitama_v8_min_region_bright'
-	return data_dir
 
 def get_out_dir():
 	data_dir = get_data_dir()
@@ -110,6 +101,7 @@ def load_in_mat():
 	return in_mat_i
 
 out_mat_i = load_out_mat_internal()
+
 def load_out_mat():
 	return out_mat_i
 
@@ -120,7 +112,8 @@ def get_measured_spectra_internal():
 
 def get_reconstructed_spectra_internal():
 	out_mat = load_out_mat()
-	estimated_spectra = out_mat['EstimatedSpectra']
+	estimated_spectra_arrays = out_mat['multipleReconstructions']
+	estimated_spectra = estimated_spectra_arrays[:,:,2]
 	return estimated_spectra
 
 def get_reconstructed_spectra_rgb_internal():
@@ -263,8 +256,15 @@ def get_concat_lbp(feature_set, rgb=False):
 	elif "mlbp" in feature_set:
 		lbp_features = get_multispectral_lbp()
 
-	concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
-	#concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
+	if scales == 1:
+		concat_lbp = concat_features(lbp_features[0])
+	elif scales == 2: 
+		concat_lbp = concat_features(lbp_features[0], lbp_features[1])
+	elif scales == 3:
+		concat_lbp = concat_features(lbp_features[0], lbp_features[1], lbp_features[2])
+	else: 
+		print("Unsupported scale number.")
+
 	return concat_lbp
 
 
@@ -384,11 +384,15 @@ def head(values, n = 10):
 	[print(values[i]) for i in range(n)]
 	print('....')
 
-def write_file(filename, contents, write_options="w+"):
-	with open(filename, write_options) as csv_file:
-		writer = csv.writer(csv_file)
-		writer.writerows(contents)
-	csv_file.close()
+def write_csv(filename, row_contents, write_options="w+"):
+	with open(filename, mode=write_options) as employee_file:
+		csv_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+		csv_writer.writerow(row_contents)
+
+def append_csv(filename, row_contents):
+	with open(filename, mode='a') as employee_file:
+		csv_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+		csv_writer.writerow(row_contents)
 
 def write_log(filename, contents, write_options="a+"):
 	with open(filename, write_options) as log_file:
@@ -410,6 +414,7 @@ def write_folds(subset_name='unique', folds=10):
 		fold_contents = [ subset[j][:] for j in range(len(subset)) for x in samples[start_index:end_index] if x in subset[j][1]]
 		start_index = end_index
 		write_file( 'names_fold' + str(i) + '.csv', fold_contents)
+
 
 def get_fold_indexes(subset_name='unique', folds=10, ignore_test=False):
 	spectra_names = get_spectra_names()
@@ -444,7 +449,7 @@ def get_fold_indexes(subset_name='unique', folds=10, ignore_test=False):
 
 	return fold_indexes, folds
 
-def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False):
+def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False, seed=None):
 	spectra = get_measured_spectra()
 	positive_labels = get_labels()
 	subset_ids_s = subset_indexes(subset_name) 
@@ -456,8 +461,8 @@ def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False)
 		subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
 	data, labels, fixation, lbp_features = get_subset_with_index(subset_ids, spectra, positive_labels)
 
-
-	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
+	seed = 1 if seed is None else seed 
+	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
 	fold_indexes = []
 	for train, test in cv.split(data, labels):
 		fold_indexes.append([subset_ids[x] for x in test])
