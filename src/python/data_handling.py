@@ -415,6 +415,7 @@ def write_folds(subset_name='unique', folds=10):
 		start_index = end_index
 		write_file( 'names_fold' + str(i) + '.csv', fold_contents)
 
+
 def get_fold_indexes(subset_name='unique', folds=10, ignore_test=False):
 	spectra_names = get_spectra_names()
 	positive_labels = get_labels()
@@ -448,7 +449,7 @@ def get_fold_indexes(subset_name='unique', folds=10, ignore_test=False):
 
 	return fold_indexes, folds
 
-def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False):
+def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False, seed=None):
 	spectra = get_measured_spectra()
 	positive_labels = get_labels()
 	subset_ids_s = subset_indexes(subset_name) 
@@ -460,8 +461,8 @@ def get_fold_indexes_stratified(subset_name='unique',folds=7, ignore_test=False)
 		subset_ids = [x for x in subset_ids_s if samples_all[x] not in test_sample_names]
 	data, labels, fixation, lbp_features = get_subset_with_index(subset_ids, spectra, positive_labels)
 
-
-	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=1)
+	seed = 1 if seed is None else seed 
+	cv = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
 	fold_indexes = []
 	for train, test in cv.split(data, labels):
 		fold_indexes.append([subset_ids[x] for x in test])

@@ -287,9 +287,9 @@ def compare_pca_ica(data, labels, show_figures=False, name=''):
 # current_data, current_labels, current_fixation, current_indexes = dh.get_scaled_subset('unique', dh.get_measured_spectra(), dh.get_labels(), scaler)
 # print('Subset contains ', len(current_labels), ' observations')
 
-#compare_pca_ica(dh.get_measured_spectra(),  dh.get_labels(), True, 'measured')
-#compare_pca_ica(dh.get_reconstructed_spectra(),  dh.get_labels(), True, 'reconstructed')
-#compare_pca_ica(dh.get_concat_lbp('mmlbp'),  dh.get_labels(), True, 'mmlbp')
+# compare_pca_ica(dh.get_measured_spectra(),  dh.get_labels(), True, 'measured')
+# compare_pca_ica(dh.get_reconstructed_spectra(),  dh.get_labels(), True, 'reconstructed')
+# compare_pca_ica(dh.get_concat_lbp('mmlbp'),  dh.get_labels(), True, 'mmlbp')
 
 #dimension_reduction(dh.get_measured_spectra(), dh.get_measured_spectra(), 'RF', True, 2, 'measured')
 
