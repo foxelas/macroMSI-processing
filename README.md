@@ -41,7 +41,7 @@ above 2019a
 * Validation
 * Testing
 
-### Python version###
+### Python version ###
 v.3.7.
 
 ### Required Packages ### 
