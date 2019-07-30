@@ -101,6 +101,7 @@ def load_in_mat():
 	return in_mat_i
 
 out_mat_i = load_out_mat_internal()
+
 def load_out_mat():
 	return out_mat_i
 
@@ -111,7 +112,6 @@ def get_measured_spectra_internal():
 
 def get_reconstructed_spectra_internal():
 	out_mat = load_out_mat()
-	#estimated_spectra = out_mat['EstimatedSpectra']
 	estimated_spectra_arrays = out_mat['multipleReconstructions']
 	estimated_spectra = estimated_spectra_arrays[:,:,2]
 	return estimated_spectra

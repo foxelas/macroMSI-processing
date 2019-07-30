@@ -2,6 +2,232 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 
+def get_comparison_sets(input_sets=None, feature_sets=None, reduction1_sets=None, \
+	reduction2_sets=None, n_components1_sets=None, n_components2_sets=None):
+
+	if (input_sets == None):
+		input_sets = {'unique', 'unique_unfixed', 'unique_fixed'}
+	if (feature_sets == None):
+		feature_sets = {'spect+clbp', 'spect+slbp', 'spect+mlbp', 'spect'}
+	if (reduction1_sets == None):
+		reduction1_sets = {'None', 'PCA', 'ICA'}		
+	if (reduction2_sets == None):
+		reduction2_sets = {'None', 'PCA', 'ICA'}
+	if (n_components1_sets == None):
+		n_components1_sets = {10, 20, 30, None}
+	if (n_components2_sets == None):
+		n_components2_sets = {10, 20, 30, None}
+
+	print(input_sets, feature_sets, reduction1_sets, reduction2_sets, n_components1_sets, n_components2_sets)
+	return input_sets, feature_sets, reduction1_sets, reduction2_sets, n_components1_sets, n_components2_sets
+
+
+def get_grid_search_randomizer(classifier_name):
+	if "Random Forest" in classifier_name:
+		n_estimators = [int(x) for x in np.linspace(start = 20, stop = 500, num = 20)]
+		# Number of features to consider at every split
+		max_features = ['auto', 'sqrt', None]
+		# Maximum number of levels in tree
+		max_depth = [int(x) for x in np.linspace(10, 200, num = 20)]
+		max_depth.append(None)
+		# Minimum number of samples required to split a node
+		min_samples_split = [2, 5, 10]
+		# Minimum number of samples required at each leaf node
+		min_samples_leaf = [1, 2, 4]
+		# Method of selecting samples for training each tree
+		bootstrap = [True, False]
+		class_weights = ['balanced', {0:1.25, 1:1.0} , {0:0.75, 1:1.0}]
+		criteria = ['gini', 'entropy']
+		# Create the random grid
+		random_grid = {'n_estimators': n_estimators,
+						'criterion': criteria,
+						'max_features': max_features,
+						'max_depth': max_depth,
+						'min_samples_split': min_samples_split,
+						'min_samples_leaf': min_samples_leaf,
+						'class_weight': class_weights,
+						'bootstrap': bootstrap}
+		rf = RandomForestClassifier(class_weight=[class_weights[0]])
+		randomized_classifier = RandomizedSearchCV(estimator = rf, param_distributions = random_grid, n_iter = 100, cv = 5, verbose=1, random_state=2, n_jobs = -1)
+
+	elif "SVM" in classifier_name:
+		kernels = ['rbf', 'poly', 'linear', 'sigmoid']
+		Cs = [x for x in np.linspace(0.1, 5, num = 25)]
+		gamma = ['auto', 0.2, 0.5]
+		shrinkings = [True, False]
+		class_weights = ['balanced', {0:1.25, 1:1.0} , {0:0.75, 1:1.0}]
+		random_grid = {'kernel': kernels,
+						'C': Cs,
+						'gamma': gamma,
+						'shrinking': shrinkings,
+						'class_weight': class_weights}
+		svm = SVC()
+		randomized_classifier = RandomizedSearchCV(estimator = svm, param_distributions = random_grid, n_iter = 100, cv = 5, verbose=1, random_state=2, n_jobs = -1)
+	elif "KNN" in classifier_name:
+
+		distances = [ 'euclidean', 'correlation', 'chebyshev']
+		neighbors = [3, 5, 9]
+		weights = ['uniform', 'distance']
+		random_grid = {'metric': distances,
+						'n_neighbors': neighbors,
+						'weights': weights}
+		knn = KNN()
+		randomized_classifier = RandomizedSearchCV(estimator = knn, param_distributions = random_grid, n_iter = 100, cv = 5, verbose=1, random_state=2, n_jobs = -1)
+	else:
+		print("Unsupported classifier")
+
+	print(random_grid)
+	return randomized_classifier 	
+
+def get_classifier(classifier_name):
+	if "/" in classifier_name:
+		classifier_name = classifier_name[:classifier_name.find("/")]
+
+	if 'SVM' in classifier_name:
+		a, b, c, d, e, f = classifier_name.split('-') 
+		c = float(c)
+		d = d if (d == 'auto' or d == 'scale') else float(d)
+		if f == 'emphasize_benignity':
+			f = {0:1.25, 1:1.0}
+		elif f == 'emphasize_malignancy':
+			f  = {0:0.75, 1:1.0}
+		else:
+			f = 'balanced'
+		clf = SVC(kernel=b, C=c, gamma=d, shrinking=(e==True), probability=True, random_state=2, class_weight=f)
+
+	elif 'KNN' in classifier_name:
+		a, b, c, d =  classifier_name.split('-')
+		clf = KNN(n_neighbors=int(b), weights=d, algorithm = 'auto', metric=c, n_jobs=-1)
+
+	elif 'QDA' in classifier_name:
+		clf = QDA()
+
+	elif 'LDA' in classifier_name:
+		clf = LDA()
+
+	elif 'Decision Tree' in classifier_name:
+		a, b=  classifier_name.split('-')
+		clf = DecisionTreeClassifier(criterion=b)
+
+	elif 'Random Forest' in classifier_name:
+		a, b, c, d, e, f = classifier_name.split('-') 
+		d = None if (d == 'none') else d
+		e = None if (e == 'none') else int(e)
+		if f == 'emphasize_benignity':
+			f = {0:1.25, 1:1.0}
+		elif f == 'emphasize_malignancy':
+			f  = {0:0.75, 1:1.0}
+		else:
+			f = 'balanced'
+		clf = RandomForestClassifier(n_estimators=int(b), criterion=c, max_features=d, max_depth=e, class_weight=f, n_jobs=-1, random_state=2)
+
+	elif 'Naive Bayes' in classifier_name:
+		clf = GaussianNB()
+
+	else:
+		print(classifier_name, 'Not yet implemented.')
+		return
+
+	return clf
+
+def get_validation_classifiers():
+	clfs = get_svm_classifier_names({ 'rbf', 'poly'}, { 0.5, 1.0, 3.0}, {'auto'}, {True}, {'balanced','emphasize_benignity', 'emphasize_malignancy'})
+	clfs.extend(get_knn_classifiers_names({3, 5},  { 'euclidean', 'correlation', 'chebyshev'}, {'uniform', 'distance'}))
+	clfs.extend(get_rf_classifier_names({20, 100, 200}, {'gini', 'entropy'}, {'sqrt', 'log2'} , {'none'}, {'balanced','emphasize_benignity', 'emphasize_malignancy'}))
+	#clfs.append({"LDA", "QDA"})
+	return clfs
+			
+# def get_validation_classifiers():
+# 	return ["SVM-rbf-1-False",
+# 			"KNN-5-correlation",
+# 			"Random Forest-20-gini-sqrt",
+# 			"SVM-sigmoid-0.5-True",
+# 			"KNN-3-correlation",
+# 			"Random Forest-50-entropy-auto",
+# 			"SVM-sigmoid-1-True",
+# 			"KNN-1-correlation",
+# 			"Random Forest-50-gini-log2",
+# 			"SVM-sigmoid-2-True",
+# 			"KNN-3-minkowski",
+# 			"Random Forest-50-entropy-sqrt", 
+# 			"LDA", 
+# 			"QDA"]
+
+def get_validation_classifiers_noRF():
+	clfs = get_svm_classifier_names({'rbf','linear', 'sigmoid'}, {0.5, 1.0, 2.0, 5.0}, {'auto', 'scale'}, {True, False}, {'no_penalty', 'with_penalty', 'harsh_penalty'})
+	clfs.extend(get_knn_classifiers_names({1, 3, 5}, {'correlation', 'minkowski'}))
+	clfs.extend({"LDA", "QDA"})
+	return clfs
+
+def get_validation_classifiers_withRF():
+	clfs = get_svm_classifier_names({ 'rbf', 'poly'}, { 0.5, 1.0, 2.0}, {'auto'}, {True}, {'balanced','harsh_penalty'})
+	clfs.extend(get_knn_classifiers_names({3, 5},  { 'euclidean', 'correlation', 'chebyshev'}, {'uniform', 'distance'}))
+	clfs.extend(get_rf_classifier_names({20, 100}, {'gini', 'entropy'}, {'sqrt', 'log2'} , {'none'}, {'balanced','harsh_penalty'}))
+	#clfs.append({"LDA", "QDA"})
+	return clfs
+
+def get_validation_classifiers_additional():
+	clfs = get_svm_classifier_names({ 'rbf', 'linear'}, { 0.25, 0.5, 1.0, 2.0, 3.0}, {'auto'}, {True}, {'balanced','harsh_penalty'})
+	clfs.extend(get_rf_classifier_names({ 200, 500}, {'gini', 'entropy'}, {'sqrt', 'log2'} , {'none'}, {'balanced','harsh_penalty'}))
+	#clfs.append({"LDA", "QDA"})
+	return clfs
+
+
+def get_knn_classifiers_names(near_neighbors=None, distances=None, weights=None):
+	if near_neighbors is None: 
+		near_neighbors = {1, 3, 5}
+	if distances is None: 
+		distances = {'minkowski', 'euclidean', 'correlation', 'chebyshev', 'hamming', 'cityblock'}
+	if weights is None: 
+		weights = {'uniform', 'distance'}
+	names = []
+	for neighbors in near_neighbors: 
+		for distance in distances:
+			for weight in weights:
+				names.append('-'.join(['KNN', str(neighbors), distance, weight]))
+	return names
+
+def get_svm_classifier_names(kernels=None, Cs=None, gammas=None, shrinkings=None, penalties=None):
+	if kernels is None:
+		kernels =  {'rbf', 'poly', 'linear', 'sigmoid'}
+	if Cs is None: 
+		Cs = {0.25, 0.5, 1.0, 2.0, 5.0}
+	if gammas is None:
+		gammas = {'auto', 'scale', 0.5, 1, 2}
+	if shrinkings is None: 
+		shrinkings = {True, False}
+	if penalties is None:
+		penalties = {'emphasize_malignancy', 'emphasize_benignity', 'balanced'}
+	names = []
+	for kernel in kernels:
+		for C in Cs:
+			for gamma in gammas:
+				for shrinking in shrinkings:
+					for has_penalty in penalties:
+						if not(kernel == 'linear' and gamma != 'auto'):
+							names.append('-'.join(['SVM', kernel, str(C), str(gamma), str(shrinking), has_penalty]))
+	return names
+
+def get_rf_classifier_names(estimators=None, criteria=None, features=None, depth = None, penalties=None): 
+	if estimators is None:
+		estimators = {20, 100, 200}
+	if criteria is None:
+		criteria = {'gini', 'entropy'}
+	if features is None: 
+		features = {'sqrt', 'log2'}
+	if depth is None: 
+		depth = {'none'}
+	if penalties is None:
+		penalties = {'emphasize_malignancy', 'emphasize_benignity', 'balanced'}
+	names = []
+	for n_estimators in estimators:
+		for criterion in criteria:
+				for max_features in features:
+					for max_depth in depth:
+						for has_penalty in penalties:
+							names.append('-'.join(['Random Forest', str(n_estimators), criterion, max_features, str(max_depth), has_penalty]))
+	return names
+
 def get_optimized_classifiers():
 	classifiers = [
 RandomForestClassifier(n_estimators= 373, min_samples_split= 5, min_samples_leaf= 2, max_features= None, max_depth= 130, criterion= 'entropy', class_weight={ 0: 1.25, 1: 1.0}, bootstrap= False, random_state=2, n_jobs = -1),
