@@ -1,4 +1,4 @@
-function [estimatedReflectance, rmse, nmse, minIdx] = reflectanceEstimation(MSI, mask, spectrum, id, options)
+function [estimatedReflectance, gfc, nmse] = reflectanceEstimation(MSI, mask, spectrum, id, options)
 
 %% wienerEstimation Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %Input arguments
@@ -322,8 +322,14 @@ if contains(noiseType, 'spatiospectral')
 	kronProd = kron(I, H);
 	kronNoise = kron(I, Kn);
     %kronNoise = repmat(Kn, windowDim^2, windowDim^2);
-    sigma = var(G,0,'all');
-    xx = sigma^2 .* markovian;
+    %sigma2 = var(G,0,'all')^2;    
+    %sigma2 = options.sigma2;
+    sigma2  = 0.001; %for brights
+    %sigma2 = 0.0075; %for darks
+%     loads = load(fullfile(options.systemdir, 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
+%     sigma2 = loads.sigma .^2;
+%     clear('loads');
+    xx = sigma2 .* markovian;
     ff = kron(xx, M);
 	selector = zeros(wavelengths, wavelengths * windowDim^2);
 	selector(:,(ceil(windowDim^2 /2) - 1) * wavelengths + (1:wavelengths)) = eye(wavelengths);
@@ -372,26 +378,26 @@ else
 end  
 
 
-%{ 
-Show all estimates in the region
+
+%Show all estimates in the region
 if (false)
     figure(3);
     clf(3);
-    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectance));
-    bb = estimatedReflectance(:,rmseIdx);
+    [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectances));
+    bb = estimatedReflectances(:,rmseIdx);
     [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
     minIdx = [mini, minj];
     hold on
-    for kkk = 1:size(estimatedReflectance,2)
-    plot(estimatedReflectance(:,kkk));
+    for kkk = 1:size(estimatedReflectances,2)
+    plot(estimatedReflectances(:,kkk));
     end
     plot(spectrum, 'm*')
     plot(bb, 'g*')
-    scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
+    %scatter( ([450, 465, 505, 525, 575, 605, 630] - 380) /5, squeeze( raw2msi(MSI(:, minIdx(1), minIdx(2), :), 'adjusted')) , 'bo');
     hold off
     pause(0.2)
 end
-%}
+
 
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 ||  width > 200) %in this case the mask is ones(height, width)
@@ -409,25 +415,14 @@ else
         estimatedReflectances = min(estimatedReflectances, 1);
         warning('Estimated reflectance spectrum is out of bounds for all pixels in the region!(ID index = %d)', id.Index);
     end
-    
-%     estimatedReflectances( :, ~any(estimatedReflectances,1) ) = [];  %columns
-%     estimatedReflectance = mean(estimatedReflectances,2)';
-%     rmse = Rmse(spectrum, estimatedReflectance');
-%     nmse = Nmse(spectrum, estimatedReflectance');
-%     minIdx =[];
-    
     [rmse, rmseIdx] = min(Rmse(spectrum, estimatedReflectances));
-    [nmse, ~] = min(Nmse(spectrum, estimatedReflectances));
-    estimatedReflectance = estimatedReflectances(:,rmseIdx)';
-    [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
-    minIdx = [mini, minj]; 
-    
-%     f = figure(1);
-%     clf(f);
-%     hold on 
-%     plot(spectrum)
-%     plot(estimatedReflectance)
-%     hold off
+    [nmse, nmseIdx] = min(Nmse(spectrum, estimatedReflectances));
+    estimatedReflectance = mean(estimatedReflectances, 2)';
+%     estimatedReflectance = estimatedReflectances(:,rmseIdx)';
+%     estimatedReflectance = estimatedReflectances(:,nmseIdx)';
+%     [mini, minj] = ind2sub([height, width], activeRegionIdx(rmseIdx));
+%     minIdx = [mini, minj]; 
+    gfc = GoodnessOfFit(spectrum, estimatedReflectance);
 end
 % Perform the estimation for all pixels in an image area ends
 
@@ -505,7 +500,7 @@ function adaptedM = adaptiveSmoothingMatrix(rhat, systemdir, gamma, alpha)
     load(fullfile(systemdir, 'in.mat'), 'Spectra', 'SpectraNames');
     [~, idxs] = unique(SpectraNames);
     r = num2cell( Spectra(idxs,:)',1);
-    d = cellfun(@(x) reflectanceDistance(x, rhat'), r, alpha); % or reflectanceDistance
+    d = cellfun(@(x) reflectanceDistance(x, rhat', alpha), r); % or reflectanceDistance
     reps = arrayfun(@(x) replicationTimes(x, max(d), gamma), d);
     spectra = zeros(length(rhat), sum(reps));
     j = 0;
@@ -532,4 +527,11 @@ function [windowKernel, windowElements] = makeKernel(windowDim, height, width)
         windowKernel = ones(mindim);
         windowElements = min(height, width);
     end
+end
+
+function gfc = GoodnessOfFit(reconstructed, measured)
+    if size(reconstructed) ~= size(measured)
+        reconstructed = reconstructed';
+    end
+    gfc = abs(reconstructed * measured') / ( sqrt(sum(reconstructed.^2)) * sqrt(sum(measured.^2)));
 end

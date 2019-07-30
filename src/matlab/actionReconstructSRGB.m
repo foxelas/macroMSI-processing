@@ -1,10 +1,13 @@
 %% Reconstruct sRGB from MSI
-
-for k = 1:msiN
-    sampleName = generateName('plot', options, ID(k));
-    [g , whiteImg ]= readMSI({data([data.MsiID] == ID(k).MsiID).File});
-    figure(5); imshow(whiteImg);
-    sRGB = createSRGB(g, 'original', sampleName, ID(k), options);
+close all;
+for k = 1:max([ID.Group])
+    infile = fullfile(options.systemdir, 'infiles', strcat('group_', num2str(k), '.mat'));
+    load(infile, 'raw', 'whiteReference', 'specimenMask');
+    figure(5); imshow(whiteReference);
+    z = find([ID.Group] == k, 1);
+    sRGB = createSRGB(raw, 'medium', ID(z), options, 'cmccat2000', specimenMask);
+    outfile = fullfile(options.saveOptions.savedir, '10-sRGB', strcat('group_', num2str(k), '.mat'));
+    save(outfile, 'sRGB');
 end
 
 % end of create srgb

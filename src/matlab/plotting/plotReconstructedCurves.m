@@ -25,6 +25,7 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 
 	% each column of 'spectrum' is that data for a plot line
 	curveN = size(reflectanceSpectra, 2);
+    
 	if isempty(curveNames)
 		curveNames = {'MS center \lambda', 'Measured', 'Est-MSgreen', 'Est-MSrms', 'Est-MSadjusted', 'Est-MSextended', 'Est-RGB'};
 	else
@@ -37,31 +38,40 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 		end
 	end
 		
-	color = colorcube(curveN+10);         
+	color = colorcube(curveN+3); 
+    color = color(3:end-1, :);
+    
 	[~, peakIdx] = ismember(fc, wavelength); % mark filter wavelengths
 	
 	hold on
 	for i = 1:curveN
-		if  contains( lower(curveNames{i + 1}), 'rgb')
+        currentCurvName= curveNames{i};
+		if contains( lower(currentCurvName), 'rgb')
 			lineStyle = ':';
-		elseif contains( lower(curveNames{i + 1}), 'measured')
+            clrs = 'k';
+        elseif contains( lower(currentCurvName), 'measured')
 			lineStyle = '--';
+            clrs = 'g';
 		else 
 			lineStyle = '-';
-		end
-		plot(wavelength, reflectanceSpectra(:, i) .* 100, 'Color', color(i, :), 'Marker', markers{i}, ...
-			'LineWidth', 1.3, 'LineStyle', lineStyle, 'DisplayName', curveNames{i + 1}); % plot estimated reflectances
-	end
-	plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', curveNames{1}, 'LineWidth', 1.3); % plot measured reflectance
+            clrs = color(i, :);
+        end
+		plot(wavelength, reflectanceSpectra(:, i) .* 100, 'Color', clrs, 'Marker', markers{i}, ...
+			'LineWidth', 2, 'LineStyle', lineStyle, 'DisplayName', currentCurvName); % plot estimated reflectances
+    end
+    plot(wavelength(peakIdx), reflectanceSpectra(peakIdx, 1) .* 100, 'rx', 'DisplayName', 'Channel Wavelength', 'LineWidth', 1.3); % plot measured reflectance
 	hold off
 	
-	xlabel('Wavelength \lambda (nm)');
-	ylabel('Reflectance %');
+	xlabel('Wavelength \lambda (nm)', 'FontSize', 15);
+	ylabel('Reflectance %', 'FontSize', 15);
 	xlim([400, 700]);
-	figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
-	title(figTitle);
-	legend({curveNames{2:(curveN+1)}, curveNames{1}}, 'Location', 'best', 'FontSize', 12); % 'Orientation','horizontal');
-
+	%figTitle = strjoin({'Comparative plot of Wiener estimation for Sample', simpleSampleName(figTitle)}, ' ');
+	%title(figTitle);
+    legend([curveNames,'Channel Wavelength'], 'Location', 'EastOutside', 'FontSize', 15); % 'Orientation','horizontal');
+    
+    %Optional
+    set(gcf, 'Position', get(0, 'Screensize'));
+    
     saveOptions.cropBorders = true;
 	savePlot(fig, saveOptions);
 

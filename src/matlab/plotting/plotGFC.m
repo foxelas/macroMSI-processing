@@ -13,10 +13,6 @@ function [] = plotGFC(x, y, xlab, ylab, figTitle, fig,saveOptions)
 
     warning('off');
     
-    if (size(y,1) ~= size(x,1))
-        error('Incompatible size.');
-    end
-    
     if contains(xlab, 'sigma')
         x = log10(x);
     end
@@ -25,8 +21,8 @@ function [] = plotGFC(x, y, xlab, ylab, figTitle, fig,saveOptions)
     ylabel(ylab, 'FontSize', 15);
     %title(figTitle,'FontSize', 15);
     ylim([0.95, 1.005]);
-    yline(0.99, '--b', 'Good');
-    yline(0.999, '--m', 'Very Good');
+    yline(0.99, '--r', 'Good', 'FontSize', 15, 'LabelHorizontalAlignment', 'left');
+    yline(0.999, '--m', 'Very Good',  'FontSize', 15, 'LabelHorizontalAlignment', 'left');
     savePlot(fig, saveOptions);
     
     warning('on');

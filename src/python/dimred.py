@@ -293,4 +293,3 @@ def compare_pca_ica(data, labels, show_figures=False, name=''):
 
 #dimension_reduction(dh.get_measured_spectra(), dh.get_measured_spectra(), 'RF', True, 2, 'measured')
 
-
