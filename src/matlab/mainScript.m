@@ -17,3 +17,5 @@ readData; %% redo intial bg removal with labels  etc the images are corrupt
 %ReflectanceEstimationParameterComparison;
 %actionReflectanceEstimationComparison;
 %actionLBP;
+%actionRecostructSRGB;
+%visualTool;

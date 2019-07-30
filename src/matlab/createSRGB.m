@@ -17,13 +17,11 @@ end
 [lambdaMatch, xFcn, yFcn, zFcn] = colorMatchFcn('1931_FULL');
 [~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
 CMF = [xFcn(wavelengthIdx); yFcn(wavelengthIdx); zFcn(wavelengthIdx)]';
-%CMF = interp1(lambdaMatch, [xFcn; yFcn; zFcn]', wavelength', 'pchip', 0);
 
 % Illumination
 [lambdaMatch, d65full] = illuminant('d65');
 [~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
 d65 = d65full(wavelengthIdx);
-%d65 = interp1(lambdaMatch, d65, wavelength', 'nearest');
 
 options.smoothingMatrixMethod = 'Cor_All';
 options.pixelValueSelectionMethod = 'extended';            
@@ -52,7 +50,6 @@ if strcmp(method, 'original')
     
 elseif strcmp(method, 'medium') 
     sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756]; 
-    %sourceXYZ = squeeze(XYZobj_col(sub2ind([r, c], 620, 761), :))';
     targetXYZ = [1.09846607; 1.00000000; 0.35582280]; %d65 white
     Madapt = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
     

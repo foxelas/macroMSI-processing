@@ -1,26 +1,30 @@
-% currdir = 'saitama_v8_min_region_bright';
-% filename = fullfile('..', '..', '..', 'output', currdir, 'rgbclas.csv');
-% 
-% fixing = { 'unfixed','fixed', 'mixed'};
-% if contains(filename, 'only_spect')
-%     savedir = fullfile('..', '..', '..', 'output', currdir, '10-ClassifierPerformanceOnlySpect' );
-%     lbps = {'spect'};
-%     classifiers = {'SVM', 'KNN'}; % , 'LDA' , 'QDA'
-% else
-%     savedir = fullfile('..', '..', '..', 'output', currdir, '9-ClassifierPerformance' );
-%     classifiers = {'SVM', 'KNN', 'Random Forest'};
-% end
-% saveOptions.savedir = savedir;
-% saveOptions.saveImages = true;
-% saveOptions.plotName = '';
-% saveOptions.saveInHQ = false;
-% [tab, dimred, class_s] = ReadClassificationData(filename);
-% summary(tab)
+currdir = 'saitama_v8_min_region_bright';
+filename = fullfile('..', '..', '..', 'output', currdir, 'msiclas.csv');
+%filename = fullfile('..', '..', '..', 'output', currdir, 'rgbclas.csv');
+%filename = fullfile('..', '..', '..', 'output', currdir, 'classification_logs', 'RGB_validation_2scales2019-07-25 23_25.csv');
 
-if contains(filename, 'rgb')
+fixing = { 'unfixed','fixed', 'mixed'};
+if contains(filename, 'only_spect')
+    savedir = fullfile('..', '..', '..', 'output', currdir, '10-ClassifierPerformanceOnlySpect' );
+    lbps = {'spect'};
+    classifiers = {'SVM', 'KNN'}; % , 'LDA' , 'QDA'
+else
+    savedir = fullfile('..', '..', '..', 'output', currdir, '9-ClassifierPerformance' );
+    classifiers = {'SVM', 'KNN', 'Random Forest'};
+end
+
+saveOptions.savedir = savedir;
+saveOptions.saveImages = true;
+saveOptions.plotName = '';
+saveOptions.saveInHQ = false;
+[tab, dimred, class_s] = ReadClassificationData(filename);
+summary(tab)
+
+if contains(lower(filename), 'rgb')
     currentCase = 'RGB-reconstructed Spectra';
-    saveOptions.savedir = strcat(options.savedir, '_rgb');
-    lbps = {'spect', 'spect+SumLBP'};
+    saveOptions.savedir = strcat(saveOptions.savedir, '_rgb');
+    %lbps = {'spect', 'spect+SumLBP'};
+    lbps = {'spect', 'spect+MMLBP'};
     lbpsShow =  {'spect', 'spect+LBP'};
 elseif contains(filename, 'mes')
     currentCase = 'Measured Spectra';
@@ -42,14 +46,14 @@ else
     disp('Classifier comparison')
     saveOptions.plotName = fullfile(saveOptions.savedir, 'unfixed_classifier_auc');
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s, lbps,  classifiers , 'AUC', 'Accuracy', 'unfixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [70, 100], 1, saveOptions);
+    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 1, saveOptions);
     saveOptions.plotName = fullfile(saveOptions.savedir, 'unfixed_classifier_dor');
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
     plotClassificationPerformanceBars(barDORInfo1 ./ 100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 1, saveOptions);
     
     saveOptions.plotName = fullfile(saveOptions.savedir, 'mixed_classifier_auc');
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s,   lbps,  classifiers , 'AUC', 'Accuracy', 'mixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [70, 100], 2, saveOptions);
+    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 2, saveOptions);
     
     saveOptions.plotName = fullfile(saveOptions.savedir, 'mixed_classifier_dor');
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
@@ -122,7 +126,7 @@ function [maxComp, maxId] = findMaxContaining( tab, comparison_param, additional
     end
     
     if exist('condition3', 'var') && ~isempty(condition3)
-        condIds = find(contains(class_s, condition1) & contains(class_s, condition2) & contains(class_s, condition3) & tab.AUC > 0.7); % & tab.Accuracy > 0.6 & tab.AUC > 0.6);  
+        condIds = find(contains(class_s, condition1) & contains(class_s, condition2) & contains(class_s, condition3) ); %  & tab.AUC > 0.7 & tab.Accuracy > 0.6 & tab.AUC > 0.6);  
     else
         condIds = find(contains(class_s, condition1) & contains(class_s, condition2) & tab.AUC > 0.7); %  & tab.Accuracy > 0.6  & (~contains(condition2, 'SVM') | contains(classifier, 'sigmoid')) 
     end
@@ -147,7 +151,7 @@ end
 %% Function for Reading performance data
 function [tab, dimred, class_s] = ReadClassificationData(filename)
     tab = readtable(filename, 'Delimiter', ',', 'ReadVariableNames', true, 'Format','%s%s%s%s%s%s%s%f%f%f%f%f%f%f%f');
-    tab.Properties.VariableNames(1) = {'Classifier'};
+    %tab.Properties.VariableNames(1) = {'Classifier'};
 
     for i  = 1:length(tab.Classifier)
         if strcmp(tab.Input(i), 'unique_fixed')

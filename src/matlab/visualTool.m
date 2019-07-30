@@ -1,12 +1,8 @@
 for k = [20, 19, 18]
-    infile = fullfile(options.systemdir, 'infiles', strcat('group_', num2str(k), '.mat'));
-    load(infile, 'raw', 'whiteReference', 'specimenMask');
-    figure(5); imshow(whiteReference);
-    z = find([ID.Group] == k, 1);
-    sRGB = createSRGB(raw, 'medium', ID(z), options, 'cmccat2000', specimenMask);
-    
 
-    trueLabels = [1 1 1 1 0 0];
+    outfile = fullfile(options.saveOptions.savedir, '10-sRGB', strcat('group_', num2str(k), '.mat'));
+    load(outfile, 'sRGB');
+
     options.saveOptions.saveImages = true;
     roiIndexes = find([ID.Group] == k);
     rois = length(roiIndexes);
@@ -19,30 +15,65 @@ for k = [20, 19, 18]
     end
     [~, orderedRois] = sort(cellfun(@(x) sum(x(:)), segmentMasks), 'descend');
     
-    if k == 20
-        cancerProb = 1 - [0.40334867 0.41269009 0.33632419 0.31629984 0.29190125 0.35072469];
-        predictedLabels = [1 1 0 0 1 0];
+    if k == 20        
+%         %SVM-rbf-3.0-auto-True-harsh_penalty-spect+mlbp-ICA-20-ICA-20
+%         % 3scales
+%         cancerProb =  [ 0.79466855 0.63459283  0.76740779 0.73678306 0.52148642 0.72221257 ];
+%         predictedLabels = [1 1 1 1 0 1];
+        cancerProb = [0.83883908 0.84836129  0.70056079 0.67005854 0.79753921 0.70401719];
+        predictedLabels = [1 1 1 1 1 1];
+        getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Svm_unfixed', options, 3, 'Unfixed');
+        
+        % KNN-3-chebyshev-distance-spect+mlbp-PCA-20-None-None
+        % 2 scales
+        cancerProb =  [1.         0.6845067  0.64820811 0.3260943  0.31588529 0.       ];
+        predictedLabels = [1 1 1 0 0 0];
         getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Knn_unfixed', options, 1, 'Unfixed');
-
-        cancerProb = 1 - [0.615 0.605 0.56  0.49  0.655 0.53];
-        predictedLabels = [1 1 1 0 1 1];
+        %Random Forest-100-gini-log2-none-balanced-spect+mlbp-ICA-20-ICA-20
+        %2 scales
+        cancerProb =  [0.55 0.56 0.56 0.54 0.61 0.45];
+        predictedLabels = [1 1 1 1 1 0];
         getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'RF_unfixed', options, 2, 'Unfixed');
+        
+        trueLabels = [1 1 1 1 0 0];
+        getImageForClassifier([0 0 0 0 0 0], trueLabels, coordinates, orderedRois, segmentMasks, sRGB, 'GD_unfixed', options, 2, 'Fixed');
+
     elseif k == 19
-        cancerProb = 1 - [0.33009663 0.35727159 0.42860166 0.40599089  0.38940433 0.34980716 0.35152617 0.3277389];
-        predictedLabels = [1 1 1 1 1 1 1 1];
+%         cancerProb =  [0.6683761  0.78546708 0.85105244 0.83916144  0.77098218 0.76302766 0.80217468 0.78879581 ];
+%         predictedLabels = [ 1 1 1 1 1 1 1 1 ];
+        cancerProb = [0.74922035 0.79203226 0.77949437 0.81355963  0.74810811 0.7854452  0.80657934 0.86976086 ];
+        predictedLabels = [ 1 1 1 1 1 1 1 1 ];
+        getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Svm_fixed', options, 3, 'Fixed');
+        
+        cancerProb =  [1.         1.         1.         1.   1.         1.         0.32505164 0.32528109];
+        predictedLabels = [1 1 1 1 1 1 0 0 ];
         getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Knn_fixed', options, 1, 'Fixed');
 
-        cancerProb = 1 - [0.46  0.545 0.545 0.6  0.525 0.555 0.605 0.61 ];
-        predictedLabels = [ 0 1 1 1 1 1 1 1];
+        cancerProb = [ 0.56 0.62 0.57 0.64 0.58 0.54 0.58 0.64];
+        predictedLabels = [ 1 1 1 1 1 1 1 1 ];
         getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'RF_fixed', options, 2, 'Fixed');
-    elseif k == 18
-        cancerProb = 1 - [0.34954588 0.38105323 0.33074516 0.31270676 0.30913618 0.3470074  0.35892913 0.32471956];
-        predictedLabels = [1 1 1 1 1 1 0 0];
-        getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Knn_sectioned', options, 1, 'Sectioned');
+        
+        trueLabels = [1 1 1 1 1 1 0 0 ];
+        getImageForClassifier([0 0 0 0 0 0 0 0], trueLabels, coordinates, orderedRois, segmentMasks, sRGB, 'GD_fixed', options, 2, 'Fixed');
 
-        cancerProb = 1 - [0.51  0.585 0.61  0.615 0.59  0.63  0.49  0.475];
-        predictedLabels = [1 1 1 1 1 1 0 0];
+    elseif k == 18
+%         cancerProb =  [0.82120848 0.67357772 0.85494806 0.62093993 0.711827   0.76968064  0.67605464 0.54017125  ];
+%         predictedLabels = [1 1 1 1 1 1 1 0 ];
+        cancerProb = [0.69209988 0.52010556 0.77349548 0.60031225 0.68874827 0.72247141  0.3476265  0.30541984  ];
+        predictedLabels = [1 0 1 1 1 1 0 0  ];
+        getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Svm_sectioned', options, 3, 'Sectioned');
+
+        cancerProb =  [0.69429197 0.66705237 0.39345565 1.         0.31506872 1.  0.34356235 0.66886696];
+        predictedLabels = [1 1 0 1 0 1 0 1];
+        getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Knn_sectioned', options, 1, 'Sectioned');
+        
+        cancerProb = [0.52 0.56 0.52 0.58 0.61 0.53 0.51 0.44 ];
+        predictedLabels = [1 1 1 1 1 1 1 0];
         getImageForClassifier(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'RF_sectioned', options, 2, 'Sectioned');
+        
+        trueLabels = [1 1 1 1 1 1 0 0];
+        getImageForClassifier([0 0 0 0 0 0 0 0], trueLabels, coordinates, orderedRois, segmentMasks, sRGB, 'GD_sectioned', options, 2, 'Sectioned');
+
     end
      
 end

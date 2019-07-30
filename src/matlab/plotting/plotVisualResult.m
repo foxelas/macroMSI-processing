@@ -24,7 +24,6 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
     
     warning('off')
 
-    alpha = 0.7;
     cmapSize = 100; % default size of 60 shows visible discretization
     if ischar(cmap)
         try
@@ -34,7 +33,6 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
             cmap = jet(cmapSize);
         end
     end
-    colormap(cmap);
 
     clf(gcf);
     axes(gcf);
@@ -43,14 +41,14 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
     hold on 
     h = imagesc(Ioverlay);
     set(gca, 'CLim', [0 1]);
-    colormap(cmap);
+    colormap(cmap( 15:cmapSize, :));
     hold off
     alphaI = Ioverlay > 0;
     set(h, 'AlphaData', alphaI * 0.5);
     if ~hideColorbar
         c = colorbar('location','southoutside', 'Ticks', [0 0.5 1], 'TickLabels', {'low', 'medium', 'high'});
         c.Label.String = 'Malignancy Probability';
-        c.Label.FontSize = 10;
+        c.Label.FontSize = 15;
         c.Label.FontWeight = 'bold';
         c.Limits = [0,1];
         c.LimitsMode = 'manual';
@@ -64,9 +62,9 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
             x = coordinates(i,1);
             y = coordinates(i,2);
             if (labels(i) == 1) 
-                plot(x, y,'rx', 'MarkerSize', 10, 'MarkerEdgeColor', 'r', 'LineWidth', 3);
+                plot(x, y,'r^', 'MarkerSize', 12, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r',  'LineWidth', 3);
             else 
-                plot(x, y,'go', 'MarkerSize', 10, 'MarkerEdgeColor', 'g', 'LineWidth', 3);
+                plot(x, y,'go', 'MarkerSize', 12, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'g', 'LineWidth', 3);
             end
         end
         hold off
