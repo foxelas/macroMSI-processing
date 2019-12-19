@@ -1,7 +1,7 @@
 function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, cmap, hideColorbar, fig,saveOptions)
 %% Visualization of malignancy score %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if (nargin < 4)
-        labels =[];
+        labels = {};
     end
     if (nargin < 5)
         coordinates = [];
@@ -22,6 +22,13 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
         saveOptions.SaveImage = false;
     end
     
+    key = {'Benign', 'Atypical', 'Malignant'};
+    value = {'go', 'ms', 'r^'}; 
+    lineStyleMap = containers.Map(key, value);
+    
+    value = {'g', 'm', 'r'}; 
+    lineColorMap = containers.Map(key, value);
+
     warning('off')
 
     cmapSize = 100; % default size of 60 shows visible discretization
@@ -61,17 +68,27 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
         for i = 1:size(coordinates, 1)
             x = coordinates(i,1);
             y = coordinates(i,2);
-            if (labels(i) == 1) 
-                plot(x, y,'r^', 'MarkerSize', 12, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r',  'LineWidth', 3);
-            else 
-                plot(x, y,'go', 'MarkerSize', 12, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'g', 'LineWidth', 3);
-            end
+            plot(x, y,lineStyleMap(labels{i}), 'MarkerSize', 12, 'MarkerEdgeColor', 'k', ...
+                'MarkerFaceColor', lineColorMap(labels{i}),  'LineWidth', 3);
         end
         hold off
     end
     
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
     
+      
+    hold on; 
+    h = [];
+    for i = 1:length(key)
+        h(i) = plot(nan, nan, lineStyleMap(key{i}), 'MarkerSize', 12, 'MarkerEdgeColor', 'k', ...
+                'MarkerFaceColor', lineColorMap(key{i}),  'LineWidth', 3, 'DisplayName', key{i});
+    end
+    hold off;
+    
+    hleg = legend(h);
+    legPos = get(hleg,'position') ;
+    set(hleg,'position', [legPos(1),legPos(2) - legPos(4), legPos(3),legPos(4) * 2.0]) ;
+                
     saveOptions.cropBorders = true;
     savePlot(fig, saveOptions);  
     warning('on')

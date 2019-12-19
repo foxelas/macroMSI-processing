@@ -1,14 +1,13 @@
 %% main 
 close all; 
 %clc; 
+onOffOptions = {'OFF', 'ON'};
 
-showImages = false;
-saveImages = false; %true;
-dataset = 'saitama_v8_min_region_bright';
-%dataset = 'saitama_v8_min_region_dark';
+showImages = setAndNotify('show images', true);
+saveImages = setAndNotify('save images', true);
+tryReadData = setAndNotify('try read data', false);
+dataset = setAndNotify('dataset', 'saitama_v9_bright_3class');
 
-tryReadData = false; %true;
-    
 %Set-up of options for running
 options =  setOpt([], dataset, showImages, saveImages, tryReadData);   
 readData; %% redo intial bg removal with labels  etc the images are corrupt 
