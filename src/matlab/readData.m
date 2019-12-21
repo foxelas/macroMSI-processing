@@ -15,7 +15,7 @@ end
 wavelengthN = size(sensitivity, 1);
 wavelength = linspace(380, 780, wavelengthN);
 originalChannels = 7;
-
+outputFolderMap = getOutputDirectoryMap();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 msiN = length(ID);
 if (options.tryReadData)
@@ -169,3 +169,4 @@ function [H] = illumXsensitivity(E, S, pixelValueSelectionMethod)
     end
 
 end
+

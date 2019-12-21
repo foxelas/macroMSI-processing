@@ -1,6 +1,6 @@
 for k = [20, 19, 18]
 
-    outfile = fullfile(options.saveOptions.savedir, '10-sRGB', strcat('group_', num2str(k), '.mat'));
+    outfile = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('group_', num2str(k), '.mat'));
     load(outfile, 'sRGB');
 
     options.saveOptions.saveImages = true;

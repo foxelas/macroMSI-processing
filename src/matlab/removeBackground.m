@@ -66,7 +66,8 @@ function specimenMask = removeBackground(whiteReference, idd, options, colorLeve
 
     cluster1 = whiteReference .* double(specimenMask);
     name = strjoin( {'bgRemoved', num2str(idd.Group), idd.Sample, idd.Type}, '_');
-    saveOptions.plotName = fullfile(saveOptions.savedir, '1-BackgroundRemoval', name);
+    outputFolderMap = getOutputDirectoryMap();
+    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('backgroundRemoval'), name);
     plotMontage(whiteReference,cluster1, 1, saveOptions);
 
 end

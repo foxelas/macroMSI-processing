@@ -12,7 +12,7 @@ function [] = plotVisualResultAfterClassification(cancerProb, predictedLabels, c
         malignancyMap(logical(segmentMasks{i})) = cancerProb(i);
     end
     
-    options.saveOptions.plotName = fullfile(options.saveOptions.savedir, '11-Visual Tool', outName);
+    options.saveOptions.plotName = fullfile(options.saveOptions.savedir, outputFolderMap('visualTool'), outName);
     %labels = {isPositive, ~[ID(roiIndexes).IsBenign]};
     plotVisualResult(sRGB, malignancyMap, imgTitle, predictedClasses, coordinates, 'hsv', false, fig, options.saveOptions)
 end

@@ -105,7 +105,7 @@ title('sRGB from MSI data')
 % title('Intensity Histogram')
 % colorbar
 
-% outName = fullfile(options.saveOptions.savedir, '9-sRGB', strcat('sRgb_', num2str(id.Group)));
+% outName = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('sRgb_', num2str(id.Group)));
 % 
 % if ~(isempty(outName))
 %     saveas(v, strcat(outName, '_binnedspectrum.jpg'));

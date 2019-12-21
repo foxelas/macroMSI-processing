@@ -27,7 +27,7 @@ for k=1:msiN
    
 end
 
-filename = mkdir_custom(fullfile(options.saveOptions.savedir, '8-Features', 'out.mat'));
+filename = mkdir_custom(fullfile(options.saveOptions.savedir, outputFolderMap('features'), 'out.mat'));
 if exist(filename, 'file')
     save( filename,'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures','RgbLbpFeatures', '-append');
 else

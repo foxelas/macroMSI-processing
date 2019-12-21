@@ -22,12 +22,8 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
         saveOptions.SaveImage = false;
     end
     
-    key = {'Benign', 'Atypical', 'Malignant'};
-    value = {'go', 'ms', 'r^'}; 
-    lineStyleMap = containers.Map(key, value);
-    
-    value = {'g', 'm', 'r'}; 
-    lineColorMap = containers.Map(key, value);
+    lineStyleMap = getLineStyleMap(); 
+    lineColorMap = getLineColorMap();
 
     warning('off')
 
@@ -76,9 +72,9 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
     
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
     
-      
+    key = keys(lineColorMap);
     hold on; 
-    h = [];
+    h = zeros(1,length(key));
     for i = 1:length(key)
         h(i) = plot(nan, nan, lineStyleMap(key{i}), 'MarkerSize', 12, 'MarkerEdgeColor', 'k', ...
                 'MarkerFaceColor', lineColorMap(key{i}),  'LineWidth', 3, 'DisplayName', key{i});

@@ -61,9 +61,9 @@ else
 end
 
 if (isSmallMask)
-    folder = '4-SegmentsForFeatureExtraction';
+    folder =  outputFolderMap('segmentsForFeatureExtraction');
 else
-    folder = '3-Segments';
+    folder = outputFolderMap('segments');
 end
 saveOptions.plotName = fullfile(saveOptions.savedir, folder, strcat( 'segment_', num2str(idd.Index), '_', idd.Sample, '_', mal));
 baseImage = whiteReference .* specimenMask;

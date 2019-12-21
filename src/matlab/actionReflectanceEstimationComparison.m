@@ -41,7 +41,7 @@ saveOptions.saveImages = true;
 saveOptions.showImages = true;
 for i = 1:methodsN
 	nmseBars = getNmseForBarPlot(nmses(:, i), ID, methods{i}, saveOptions);
-    saveOptions.plotName = fullfile(saveOptions.savedir, '6-ReflectanceEstimationPerformance', strcat('hist_', methods{i}));
+    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('reflectanceEstimationPerformance'), strcat('hist_', methods{i}));
     plotGFCHistogram(gfcs(:,i), 1, saveOptions);
 end
 
@@ -49,7 +49,7 @@ msiId = find(strcmp(methods, 'MSI-Simple'));
 EstimatedSpectra =  multipleReconstructions(:,:,msiId); 
 rgbId = find(strcmp(methods, 'RGB-Simple'));
 EstimatedRGBSpectra = multipleReconstructions(:,:, rgbId); 
-filename = mkdir_custom(fullfile(saveOptions.savedir, '8-Features', 'out.mat'));
+filename = mkdir_custom(fullfile(saveOptions.savedir, outputFolderMap('features'), 'out.mat'));
 if exist(filename, 'file')
     save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo', 'multipleReconstructions', 'methods', '-append');
 else 
@@ -85,7 +85,7 @@ function nmseBars = getNmseForBarPlot(nmses, ID, method, saveOptions)
     end
     nmseBars = reshape(nmseBars, [2,3]);
 	
-	saveOptions.plotName = fullfile(saveOptions.savedir, '6-ReflectanceEstimationPerformance', method);
+	saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('reflectanceEstimationPerformance'), method);
     plotReconstructionPerformanceBars(nmseBars,{'malignant', 'benign'},'',1,saveOptions);
 	
     fprintf('NRMSE overall = %.4f\n', sum(nmseBars(:)));
