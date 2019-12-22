@@ -1,29 +1,30 @@
 function [W, score, latent, explained] = dimensionReduction(method, input, labels, priors, targetDimension)
+
 %% DIMENSIONREDUCTION provides data projections for dimension reduction
 % Available methods
 % 'PCA' Principal Component Analysis, MATLAB built-in
 % 'PCA b' Variation of PCA
 % 'LDA' Linear Dimension Analysis
 % 'LDA b' Variation of LDA
-% 'PCALDA' Combination or PCA and LDA 
-% 
+% 'PCALDA' Combination or PCA and LDA
+%
 % Use:
 % [W, score, latent, explained] = dimensionReduction(method, input, varargin)
-% 
+%
 % W         = discovered projections
 % score     = projection scores
 % latent    = (only for PCA)
 % explained = (only for PCA)
-% 
-% Example: 
-% 
+%
+% Example:
+%
 % [W, score, latent, explained] = dimensionReduction('PCA', X);
 % [W, score] = dimensionReduction('PCA', X, [], [], 2);
 % [W, score] = dimensionReduction('LDA', X, labels);
 % [W, score] = dimensionReduction('LDA', X, labels, [0.3, 0.7], 2 );
 
 [n, m] = size(input); %n observations, m variables
-    
+
 if (nargin < 3)
     labels = [];
 end
@@ -36,15 +37,15 @@ if (nargin < 5)
     targetDimension = m;
 end
 
-latent = zeros(10,1);
-explained = zeros(10,1);
-    
+latent = zeros(10, 1);
+explained = zeros(10, 1);
+
 if contains(method, 'LDA')
     % Determine size of input data
     if (n ~= length(labels))
         error('Inconsistent number of observation values and labels');
     end
-    
+
     % Available classes
     classes = unique(labels);
     C = numel(classes);
@@ -59,7 +60,7 @@ if contains(method, 'LDA')
         end
     end
     % Class element counts
-    nGroup = zeros(C, 1); 
+    nGroup = zeros(C, 1);
     for i = 1:C
         nGroup(i) = sum(double(labels == classes(i)));
     end
@@ -68,7 +69,7 @@ if contains(method, 'LDA')
         priors = nGroup / n;
     end
 
-    if (numel(priors)~= C)
+    if (numel(priors) ~= C)
         error('Inconsistent number of classes and prior probabilities.')
     end
 end
@@ -77,15 +78,15 @@ end
 switch method
     case 'PCA b'
         [W, score, latent, ~, explained] = pca(input, 'Centered', true);
-    
+
     case 'PCA'
         mu = mean(input);
-        Xcent = bsxfun(@minus, input ,mu);
-        [W,latent] = svd(cov(Xcent));
-        latent = diag(latent); 
-        explained=100*latent/sum(latent);
+        Xcent = bsxfun(@minus, input, mu);
+        [W, latent] = svd(cov(Xcent));
+        latent = diag(latent);
+        explained = 100 * latent / sum(latent);
         score = Xcent * W;
-        
+
     case 'LDA'
         classIdx = cell(C, 1);
 
@@ -114,9 +115,9 @@ switch method
 
         % eigenvalues
         invSwSb = Sw \ Sb;
-        [W, latent] = svd(invSwSb); %eigenvector of the maximum eigenvalue 
+        [W, latent] = svd(invSwSb); %eigenvector of the maximum eigenvalue
         score = input * W;
-        
+
     case 'LDA b'
         mu = zeros(C, m); % Group sample means
         poolCov = zeros(m, m); % Pooled covariance
@@ -124,7 +125,7 @@ switch method
 
         for i = 1:C
             group = (labels == classes(i));
-            
+
             % Calculate group mean vectors
             mu(i, :) = mean(input(group, :));
 
@@ -149,8 +150,7 @@ switch method
         error('Not implemented dimension reduction method')
 end
 
-targetDimension = min(targetDimension, size(W,2));
-W = W(:,1:targetDimension);
+targetDimension = min(targetDimension, size(W, 2));
+W = W(:, 1:targetDimension);
 
 end
-

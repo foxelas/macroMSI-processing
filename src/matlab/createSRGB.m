@@ -10,8 +10,8 @@ function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel, mas
 
 wavelength = 380:5:780;
 [~, r, c, ~] = size(I);
-if nargin < 6 
-    mask = ones(r,c);
+if nargin < 6
+    mask = ones(r, c);
 end
 % load color matching functions
 [lambdaMatch, xFcn, yFcn, zFcn] = colorMatchFcn('1931_FULL');
@@ -24,37 +24,37 @@ CMF = [xFcn(wavelengthIdx); yFcn(wavelengthIdx); zFcn(wavelengthIdx)]';
 d65 = d65full(wavelengthIdx);
 
 options.smoothingMatrixMethod = 'Cor_All';
-options.pixelValueSelectionMethod = 'extended';            
+options.pixelValueSelectionMethod = 'extended';
 options.noiseType = 'spatiospectralolympus';
 options.rho = 0.6;
 options.windowDim = 3;
-options.noiseParam =  0.000001; % 0.0001;   
+options.noiseParam = 0.000001; % 0.0001;
 
 % options.noiseType = 'fromOlympus';
-% options.noiseParam = 0.001;  
-            
+% options.noiseParam = 0.001;
+
 reflectance = reflectanceEstimation(I, [], [], id, options);
 reflectance = permute(reflectance, [2, 3, 1]);
 
-XYZideal = bsxfun(@times, CMF, d65);    
+XYZideal = bsxfun(@times, CMF, d65);
 %Compute the normalisation factor k
 reflectance = reshape(reflectance, r*c, numel(wavelength));
-XYZobj = [reflectance * XYZideal(:,1), reflectance * XYZideal(:,2), reflectance * XYZideal(:,3)];
-k = 1 / sum(XYZideal(:,2));
-XYZobj_col = k * XYZobj; 
-    
+XYZobj = [reflectance * XYZideal(:, 1), reflectance * XYZideal(:, 2), reflectance * XYZideal(:, 3)];
+k = 1 / sum(XYZideal(:, 2));
+XYZobj_col = k * XYZobj;
+
 if strcmp(method, 'original')
-          
+
     sRGB_col = xyz2srgbCustom(XYZobj_col);
-    sRGB = reshape(sRGB_col, r,  c, 3);
-    
-elseif strcmp(method, 'medium') 
-    sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756]; 
+    sRGB = reshape(sRGB_col, r, c, 3);
+
+elseif strcmp(method, 'medium')
+    sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756];
     targetXYZ = [1.09846607; 1.00000000; 0.35582280]; %d65 white
     Madapt = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
-    
+
     sRGBadapt = (Madapt * XYZobj_col')';
-    sRGB = reshape(sRGBadapt, r,  c, 3);
+    sRGB = reshape(sRGBadapt, r, c, 3);
 
 else
     warning('Not implemented')
@@ -78,7 +78,7 @@ title('sRGB from MSI data')
 
 % if ~(isempty(outName))
 %     imwrite(sRGB, strcat(outName, '_sRGB', '.tif'), 'tif');
-%     
+%
 %     %Write to TIFF (in the format that Photoshop can read the L,a,b channels)
 %     imwrite(Lab16(:, :, 1), strcat(outName, '_L', '.tif'), 'tif');
 %     imwrite(Lab16(:, :, 2)./2+((2^16) / 2), strcat(outName, '_a', '.tif'), 'tif');
@@ -88,7 +88,7 @@ title('sRGB from MSI data')
 %% Makes a 2D histogram style image of wavelength versus intensity of the spectral map
 
 % I = raw2msi(I, 'adjusted');
-% 
+%
 % figure(2);
 % vec = zeros(w, r*c);
 % vech = zeros(256, w);
@@ -106,7 +106,7 @@ title('sRGB from MSI data')
 % colorbar
 
 % outName = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('sRgb_', num2str(id.Group)));
-% 
+%
 % if ~(isempty(outName))
 %     saveas(v, strcat(outName, '_binnedspectrum.jpg'));
 % end
@@ -121,18 +121,19 @@ end
 % *** XYZ is n by 3 and in the range 0–1
 % *** see also srgb2xyz
 function [RGB] = xyz2srgbCustom(XYZ)
-if (size(XYZ,2)~=3)
-disp('XYZ must be n by 3'); return;
+if (size(XYZ, 2) ~= 3)
+    disp('XYZ must be n by 3');
+    return;
 end
-M = [3.2404542, -1.5371385, -0.4985314;...
-    -0.9692660,  1.8760108,  0.0415560;...
-    0.0556434, -0.2040259,  1.0572252];
-RGB = (M*XYZ')';
-RGB(RGB<0) = 0;
-RGB(RGB>1) = 1;
-index = (RGB<=0.00304);
-RGB = RGB + (index).*(12.92*RGB);
-RGB = RGB + (1-index).*(1.055*RGB .^ (1/2.4)-0.055);
+M = [3.2404542, -1.5371385, -0.4985314; ...
+    -0.9692660, 1.8760108, 0.0415560; ...
+    0.0556434, -0.2040259, 1.0572252];
+RGB = (M * XYZ')';
+RGB(RGB < 0) = 0;
+RGB(RGB > 1) = 1;
+index = (RGB <= 0.00304);
+RGB = RGB + (index) .* (12.92 * RGB);
+RGB = RGB + (1 - index) .* (1.055 * RGB.^(1 / 2.4) - 0.055);
 
 end
 
@@ -144,13 +145,14 @@ function xy = XYZ2xy(xyz)
 X = xyz(1);
 Y = xyz(2);
 s = sum(xyz);
-xy = [X/s; Y/s];
+xy = [X / s; Y / s];
 
 end
 
-function xyz = xy2XYZ(xy,Y)
+function xyz = xy2XYZ(xy, Y)
 %xyz = xy2XYZ(xy,Y)
 % Converts xyY chromaticity to CIE XYZ.
-x = xy(1); y = xy(2);
-xyz = [Y/y*x; Y; Y/y*(1-x-y)];
+x = xy(1);
+y = xy(2);
+xyz = [Y / y * x; Y; Y / y * (1 - x - y)];
 end

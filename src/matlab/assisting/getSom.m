@@ -1,4 +1,4 @@
-function [net] = getSom(inputs, dimension1,dimension2, saveOptions, inputName)
+function [net, outputs] = getSom(inputs, dimension1,dimension2, saveOptions, inputName)
 
     outputFolderMap = getOutputDirectoryMap();
 
