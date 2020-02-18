@@ -13,6 +13,9 @@ switch method
 		
 	case 'rms'
 		G = squeeze(sqrt(sum(A.^2, 4)));
+    
+    case 'max'
+        G = squeeze(max(A.^2, [], 4));
 		
 	case 'adjusted'
 		G = zeros(bands, height, width);
