@@ -75,6 +75,17 @@ if (options.tryReadData)
 
     end
 
+    %%%% Read white reference %%%%
+    disp('Read reference MSI.')
+
+    referenceID = 143;
+    files = {data([data.MsiID] == referenceID).File};
+    [raw, whiteReference, darkReference] = readMSI(files);
+    specimenMask = ones(size(raw, 2), size(raw, 3));
+
+    infile = mkdir_custom(fullfile(options.systemdir, 'infiles', strcat('reference.mat')));
+    save(infile, 'raw', 'whiteReference', 'darkReference', 'specimenMask', '-v7.3');
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %% Precompute correlation smoothing Matrices

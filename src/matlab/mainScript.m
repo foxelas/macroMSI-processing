@@ -10,6 +10,9 @@ dataset = setAndNotify('dataset', 'saitama_v9_bright_3class');
 
 options = setOpt([], dataset, showImages, saveImages, tryReadData);
 readData; %% redo intial bg removal with labels  etc the images are corrupt
+
+options.saveOptions.savedir = strrep( options.saveOptions.savedir, dataset, 'saitama_v10_density_maps' );
+
 % visualizePOIs;
 % actionSOM;
 % dimredscript;
@@ -21,4 +24,5 @@ readData; %% redo intial bg removal with labels  etc the images are corrupt
 % %actionLBP;
 % %actionRecostructSRGB;
 % %visualTool;
-createOpticalDensityMaps; 
+%createOpticalDensityMaps; 
+findChannelCoeffs;

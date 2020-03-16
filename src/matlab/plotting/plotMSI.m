@@ -21,7 +21,7 @@ function [] = plotMSI(raw,fig,saveOptions, isSeparateImages)
 
     if ndims(raw) > 3 
         msi = raw2msi(raw, 'extended');    
-        msi = permute(msi, [2, 3, 1]);
+        %msi = permute(msi, [2, 3, 1]);
     else 
         msi = raw; 
     end 
