@@ -69,17 +69,4 @@ function [xcorrMsi] = getXcorrMSI(msi)
     end
 end
 
-function [normMsi] = getNormMSI(msi)
-    if ndims(msi) > 2 
-        normMsi = zeros(size(msi));
-        for i = 1:size(msi,1)
-            normMsi(i, :, :) = squeeze(msi(i, :, :)) - mean(mean(squeeze(msi(i, :, :))));
-        end 
-    else 
-        normMsi = zeros(size(msi));
-        for i = 1:size(msi,2)
-            normMsi(:,i) = squeeze(msi(:, i)) - mean(squeeze(msi(:, i)));
-        end 
-    end 
-end
 
