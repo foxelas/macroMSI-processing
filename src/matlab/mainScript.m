@@ -25,4 +25,3 @@ options.saveOptions.savedir = strrep( options.saveOptions.savedir, dataset, 'sai
 % %actionRecostructSRGB;
 % %visualTool;
 %createOpticalDensityMaps; 
-findChannelCoeffs;

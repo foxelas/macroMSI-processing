@@ -14,7 +14,7 @@ c = size(msi, 1);
 patchNames = {'Healthy patch', 'Atypical patch', 'Cancer patch'};
 patches = {msi(:, 1187:(1187+n -1), 438:(438 + m - 1)),  msi(:, 820:(820+n -1), 685:(685 + m -1)), msi(:, 699:(699+n -1), 444:(444 + m -1))};
 
-options.saveOptions.saveImages = false; 
+options.saveOptions.saveImage = false; 
 nbins = 10;
 for i = 1:length(patchNames)
     patch = patches{i};
@@ -31,17 +31,9 @@ simHealthyCancer = getSpectralHistogramSimilarity(spectralHists{1}, spectralHist
 simCancerAtypical = getSpectralHistogramSimilarity(spectralHists{3}, spectralHists{2})
 
 simHealthyHealthy = getSpectralHistogramSimilarity(spectralHists{1}, spectralHists{1})
-simHealthyHealthy = getSpectralHistogramSimilarity(spectralHists{2}, spectralHists{2})
-simHealthyHealthy = getSpectralHistogramSimilarity(spectralHists{3}, spectralHists{3})
+simAtypicalAtypical = getSpectralHistogramSimilarity(spectralHists{2}, spectralHists{2})
+simCancerCancer = getSpectralHistogramSimilarity(spectralHists{3}, spectralHists{3})
 
 
-function [val] = getSpectralHistogramSimilarity(h1, h2)
-    val = 0; 
-    for i = 1:size(h1, 1)
-        val = val + sum((h1 - h2).^2 ./ (h1 + h2));
-    end
-    mn = sum(h1(1,:));
-    val = 1 / mn * sum(val);
-end 
 
 

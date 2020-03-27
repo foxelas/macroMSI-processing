@@ -2,71 +2,44 @@ close all; clc;
 k = 20;
 msiType = 'extended'; %'extended'; % 'max';
  
-% for all pixels without bg removal 
-removebg = false; 
-[msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, true);
-[coeff,latent,explained]  = doPixelPCA(msi);
+% % for all pixels without bg removal 
+% removebg = false; 
+% [msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, true);
+% [coeff, scores, latent,explained]  = doPixelPCA(msi);
 
-% for only the pixels of the speciment 
-removebg = true; 
-[msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, true);
-[coeff,latent,explained]  = doPixelPCA(msi);
+% % for only the pixels of the specimen
+% [msi, ~, specimenMask, height, width, ~] = getImage(k, options, msiType, false, true);
+specimenIdxs = find(specimenMask == 1)';
+colMsi = msi(specimenIdxs, :);
+[coeff,scores, latent,explained]  = doPixelPCA(colMsi);
+% [coeff,scores, latent,explained] = applyOnQualityPixels( @doPixelPCA, colMsi);
 
-normMsi = getNormMSI(msi);
-[Loadings1,specVar1,T,stats] = factoran(normMsi,2,'rotate','none') %'Xtype','cov',
+for i = 1 : 3
+    pcComp = zeros(size(msi,1), 1);
+    pcComp(specimenIdxs) = scores(:,i);
+    pcCompImage = reshape(pcComp, height, width);
+    figure(i);
+    imagesc(pcCompImage);
+    colorbar;
+    title(sprintf('Principal Component %d', i))
+    %caxis([-2,2])
+end 
+
+% pc1 healthy skin, pc2 hemoglobin, pc3 
 
 
-[msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, false);
-plotMSI(msi, 1, options.saveOptions);
-title('Msi (Extended)')
-[difMsi, avgMsi] = getDifMSI(msi, 'toAverage') ;
-plotMSI(avgMsi, 2, options.saveOptions);
-title('Average')
-plotMSI(difMsi, 3, options.saveOptions);
-title('Difference to Average')
-[difMsi, ~] = getDifMSI(msi, 'toNextBand') ;
-plotMSI(difMsi, 4, options.saveOptions);
-title('Difference to Next Band')
-%xcorrMsi = getXcorrMSI(msi) ;
-%plotMSI(xcorrMsi, 5, options.saveOptions);
-%title('Difference to Next Band') 
-[normMsi] = getNormMSI(msi);
-plotMSI(normMsi, 6, options.saveOptions);
-title('Normalized Msi') 
+% normMsi = getNormMSI(msi);
+% [Loadings1,specVar1,T,stats] = factoran(normMsi,2,'rotate','none') %'Xtype','cov',
 
-function [coeff,latent,explained]  = doPixelPCA(columns)
 
-    [coeff,score,latent,tsquared,explained,mu] = pca(columns,'NumComponents',2, 'Centered', true);
+function [coeff,scores, latent,explained]  = doPixelPCA(columns)
+
+    [coeff,scores,latent,tsquared,explained,mu] = pca(columns,'NumComponents',5, 'Centered', true);
 
     coeff
     latent
     explained
 
 end 
-
-function [difMsi, avgMsi] = getDifMSI(msi, type)
-    if strcmp(type, 'toAverage')
-        channels = size(msi, 1);
-        avgMsi =  mean(msi,1);
-        avgMsiRep = repmat(avgMsi, channels, 1, 1);   
-        difMsi = bsxfun(@(x,y) x - y, msi, avgMsiRep); 
-    elseif strcmp(type, 'toNextBand')
-        [channels, m, n] = size(msi);
-        difMsi = zeros(channels - 1, m, n);
-        for i = 1:(channels - 1)
-            difMsi(i, :, :) = squeeze(msi(i, :, :) - msi(i + 1, :, :));
-        end 
-        avgMsi = [];
-    else 
-        disp('Not supported method.');
-    end    
-end 
-
-function [xcorrMsi] = getXcorrMSI(msi)
-    [channels, m, n] = size(msi);
-    for i = 1:(channels - 1)
-        xcorrMsi(i, :, :) = xcorr2(squeeze(msi(i, :, :)), squeeze(msi(i + 1, :, :)));
-    end
-end
 
 
