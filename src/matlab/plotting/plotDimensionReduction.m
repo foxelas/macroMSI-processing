@@ -1,4 +1,4 @@
-function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, latent, explained, fig,saveOptions)
+function [] = plotreduceDimension(dimred, figTitle, coefficients, labels, latent, explained, fig,saveOptions)
 
     if (nargin < 5)
 		latent = [];
