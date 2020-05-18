@@ -1,7 +1,8 @@
 function [ID] = selectCoeffIndex()
+
 %% SelectCoeffIndex  updates the values of CoeffIndex of ID.mat
 % based on the image point which produces minimum average estimation rmse,
-% when coefficient values are adjusted to it. 
+% when coefficient values are adjusted to it.
 %
 %Usage:
 % selectCoeffIndex();
@@ -21,25 +22,25 @@ disp('Searching for reference coefficient...')
 %load(generateName('system'), 'wavelength'); % camera system parameters
 load(generateName('id'), 'ID'); % image data id and info struct
 load(getSetting('matfilein'), 'poiRAWs', 'Spectra');
-    
+
 G = findgroups({ID.Sample}, {ID.Type});
 for i = 1:max(G)
     rmseMin = 1;
     idxs = find(G == i);
     groupID = ID(idxs);
-    [~,coeffIdxs] = unique({groupID.ROI}); %1...N
+    [~, coeffIdxs] = unique({groupID.ROI}); %1...N
     coeffIdxs = [groupID(coeffIdxs).Index];
-    
+
     for coeffIndex = coeffIdxs
         avgRmse = 0;
         for k = idxs
 
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
-            [est, rmse] = estimateReflectance(poiRAWs{k,1}, poiRAWs{k,2}, Spectra(k,:), idk);
+            [est, rmse] = estimateReflectance(poiRAWs{k, 1}, poiRAWs{k, 2}, Spectra(k, :), idk);
             avgRmse = avgRmse + rmse;
         end
-        if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0 ) || any(est(:) > 1 ))
+        if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0) || any(est(:) > 1))
             rmseMin = avgRmse / length(idxs);
             coeffIndexMin = coeffIndex;
         end

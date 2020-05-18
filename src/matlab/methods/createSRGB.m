@@ -28,7 +28,7 @@ setSetting('pixelValueSelectionMethod', 'extended');
 setSetting('noiseType', 'spatiospectralolympus');
 setSetting('rho', 0.6);
 setSetting('windowDim', 3);
-setSetting('noiseParam',  0.000001); % 0.0001;
+setSetting('noiseParam', 0.000001); % 0.0001;
 
 % setSetting('noiseType', 'fromOlympus');
 % setSetting('noiseParam', 0.001);

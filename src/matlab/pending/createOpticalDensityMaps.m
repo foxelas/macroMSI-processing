@@ -2,7 +2,7 @@
 k = 17;
 msiType = 'max'; %'extended'; % 'max';
 [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, false);
-systemdir = getSetting('systemDir'); 
+systemdir = getSetting('systemDir');
 reference = getReference(systemdir, height, width);
 reference = raw2msi(reference, msiType);
 
@@ -14,29 +14,29 @@ reference = raw2msi(reference, msiType);
 
 %foregroundMask = permute(repmat(double(specimenMask), 1, 1,  channels), [3 1 2]);
 %msi = bsxfun(@times, msi, foregroundMask);
-opticalDensity = double(log10(msi ./ reference));
+opticalDensity = double(log10(msi./reference));
 
 plotMSI(msi, 1);
 plotMSI(reference, 2);
 plotMSI(opticalDensity, 3);
 
 figure(4);
-od630 = squeeze(opticalDensity(7,:,:));
-subplot(3,1,1);
+od630 = squeeze(opticalDensity(7, :, :));
+subplot(3, 1, 1);
 c = imagesc(od630);
 c.Parent.Visible = 'off';
 colorbar;
 title('OD630nm - Melanin Map ')
 
-odhg = squeeze(opticalDensity(5,:,:)) - 1.15 .* squeeze(opticalDensity(7,:,:));
-subplot(3,1,2);
+odhg = squeeze(opticalDensity(5, :, :)) - 1.15 .* squeeze(opticalDensity(7, :, :));
+subplot(3, 1, 2);
 c = imagesc(odhg);
 c.Parent.Visible = 'off';
 colorbar;
 title('OD575nm - 1.15 OD630nm - Hemoglobin Map ')
 
-subplot(3,1,3);
-od575 = squeeze(opticalDensity(5,:,:));
+subplot(3, 1, 3);
+od575 = squeeze(opticalDensity(5, :, :));
 c = imagesc(od575);
 c.Parent.Visible = 'off';
 colorbar;

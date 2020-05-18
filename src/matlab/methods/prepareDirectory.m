@@ -129,7 +129,7 @@ end
 
 
 samples = unique([ID.Sample]);
-for i = 1 : length(samples)
+for i = 1:length(samples)
     for j = 1:length(ID)
         if strcmp(samples(i), ID(j).Sample)
             ID(j).SampleID = i;

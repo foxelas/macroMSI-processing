@@ -4,7 +4,7 @@ tline = fgetl(fid);
 isNextLine = false;
 count = 0;
 while ischar(tline)
-    if isNextLine 
+    if isNextLine
         settings = strrep(tline, '{', "");
         settings = strrep(settings, '}', "");
         settings = strrep(settings, ", '", ", ");
@@ -13,13 +13,13 @@ while ischar(tline)
         if contains(settings, "class_weight") && ~contains(settings, "balanced")
             settings = strrep(settings, "class_weight=", "class_weight={");
             settings = strrep(settings, "0= ", "0: ");
-            settings = strrep(settings, "1= 1.0", "1: 1.0}");            
+            settings = strrep(settings, "1= 1.0", "1: 1.0}");
         end
         classifierSetting = strcat(classChar, "(", settings, additionalParams, ")");
         classifierSetting = strrep(classifierSetting, "('", "(");
         classifierSetting = strcat(classifierSetting, ",");
         disp(classifierSetting)
-        count = count + 1;        
+        count = count + 1;
     end
     if contains(tline, "Best params for")
         isNextLine = true;
@@ -33,9 +33,9 @@ while ischar(tline)
             classChar = "KNN";
             additionalParams = "";
         end
-    else 
+    else
         isNextLine = false;
-    end      
+    end
     tline = fgetl(fid);
 end
 fclose(fid);

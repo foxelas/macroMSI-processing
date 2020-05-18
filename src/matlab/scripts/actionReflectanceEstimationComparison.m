@@ -85,7 +85,7 @@ for state = {'unfixed', 'fixed', 'cut'}
 end
 nmseBars = reshape(nmseBars, [2, 3]);
 
-setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimationPerformance'), method));
+setSetting('plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimationPerformance'), method));
 plotReconstructionPerformanceBars(nmseBars, {'malignant', 'benign'}, '', 1);
 
 fprintf('NRMSE overall = %.4f\n', sum(nmseBars(:)));

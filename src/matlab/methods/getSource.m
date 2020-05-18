@@ -1,4 +1,3 @@
 function sourcedir = getSource()
-    sourcedir = fullfile('..','..','..');
+sourcedir = fullfile('..', '..', '..');
 end
-

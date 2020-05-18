@@ -28,19 +28,19 @@ for scale = 1:3
     LBPImage = im2double(lbp(rgb2gray(whiteReference).*specimenMask, scale, neighbors, mapping, 'e'));
 
     type = 'SumLBP';
-    setSetting( 'plotName',fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plotLBP(sumLBPImage, type, 1);
 
     type = 'CatLBP';
-    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plotLBP(catLBPImage.*100, type, 2);
 
     type = 'MMLBP';
-    setSetting( 'plotName',fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plotLBP(mmLBPImage.*100, type, 3);
 
     type = 'LBP';
-    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plotLBP(LBPImage, type, 4);
 
 

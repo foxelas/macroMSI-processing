@@ -1,10 +1,10 @@
-function [] = savePlot( fig )
+function [] = savePlot(fig)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 if (nargin < 1)
     fig = gcf;
-else     
+else
     figure(fig);
     clf(fig);
 end
@@ -18,19 +18,19 @@ if (saveImages)
     if (~isempty(plotName))
         filename = strrep(plotName, '.mat', '');
 
-        [filepath,name,~] = fileparts(filename);
-        filepathBW = fullfile(filepath, 'bw');    
+        [filepath, name, ~] = fileparts(filename);
+        filepathBW = fullfile(filepath, 'bw');
         mkNewDir(filepath);
         mkNewDir(filepathBW);
 
         if (saveInHQ)
             filename = fullfile(filepath, strcat(name, '.png'));
-            export_fig(filename , '-png','-native', '-nocrop');
+            export_fig(filename, '-png', '-native', '-nocrop');
             %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
         else
             filename = fullfile(filepath, name);
             if getSetting('cropBorders')
-                export_fig(filename , '-png','-native');
+                export_fig(filename, '-png', '-native');
             else
                 saveas(fig, filename, 'png');
             end
@@ -42,10 +42,9 @@ if (saveImages)
                 %export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
             end
         end
-    else 
+    else
         warning('Empty plotname')
     end
 end
 
 end
-

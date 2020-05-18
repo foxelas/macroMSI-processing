@@ -233,7 +233,7 @@ HMH = H * M * H';
 %% Covariance matrix of the additive noise
 noiseParts = strsplit(noiseType, {' ', ','});
 if (numel(noiseParts) > 1)
-    setSetting( 'noiseParam', cellfun(@str2double, noiseParts(2:end)));
+    setSetting('noiseParam', cellfun(@str2double, noiseParts(2:end)));
 end
 noiseParam = getSetting('noiseParam');
 hasNoiseParam = ~isempty(noiseParam);

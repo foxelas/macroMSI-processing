@@ -14,7 +14,7 @@ if (false)
     rhoRange = [0.2, 0.3, 0.4, 0.5, 0.6]; %[0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
     windowRange = [3, 5, 9];
 
-    setSetting('pixelValueSelectionMethod','extended');
+    setSetting('pixelValueSelectionMethod', 'extended');
 
     idx = 0;
     for rho = [0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
@@ -43,7 +43,7 @@ if (false)
 
         % Retrieve MSI data
 
-        infile = fullfile( getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
+        infile = fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
         load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
             'roiSeeds', 'measuredSpectrum', 'poiWhite');
 
@@ -81,7 +81,7 @@ if (false)
             settings(idx).noiseType = 'sameForChannel';
             settings(idx).smoothingMatrixMethod = 'Cor_Sample';
             settings(idx).noiseParam = {i};
-            
+
             setSetting('noiseType', 'sameForChannel');
             setSetting('smoothingMatrixMethod', 'Cor_Sample');
             setSetting('noiseParam', i);
@@ -100,7 +100,7 @@ if (false)
                 setSetting('noiseType', 'spatial');
                 setSetting('smoothingMatrixMethod', 'Cor_Sample');
                 setSetting('noiseParam', [i, j]);
-                
+
                 [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k));
                 reconstructions(k, idx, :) = estimated;
                 evaluation(k, idx, :) = [rmse, nmse, gfc];
@@ -152,7 +152,7 @@ end
 rhos = unique(rhos);
 windowDim = unique(windowDim);
 
-setSetting('plotName',fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral'));
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral'));
 plotNMSE2(rhos, windowDim, evaluationMeans(idx(bestIdxs), 2), 'Spatial Correlation', ...
     'Window Dimension', 'Average NMSE', 'NMSE for Spatiospectral Wiener Reconstruction', 1);
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral_gfc'));

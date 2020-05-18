@@ -1,7 +1,7 @@
 function [] = plotGFCHistogram(gfcs, fig)
-    
+
 histogram(gfcs, 7);
-ax  = get(gca);
+ax = get(gca);
 ax.FontSize = 18;
 xlabel('Goodness-Of-Fit Criterion', 'FontSize', 20);
 ylabel('Number of POIs', 'FontSize', 20);
