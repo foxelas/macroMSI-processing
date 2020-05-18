@@ -1,4 +1,4 @@
-function specimenMask = removeBackground(whiteReference, idd, options, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+function specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
 
 %load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\ID.mat'));
 %load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\data.mat'));
@@ -22,9 +22,6 @@ end
 if (nargin < 9)
     openingCoefficient = 5;
 end
-
-saveOptions = options.saveOptions;
-saveOptions.saveImages = true;
 
 [m, n, ~] = size(whiteReference);
 
@@ -66,8 +63,8 @@ specimenMask = bwareaopen(specimenMask, ceil(m*n/500), 8);
 
 cluster1 = whiteReference .* double(specimenMask);
 name = strjoin({'bgRemoved', num2str(idd.Group), idd.Sample, idd.Type}, '_');
-saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('backgroundRemoval'), name);
-plotMontage(whiteReference, cluster1, 1, saveOptions);
+ setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('backgroundRemoval'), name));
+plotMontage(whiteReference, cluster1, 1);
 
 end
 

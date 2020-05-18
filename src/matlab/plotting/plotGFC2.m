@@ -1,15 +1,4 @@
-function [] = plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig,saveOptions)
-
-    if (nargin < 7)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
-
-    if (nargin < 8)
-        saveOptions.SaveImage = false;
-    end 
+function [] = plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig)
 
     if contains(x1lab, 'sigma')
         x1 = log10(x1);
@@ -41,7 +30,7 @@ function [] = plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig,saveOptions)
     hold off
     
     pause;
-    savePlot(fig, saveOptions);
+    savePlot(fig);
     
     warning('on');
 end

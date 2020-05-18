@@ -1,4 +1,4 @@
-function [] = visualizeLBP(raw, whiteReference, specimenMask, g, saveOptions)
+function [] = visualizeLBP(raw, whiteReference, specimenMask, g)
 
 msi = raw2msi(raw, 'extended');
 [B, M, N] = size(msi);
@@ -28,20 +28,20 @@ for scale = 1:3
     LBPImage = im2double(lbp(rgb2gray(whiteReference).*specimenMask, scale, neighbors, mapping, 'e'));
 
     type = 'SumLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(sumLBPImage, type, 1, saveOptions);
+    setSetting( 'plotName',fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plotLBP(sumLBPImage, type, 1);
 
     type = 'CatLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(catLBPImage.*100, type, 2, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plotLBP(catLBPImage.*100, type, 2);
 
     type = 'MMLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(mmLBPImage.*100, type, 3, saveOptions);
+    setSetting( 'plotName',fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plotLBP(mmLBPImage.*100, type, 3);
 
     type = 'LBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(LBPImage, type, 4, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plotLBP(LBPImage, type, 4);
 
 
 end

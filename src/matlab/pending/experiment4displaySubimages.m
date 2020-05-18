@@ -5,17 +5,17 @@ msiType = 'extended'; %'extended'; % 'max';
  
 % for all pixels without bg removal 
 removebg = true; 
-[msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, false);
-plotMSI(msi, 1, options.saveOptions);
+[msi, ~, ~, ~, ~, ~] = getImage(k, msiType, removebg, false);
+plotMSI(msi, 1);
 title('Msi (Extended)')
 [difMsi, avgMsi] = getDifMSI(msi, 'toAverage') ;
-plotMSI(avgMsi, 2, options.saveOptions);
+plotMSI(avgMsi, 2);
 title('Average')
-plotMSI(difMsi, 3, options.saveOptions);
+plotMSI(difMsi, 3);
 title('Difference to Average')
 [difMsi, ~] = getDifMSI(msi, 'toNextBand') ;
-plotMSI(difMsi, 4, options.saveOptions);
+plotMSI(difMsi, 4);
 title('Difference to Next Band')
 [normMsi] = getNormMSI(msi);
-plotMSI(normMsi, 5, options.saveOptions);
+plotMSI(normMsi, 5);
 title('Normalized Msi') 

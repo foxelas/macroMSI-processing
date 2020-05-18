@@ -1,15 +1,4 @@
-function [] = plotReconstructionParams(x, y, xlab, ylab, figTitle, fig,saveOptions)
-
-    if (nargin < 6)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
-
-    if (nargin < 7)
-        saveOptions.SaveImage = false;
-    end 
+function [] = plotReconstructionParams(x, y, xlab, ylab, figTitle, fig)
 
     warning('off');
     
@@ -18,7 +7,7 @@ function [] = plotReconstructionParams(x, y, xlab, ylab, figTitle, fig,saveOptio
     ylabel(ylab, 'FontSize', 15);
     title(figTitle, 'FontSize', 15);
 
-    savePlot(fig, saveOptions);
+    savePlot(fig);
     
     warning('on');
 end

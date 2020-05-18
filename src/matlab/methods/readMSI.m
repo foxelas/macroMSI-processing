@@ -1,8 +1,8 @@
-function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = readMSI(files, coordinates, width, height, options, fc)
+function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = readMSI(files, coordinates, width, height, fc, plotNames)
 %%readMSI Read the MSI image from raw RGB subimages
 %
 % [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = 
-%   readMSI(files, coordinates, width, height, options, fc)
+%   readMSI(files, coordinates, width, height, fc)
 % Reads subimages with given filenames and loads the area contained in a 
 % given bounding box to a 4D matrix. Additionally, produces the respective 
 % white and dark RGB images and binary masks of the read area.
@@ -12,7 +12,6 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
 % coordinates - [x,y] of the upper left corner of the bounding box
 % width - width of bounding box to be read (x axis)
 % height - height of bounding box to be read (y axis)
-% options - running configurations
 % fc - a vector of frequency bands of the MSI
 % 
 % Outputs:
@@ -25,7 +24,7 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
 %     
 % Usage:
 % [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = 
-%     readMSI(files, coordinates, width, height, options, fc)
+%     readMSI(files, coordinates, width, height, fc)
 % Reads the area of the image contained in bounding box with upper 
 % left corner at [coordinates], with dimensions [width], [height]
 % segmentMSI = readMSI(files)
@@ -62,11 +61,11 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
         error('No region to be read.')
     end
 
-    if (nargin < 5) || isempty(options)
-        options.saveOptions.plotName = '../../output/cropped/';
+    if (nargin < 5) 
+         setSetting( 'plotName', fullfile(getSetting('savedir'), 'cropped'));
     end
 
-    if (nargin < 6) || isempty(fc)
+    if (nargin < 5) || isempty(fc)
         fc = [1, 450, 465, 505, 525, 575, 605, 630];
     end   
     
@@ -120,10 +119,9 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
             
             if hasWhiteReference
                 segmentWhite{roi} = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
-                if isfield(options, 'showImages') && (options.showImages)
-                    currentOptions = options.saveOptions;
-                    currentOptions.plotName = options.saveOptions.plotName{roi};
-                    plots('cropped', 1, 'Image', whiteReference + maskI, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+                if getSetting('showImages')
+                    setSetting('plotName', plotNames{roi});
+                    plotMSIWithPOI( whiteReference + maskI, [x,y], 1);
                 end
             end
             

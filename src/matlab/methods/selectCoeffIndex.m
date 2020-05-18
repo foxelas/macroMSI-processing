@@ -1,26 +1,26 @@
-function [ID] = selectCoeffIndex(options)
+function [ID] = selectCoeffIndex()
 %% SelectCoeffIndex  updates the values of CoeffIndex of ID.mat
 % based on the image point which produces minimum average estimation rmse,
 % when coefficient values are adjusted to it. 
 %
 %Usage:
-% selectCoeffIndex('saitama_v2');
+% selectCoeffIndex();
 
-% options.action = 'ReflectanceEstimationPreset';
-options.skipLoading = false;
-options.showImages = false;
-options.saveImages = false;
-options.tryReadData = false;
-options.pixelValueSelectionMethod = 'adjusted';
-options.smoothingMatrixMethod = 'Cor_Sample';
-options.noiseType = 'givenSNR';
-options.noiseParam = 20;
+% setSetting('action', 'ReflectanceEstimationPreset');
+setSetting('skipLoading', false);
+setSetting('showImages', false);
+setSetting('saveImages', false);
+setSetting('tryReadData', false);
+setSetting('pixelValueSelectionMethod', 'adjusted');
+setSetting('smoothingMatrixMethod', 'Cor_Sample');
+setSetting('noiseType', 'givenSNR');
+setSetting('noiseParam', 20);
 
 disp('Searching for reference coefficient...')
 
-%load(generateName('system', options), 'wavelength'); % camera system parameters
-load(generateName('id', options), 'ID'); % image data id and info struct
-load(generateName('matfilein', options), 'poiRAWs', 'Spectra');
+%load(generateName('system'), 'wavelength'); % camera system parameters
+load(generateName('id'), 'ID'); % image data id and info struct
+load(getSetting('matfilein'), 'poiRAWs', 'Spectra');
     
 G = findgroups({ID.Sample}, {ID.Type});
 for i = 1:max(G)
@@ -36,7 +36,7 @@ for i = 1:max(G)
 
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
-            [est, rmse] = estimateReflectance(poiRAWs{k,1}, poiRAWs{k,2}, Spectra(k,:), idk, options);
+            [est, rmse] = estimateReflectance(poiRAWs{k,1}, poiRAWs{k,2}, Spectra(k,:), idk);
             avgRmse = avgRmse + rmse;
         end
         if (avgRmse / length(idxs)) < rmseMin && ~(any(est(:) < 0 ) || any(est(:) > 1 ))
@@ -48,7 +48,7 @@ for i = 1:max(G)
 end
 
 ID = orderfields(ID);
-save(fullfile(options.systemdir, 'ID.mat'), 'ID');
+save(fullfile(getSetting('systemdir'), 'ID.mat'), 'ID');
 disp('Finished updating CoeffIndex values in the ID file.')
 
 end

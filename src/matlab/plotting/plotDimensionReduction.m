@@ -1,4 +1,4 @@
-function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, latent, explained, fig,saveOptions)
+function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, latent, explained, fig)
 
     if (nargin < 5)
 		latent = [];
@@ -6,16 +6,6 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
     if (nargin < 6)
 		explained = [];
     end
-    if (nargin < 7)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 8)
-        saveOptions.SaveImage = false;
-    end
-  
 	
 	if contains(dimred, 'PCA') && ~isempty(latent) && ~isempty(explained)
 		subplot(1, 3, 1);
@@ -74,9 +64,8 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
 	legend(h, 'Location', 'best');
 	set(gcf, 'Position', get(0, 'Screensize'));
 	
-	saveOptions.saveInHQ = true;
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('dimred'), dimred);
-    savePlot(fig, saveOptions);
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('dimred'), dimred));
+    savePlot(fig);
 
 end
 

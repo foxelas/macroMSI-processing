@@ -1,5 +1,5 @@
 function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength,  figTitle, ...
-      fig,saveOptions, markers)
+      fig, markers)
 
 	%{
 		% returns a comparative plot of the estimation reflectanceSpectra versus the measured spectrum.
@@ -12,16 +12,7 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
 	%}
 	
     fc = [450, 465, 505, 525, 575, 605, 630];
-    
-	if (nargin < 5)
-		fig = figure;
-	else     
-		figure(fig);
-        clf(fig);
-	end
-	if (nargin < 6)
-		saveOptions.SaveImage = false;
-	end
+   
 
 	% each column of 'spectrum' is that data for a plot line
 	curveN = size(reflectanceSpectra, 2);
@@ -72,8 +63,8 @@ function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength
     %Optional
     set(gcf, 'Position', get(0, 'Screensize'));
     
-    saveOptions.cropBorders = true;
-	savePlot(fig, saveOptions);
+    setSetting('cropBorders', true);
+	savePlot(fig);
 
 end
 

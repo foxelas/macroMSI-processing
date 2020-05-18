@@ -14,7 +14,7 @@ if (false)
     rhoRange = [0.2, 0.3, 0.4, 0.5, 0.6]; %[0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
     windowRange = [3, 5, 9];
 
-    options.pixelValueSelectionMethod = 'extended';
+    setSetting('pixelValueSelectionMethod','extended');
 
     idx = 0;
     for rho = [0.6, 0.65, 0.7, 0.8, 0.9, 0.97]
@@ -43,7 +43,7 @@ if (false)
 
         % Retrieve MSI data
 
-        infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+        infile = fullfile( getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
         load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
             'roiSeeds', 'measuredSpectrum', 'poiWhite');
 
@@ -62,13 +62,13 @@ if (false)
                     settings(idx).smoothingMatrixMethod = 'Cor_Sample';
                     settings(idx).noiseParam = {sigma};
 
-                    options.rho = rho;
-                    options.windowDim = windowDim;
-                    options.noiseType = 'spatiospectralolympus';
-                    options.smoothingMatrixMethod = 'Cor_Sample';
-                    options.noiseParam = sigma;
+                    setSetting('rho', rho);
+                    setSetting('windowDim', windowDim);
+                    setSetting('noiseType', 'spatiospectralolympus');
+                    setSetting('smoothingMatrixMethod', 'Cor_Sample');
+                    setSetting('noiseParam', sigma);
 
-                    [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k), options);
+                    [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k));
                     reconstructions(k, idx, :) = estimated;
                     evaluation(k, idx, :) = [rmse, nmse, gfc];
                 end
@@ -81,11 +81,11 @@ if (false)
             settings(idx).noiseType = 'sameForChannel';
             settings(idx).smoothingMatrixMethod = 'Cor_Sample';
             settings(idx).noiseParam = {i};
-
-            options.noiseType = 'sameForChannel';
-            options.smoothingMatrixMethod = 'Cor_Sample';
-            options.noiseParam = i;
-            [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k), options);
+            
+            setSetting('noiseType', 'sameForChannel');
+            setSetting('smoothingMatrixMethod', 'Cor_Sample');
+            setSetting('noiseParam', i);
+            [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k));
             reconstructions(k, idx, :) = estimated;
             evaluation(k, idx, :) = [rmse, nmse, gfc];
         end
@@ -97,11 +97,11 @@ if (false)
                 settings(idx).smoothingMatrixMethod = 'Cor_Sample';
                 settings(idx).noiseParam = {i, j};
 
-                options.noiseType = 'spatial';
-                options.smoothingMatrixMethod = 'Cor_Sample';
-
-                options.noiseParam = [i, j];
-                [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k), options);
+                setSetting('noiseType', 'spatial');
+                setSetting('smoothingMatrixMethod', 'Cor_Sample');
+                setSetting('noiseParam', [i, j]);
+                
+                [estimated, gfc, nmse] = estimateReflectance(msi, mask, measured, ID(k));
                 reconstructions(k, idx, :) = estimated;
                 evaluation(k, idx, :) = [rmse, nmse, gfc];
             end
@@ -119,7 +119,7 @@ if (false)
         settings(i).gfc = evaluationMeans(i, 3);
     end
 
-    savefile = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'reconstructionComparison.mat');
+    savefile = fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'reconstructionComparison.mat');
     save(savefile, 'reconstructions', 'evaluation', 'settings', 'evaluationMeans');
 
 else
@@ -128,17 +128,17 @@ else
     load('D:\temp\Google Drive\titech\research\output\saitama_v8_min_region_bright\Reconstruction Parameter Optimization\reconstructionComparison.mat');
 end
 
-saveOptions.saveImages = true;
+setSetting('saveImages', true);
 
 idx = find(cellfun(@(x) strcmp(x, 'sameForChannel'), {settings.noiseType}));
 sigmas = cell2mat([settings(idx).noiseParam]);
 
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'simpleWiener');
+setSettin('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleWiener'));
 plotNMSE(sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
-    'Average NMSE', 'NMSE for simple Wiener Reconstruction', 1, saveOptions);
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'simpleWiener_gfc');
+    'Average NMSE', 'NMSE for simple Wiener Reconstruction', 1);
+setSettin('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleWiener_gfc'));
 plotGFC(sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
-    'Average GFC', 'GFC for simple Wiener Reconstruction', 2, saveOptions);
+    'Average GFC', 'GFC for simple Wiener Reconstruction', 2);
 
 idx = find(cellfun(@(x) contains(x, 'spatiospectralolympus'), {settings.noiseType}));
 rhos = [settings(idx).rho];
@@ -152,23 +152,23 @@ end
 rhos = unique(rhos);
 windowDim = unique(windowDim);
 
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'Spatiospectral');
+setSetting('plotName',fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral'));
 plotNMSE2(rhos, windowDim, evaluationMeans(idx(bestIdxs), 2), 'Spatial Correlation', ...
-    'Window Dimension', 'Average NMSE', 'NMSE for Spatiospectral Wiener Reconstruction', 1, saveOptions);
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'Spatiospectral_gfc');
+    'Window Dimension', 'Average NMSE', 'NMSE for Spatiospectral Wiener Reconstruction', 1);
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral_gfc'));
 plotGFC2(rhos, windowDim, evaluationMeans(bestIdxs, 3), 'Spatial Correlation', ...
-    'Window Dimension', 'Average GFC', 'GFC for Spatiospectral Wiener Reconstruction', 2, saveOptions);
+    'Window Dimension', 'Average GFC', 'GFC for Spatiospectral Wiener Reconstruction', 2);
 
 idx = find(cellfun(@(x) strcmp(x, 'spatial'), {settings.noiseType}));
 sigmas = cellfun(@(x) (sqrt(0.5) * x{1} + x{2}), {settings(idx).noiseParam});
 [sigmas, sorted] = sort(sigmas, 'ascend');
 idx = idx(sorted);
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'spatial');
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatial'));
 plotNMSE(sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
-    'Average NMSE', 'NMSE for simple Wiener Reconstruction', 3, saveOptions);
-saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'spatial_gfc');
+    'Average NMSE', 'NMSE for simple Wiener Reconstruction', 3);
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatial_gfc'));
 plotGFC(sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
-    'Average GFC', 'GFC for simple Wiener Reconstruction', 4, saveOptions);
+    'Average GFC', 'GFC for simple Wiener Reconstruction', 4);
 
 [~, idx] = sort([settings.nmse]);
 best = settings(idx(1:10));
@@ -177,7 +177,7 @@ plotReconstructionGIF(Spectra, reconstructions);
 
 bestSpatioSpect = 1;
 bestSimple = 96;
-options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'simpleHist');
-plotGFCHistogram(evaluation(:, bestSimple, 3), 1, options.saveOptions);
-options.saveOptions.plotName = fullfile(options.saveOptions.savedir, 'Reconstruction Parameter Optimization', 'spatiospectHist');
-plotGFCHistogram(evaluation(:, bestSpatioSpect, 3), 2, options.saveOptions);
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleHist'));
+plotGFCHistogram(evaluation(:, bestSimple, 3), 1);
+setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatiospectHist'));
+plotGFCHistogram(evaluation(:, bestSpatioSpect, 3), 2);

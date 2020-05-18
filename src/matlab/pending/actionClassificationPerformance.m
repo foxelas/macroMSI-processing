@@ -1,3 +1,4 @@
+%% Not working 
 currdir = 'saitama_v8_min_region_bright';
 filename = fullfile('..', '..', '..', 'output', currdir, 'msiclas.csv');
 %filename = fullfile('..', '..', '..', 'output', currdir, 'rgbclas.csv');
@@ -5,24 +6,23 @@ filename = fullfile('..', '..', '..', 'output', currdir, 'msiclas.csv');
 
 fixing = {'unfixed', 'fixed', 'mixed'};
 if contains(filename, 'only_spect')
-    savedir = fullfile('..', '..', '..', 'output', currdir, getOutputDirectoryMap('classifierPerformanceOnlySpect'));
+    savedir = fullfile('..', '..', '..', 'output', currdir, getSetting('classifierPerformanceOnlySpect'));
     lbps = {'spect'};
     classifiers = {'SVM', 'KNN'}; % , 'LDA' , 'QDA'
 else
-    savedir = fullfile('..', '..', '..', 'output', currdir, getOutputDirectoryMap('classifierPerformance'));
+    savedir = fullfile('..', '..', '..', 'output', currdir, getSetting('classifierPerformance'));
     classifiers = {'SVM', 'KNN', 'Random Forest'};
 end
 
-saveOptions.savedir = savedir;
-saveOptions.saveImages = true;
-saveOptions.plotName = '';
-saveOptions.saveInHQ = false;
+saveImages = true;
+plotName = '';
+saveInHQ = false;
 [tab, dimred, class_s] = ReadClassificationData(filename);
 summary(tab)
 
 if contains(lower(filename), 'rgb')
     currentCase = 'RGB-reconstructed Spectra';
-    saveOptions.savedir = strcat(saveOptions.savedir, '_rgb');
+    savedir = strcat(savedir, '_rgb');
     %lbps = {'spect', 'spect+SumLBP'};
     lbps = {'spect', 'spect+MMLBP'};
     lbpsShow = {'spect', 'spect+LBP'};
@@ -40,45 +40,45 @@ if contains(filename, 'only_spect')
     [barAccInfo1, maxIds1] = performanceComparisonArray(tab, class_s, cond1, cond2, 'Specificity', 'BalancedAccuracy');
     barAccInfo2 = reshape(tab(reshape(maxIds1, [1, 6]), 'BalancedAccuracy').BalancedAccuracy, [2, 3]);
     plots('classificationPerformanceBars', 2, [], {strcat(['Performance for ', currentCase]), 'Accuracy', 'Specificity'}, 'LineNames', ...
-        classifiers, 'Performance', {barAccInfo2, barAccInfo1}, 'SaveOptions', saveOptions);
+        classifiers, 'Performance', {barAccInfo2, barAccInfo1});
 else
 
     disp('Classifier comparison')
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'unfixed_classifier_auc');
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'unfixed_classifier_auc'));
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s, lbps, classifiers, 'AUC', 'Accuracy', 'unfixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 1, saveOptions);
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'unfixed_classifier_dor');
+    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 1);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'unfixed_classifier_dor'));
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
-    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 1, saveOptions);
+    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 1);
 
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'mixed_classifier_auc');
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'mixed_classifier_auc'));
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s, lbps, classifiers, 'AUC', 'Accuracy', 'mixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 2, saveOptions);
+    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 2);
 
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'mixed_classifier_dor');
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'mixed_classifier_dor'));
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
-    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 2, saveOptions);
+    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 2);
 
     disp('Fixing comparison')
     [barAccInfo2, idx1] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'KNN');
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'knn_tissue_auc');
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 3, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'knn_tissue_auc'));
+    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 3);
     [barAccInfo2, idx2] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'SVM');
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'svm_tissue_auc');
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 4, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'svm_tissue_auc'));
+    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 4);
     [barAccInfo2, idx3] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'Random Forest');
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'rf_tissue_auc');
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 5, saveOptions);
+    ssetSetting( 'plotName', fullfile(getSetting('savedir'),'rf_tissue_auc'));
+    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 5);
 
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx1, tab.DOR);
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'knn_tissue_dor');
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 3, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'knn_tissue_dor'));
+    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 3);
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx2, tab.DOR);
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'svm_tissue_dor');
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 4, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'svm_tissue_dor'));
+    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 4);
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx3, tab.DOR);
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'rf_tissue_dor');
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 5, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'rf_tissue_dor'));
+    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 5);
 
     disp('Dimred comparison')
     %lbps = {'spect|fixed','spect+CatLBP|fixed', 'spect+MMLBP|fixed',

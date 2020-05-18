@@ -1,4 +1,4 @@
-function [net, outputs] = getSom(inputs, dimension1,dimension2, saveOptions, inputName)
+function [net, outputs] = getSom(inputs, dimension1,dimension2, inputName)
 
     net = selforgmap([dimension1 dimension2]);
 
@@ -12,15 +12,15 @@ function [net, outputs] = getSom(inputs, dimension1,dimension2, saveOptions, inp
     view(net)
     fig1 = figure(1);
     plotsomnd(net);
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap(('som'), ...
-        strcat( inputName, '_', num2str(dimension1), 'x',num2str(dimension2), '_somd'));
-    savePlot(fig1, saveOptions);  
+    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('som'), ...
+        strcat( inputName, '_', num2str(dimension1), 'x',num2str(dimension2), '_somd')));
+    savePlot(fig1);  
     
     fig2 = figure(2);
     plotsomhits(net,inputs);
-        saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('som'), ...
-        strcat( inputName, '_', num2str(dimension1), 'x',num2str(dimension2), '_somh'));
-    savePlot(fig2, saveOptions);  
+    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('som'), ...
+        strcat( inputName, '_', num2str(dimension1), 'x',num2str(dimension2), '_somh')));
+    savePlot(fig2);  
 
 end
 

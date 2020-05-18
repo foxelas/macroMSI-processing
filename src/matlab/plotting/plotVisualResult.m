@@ -1,4 +1,4 @@
-function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, cmap, hideColorbar, fig,saveOptions)
+function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, cmap, hideColorbar, fig)
 %% Visualization of malignancy score %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if (nargin < 4)
         labels = {};
@@ -12,16 +12,7 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
     if (nargin < 7)
         hideColorbar = false;
     end 
-    if (nargin < 8)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 9)
-        saveOptions.SaveImage = false;
-    end
-    
+        
     lineStyleMap = getLineStyleMap(); 
     lineColorMap = getLineColorMap();
 
@@ -85,8 +76,7 @@ function [] = plotVisualResult(Ibase, Ioverlay, figTitle, labels, coordinates, c
     legPos = get(hleg,'position') ;
     set(hleg,'position', [legPos(1),legPos(2) - legPos(4), legPos(3),legPos(4) * 2.0]) ;
                 
-    saveOptions.cropBorders = true;
-    savePlot(fig, saveOptions);  
+    savePlot(fig);  
     warning('on')
 
 end

@@ -1,45 +1,40 @@
-function [] = savePlot( fig, saveOptions)
+function [] = savePlot( fig )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 if (nargin < 1)
     fig = gcf;
-end 
-
-if ~exist('saveOptions', 'var')
-    saveOptions.saveImages = false;
-end
-if ~isfield(saveOptions,'saveInHQ')
-    saveOptions.saveInHQ = false;
-end
-if ~isfield(saveOptions,'saveInBW')
-    saveOptions.saveInBW = false;
-end
-if ~isfield(saveOptions,'plotName')
-    saveOptions.plotName = [];
+else     
+    figure(fig);
+    clf(fig);
 end
 
-if (saveOptions.saveImages)
-    if (~isempty(saveOptions.plotName))
-        filename = strrep(saveOptions.plotName, '.mat', '');
+saveImages = getSetting('saveImages');
+saveInHQ = getSetting('saveInHQ');
+saveInBW = getSetting('saveInBW');
+plotName = getSetting('plotName');
+
+if (saveImages)
+    if (~isempty(plotName))
+        filename = strrep(plotName, '.mat', '');
 
         [filepath,name,~] = fileparts(filename);
         filepathBW = fullfile(filepath, 'bw');    
         mkNewDir(filepath);
         mkNewDir(filepathBW);
 
-        if (saveOptions.saveInHQ)
+        if (saveInHQ)
             filename = fullfile(filepath, strcat(name, '.png'));
             export_fig(filename , '-png','-native', '-nocrop');
             %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
         else
             filename = fullfile(filepath, name);
-            if (isfield(saveOptions, 'cropBorders') && saveOptions.cropBorders)
+            if getSetting('cropBorders')
                 export_fig(filename , '-png','-native');
             else
                 saveas(fig, filename, 'png');
             end
-            if (saveOptions.saveInBW)
+            if (saveInBW)
                 filename = fullfile(filepathBW, strcat(name, '.eps'));
                 %export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
             else

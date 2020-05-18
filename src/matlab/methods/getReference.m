@@ -1,6 +1,6 @@
-function [reference] = getReference(options, h, w)
+function [reference] = getReference(systemdir, h, w)
 
-    infile = fullfile(options.systemdir, 'infiles', strcat('reference.mat'));
+    infile = fullfile(systemdir, 'infiles', strcat('reference.mat'));
     load(infile, 'raw');
     [~, height, width, ~] = size(raw);
 
@@ -16,7 +16,8 @@ function [reference] = getReference(options, h, w)
     wStart = floor(yCenter - w/2);
 
     reference = raw(:, hStart : h+hStart-1, wStart: w+wStart-1, :);
-    options.saveOptions.saveImages = false; 
-    plotMSI(reference, 1, options.saveOptions);
+    setSetting('saveImages', false);
+    plotMSI(reference, 1);
+    setSetting('saveImages');
 end
 

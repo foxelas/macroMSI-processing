@@ -1,15 +1,5 @@
-function [] = plotROCs(foldPerformance, averagePerformance, figTitle, fig,saveOptions)
+function [] = plotROCs(foldPerformance, averagePerformance, figTitle, fig)
 
-    if (nargin < 4)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 5)
-        saveOptions.SaveImage = false;
-    end
-    
     hold on
     folds = length(foldPerformance);
     c = colormap(folds + 1);% colormap(lines);    
@@ -34,6 +24,6 @@ function [] = plotROCs(foldPerformance, averagePerformance, figTitle, fig,saveOp
     title(figTitle);
     set(gcf, 'Position', get(0, 'Screensize'));
     
-    savePlot(fig, saveOptions);
+    savePlot(fig);
 end
 

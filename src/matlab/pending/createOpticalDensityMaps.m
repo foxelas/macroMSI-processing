@@ -1,12 +1,13 @@
 %for k = 1:max([ID.Group])
 k = 17;
 msiType = 'max'; %'extended'; % 'max';
-[msi, whiteReference, specimenMask, height, width, channels] = getImage(k, options, msiType, false);
-reference = getReference(options, height, width);
+[msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, false);
+systemdir = getSetting('systemDir'); 
+reference = getReference(systemdir, height, width);
 reference = raw2msi(reference, msiType);
 
-%sRGB = createSRGB(raw, 'medium', ID(z), options, 'cmccat2000', specimenMask);
-%outfile = fullfile(options.saveOptions.savedir, getOutputDirectoryMap('sRGB'), strcat('group_', num2str(k), '.mat'));
+%sRGB = createSRGB(raw, 'medium', ID(z), 'cmccat2000', specimenMask);
+%outfile = fullfile(getSetting('savedir'), getSetting('sRGB'), strcat('group_', num2str(k), '.mat'));
 %save(outfile, 'sRGB');
 %end
 
@@ -15,9 +16,9 @@ reference = raw2msi(reference, msiType);
 %msi = bsxfun(@times, msi, foregroundMask);
 opticalDensity = double(log10(msi ./ reference));
 
-plotMSI(msi, 1, options.saveOptions);
-plotMSI(reference, 2, options.saveOptions);
-plotMSI(opticalDensity, 3, options.saveOptions);
+plotMSI(msi, 1);
+plotMSI(reference, 2);
+plotMSI(opticalDensity, 3);
 
 figure(4);
 od630 = squeeze(opticalDensity(7,:,:));

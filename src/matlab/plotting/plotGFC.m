@@ -1,15 +1,4 @@
-function [] = plotGFC(x, y, xlab, ylab, figTitle, fig,saveOptions)
-
-    if (nargin < 7)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
-
-    if (nargin < 8)
-        saveOptions.SaveImage = false;
-    end 
+function [] = plotGFC(x, y, xlab, ylab, figTitle, fig)
 
     warning('off');
     
@@ -23,7 +12,7 @@ function [] = plotGFC(x, y, xlab, ylab, figTitle, fig,saveOptions)
     ylim([0.95, 1.005]);
     yline(0.99, '--r', 'Good', 'FontSize', 15, 'LabelHorizontalAlignment', 'left');
     yline(0.999, '--m', 'Very Good',  'FontSize', 15, 'LabelHorizontalAlignment', 'left');
-    savePlot(fig, saveOptions);
+    savePlot(fig);
     
     warning('on');
 end

@@ -1,19 +1,9 @@
-function [] = plotClassificationPerformanceBars(performance, barLabels, legends, labely, lims, fig,saveOptions)
+function [] = plotClassificationPerformanceBars(performance, barLabels, legends, labely, lims, fig)
 %% Plot bar performance %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if (nargin < 5)
         lims = [70, 100];
     end 
-    if (nargin < 6)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
-
-    if (nargin < 7)
-        saveOptions.SaveImage = false;
-    end
     
     color = hsv(3);
 %     if (saveInBW)
@@ -41,6 +31,6 @@ function [] = plotClassificationPerformanceBars(performance, barLabels, legends,
     end
     hasLegend = true;
     plotBars(barLabels, performance * 100, color, '', labelx, labely, legends, legTitle, lims, 15, hasLegend);
-    savePlot(fig, saveOptions);
+    savePlot(fig);
 
 end

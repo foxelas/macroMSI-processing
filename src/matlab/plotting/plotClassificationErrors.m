@@ -1,14 +1,4 @@
-function [] = plotClassificationErrors(errors,fig,saveOptions)
-
-    if (nargin < 2)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 3)
-        saveOptions.SaveImage = false;
-    end
+function [] = plotClassificationErrors(errors,fig)
 	
 	n = min(20, length(errors));
 	accuracy = [errors(1:n).Accuracy];
@@ -36,6 +26,6 @@ function [] = plotClassificationErrors(errors,fig,saveOptions)
 	ylabel('Classification Accuracy')
 	title(strcat('Classification results (', errors(i).Validation, ' validation)'));
 		
-	savePlot(fig, saveOptions);
+	savePlot(fig);
 
 end

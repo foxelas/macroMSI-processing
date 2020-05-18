@@ -1,9 +1,8 @@
-function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, options, msiType, removebg, isColumnImage)
+function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage)
 %% FUNCTION getImage returns the msi and other useful parameters 
 %
 %   Input arguments 
-%   k: the index of the requested image file 
-%   options: the running options 
+%   k: the index of the requested image file f
 %   msiType: the msi construction type  {'green', 'rms', 'adjusted', 
 %   'extended', 'unchanged', 'max'}
 %   removeBg: the boolean variable showing whether background pixels should 
@@ -21,19 +20,19 @@ function [msi, whiteReference, specimenMask, height, width, channels] = getImage
 %   channels: the number of channels
 %
 
-    if nargin < 3 
+    if nargin < 2
         msiType = 'max'; %'extended'; % 'max';
     end 
     
-    if nargin < 4 
+    if nargin < 3
         removebg = true; 
     end 
     
-    if nargin  < 5 
+    if nargin  < 4
         isColumnImage = false;
     end 
     
-    infile = fullfile(options.systemdir, 'infiles', strcat('group_', num2str(k), '.mat'));
+    infile = fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(k), '.mat'));
     load(infile, 'raw', 'whiteReference', 'specimenMask');
     
     [~, height, width, ~] = size(raw);
@@ -58,7 +57,8 @@ function [msi, whiteReference, specimenMask, height, width, channels] = getImage
         whiteReference = columnsWhite;
         specimenMask = fgColumn; 
     else 
-        options.saveOptions.saveImages = false; 
-        plotMSI(msi, 1, options.saveOptions);
+        setSetting('saveImages', false); 
+        plotMSI(msi, 1);
+        getSetting('saveImages');
     end
 end

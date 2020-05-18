@@ -3,22 +3,16 @@
 close all;
 %clc;
 
-showImages = setAndNotify('show images', true);
-saveImages = setAndNotify('save images', false);
-tryReadData = setAndNotify('try read data', false);
-dataset = setAndNotify('dataset', 'saitama_v9_bright_3class');
-
-options = setOpt([], dataset, showImages, saveImages, tryReadData);
+%Modify userSettings.csv for options
+setOpt();
 readData; %% redo intial bg removal with labels  etc the images are corrupt
-
-options.saveOptions.savedir = strrep( options.saveOptions.savedir, dataset, 'saitama_v10_density_maps' );
 
 % visualizePOIs;
 % actionSOM;
 % dimredscript;
 % actionReadH5;
 
-% %plotMeasuredSpectra(ID, Spectra, 1, options.saveOptions);
+% %plotMeasuredSpectra(ID, Spectra, 1);
 % %ReflectanceEstimationParameterComparison;
 % %actionReflectanceEstimationComparison;
 % %actionLBP;

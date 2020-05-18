@@ -1,13 +1,4 @@
-function [] = plotReconstructionErrors(errors, figTitle,fig,saveOptions)
-	if (nargin < 3)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 4)
-        saveOptions.SaveImage = false;
-    end
+function [] = plotReconstructionErrors(errors, figTitle,fig)
 	
 	if contains(figTitle, 'nmse', 'IgnoreCase', true)
 		avge = [errors.avgrmse];
@@ -95,9 +86,7 @@ function [] = plotReconstructionErrors(errors, figTitle,fig,saveOptions)
 	legend(h, 'Location', 'best');
 	title('Comparison of Mean and Standard Error Values for various Estimation Configurations')
 	set(gcf, 'Position', get(0, 'Screensize'));
-		
-	saveOptions.saveInHQ = true;
-		
-    savePlot(fig, saveOptions);
+	    
+    savePlot(fig);
 
 end

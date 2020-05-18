@@ -1,4 +1,4 @@
-function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel, mask)
+function [sRGB, Lab16] = createSRGB(I, method, id, adaptationModel, mask)
 %CREATESGB generates the sRGB based on the MSI reflectances
 %   Use: sRGB = createSRGB( g, 'out.jpg', [50, 465, 505, 525, 575, 605,
 %   630], 'd65');
@@ -23,17 +23,17 @@ CMF = [xFcn(wavelengthIdx); yFcn(wavelengthIdx); zFcn(wavelengthIdx)]';
 [~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
 d65 = d65full(wavelengthIdx);
 
-options.smoothingMatrixMethod = 'Cor_All';
-options.pixelValueSelectionMethod = 'extended';
-options.noiseType = 'spatiospectralolympus';
-options.rho = 0.6;
-options.windowDim = 3;
-options.noiseParam = 0.000001; % 0.0001;
+setSetting('smoothingMatrixMethod', 'Cor_All');
+setSetting('pixelValueSelectionMethod', 'extended');
+setSetting('noiseType', 'spatiospectralolympus');
+setSetting('rho', 0.6);
+setSetting('windowDim', 3);
+setSetting('noiseParam',  0.000001); % 0.0001;
 
-% options.noiseType = 'fromOlympus';
-% options.noiseParam = 0.001;
+% setSetting('noiseType', 'fromOlympus');
+% setSetting('noiseParam', 0.001);
 
-reflectance = estimateReflectance(I, [], [], id, options);
+reflectance = estimateReflectance(I, [], [], id);
 reflectance = permute(reflectance, [2, 3, 1]);
 
 XYZideal = bsxfun(@times, CMF, d65);
@@ -105,7 +105,7 @@ title('sRGB from MSI data')
 % title('Intensity Histogram')
 % colorbar
 
-% outName = fullfile(options.saveOptions.savedir, getOutputDirectoryMap('sRGB'), strcat('sRgb_', num2str(id.Group)));
+% outName = fullfile(getSetting('savedir'), getSetting('sRGB'), strcat('sRgb_', num2str(id.Group)));
 %
 % if ~(isempty(outName))
 %     saveas(v, strcat(outName, '_binnedspectrum.jpg'));

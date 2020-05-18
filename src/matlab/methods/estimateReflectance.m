@@ -1,4 +1,4 @@
-function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id, options)
+function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id)
 
 %% wienerEstimation Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %Input arguments
@@ -34,44 +34,28 @@ if size(spectrum, 2) ~= 1
     spectrum = spectrum';
 end
 
-precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
-smoothingMatrixMethod = options.smoothingMatrixMethod;
-pixelValueSelectionMethod = options.pixelValueSelectionMethod;
-noiseType = options.noiseType;
-
-defaultRho = 0.99;
-if isfield(options, 'rho')
-    rho = options.rho;
-else
-    rho = defaultRho;
-end
+precomputedFile = fullfile(getSetting('systemdir'), 'precomputedParams.mat'); %pre-set parameters
+smoothingMatrixMethod = getSetting('smoothingMatrixMethod');
+pixelValueSelectionMethod = getSetting('pixelValueSelectionMethod');
+noiseType = getSetting('noiseType');
+rho = getSetting('rho'); %defaultRho = 0.99;
 
 if strcmp(smoothingMatrixMethod, 'adaptive')
-    defaultAlpha = 0.7;
-    if isfield(options, 'alpha')
-        alpha = options.alpha;
-    else
-        alpha = defaultAlpha;
-    end
+    alpha = getSetting('alpha'); %defaultAlpha = 0.7;
+    gamma = getSetting('gamma'); %defaultGamma = 1;
 
-    defaultGamma = 1;
-    if isfield(options, 'gamma')
-        gamma = options.gamma;
-    else
-        gamma = defaultGamma;
-    end
 end
 
 signalCov = [0.0290584774952317; 0.0355809665018991; 0.0254338785693633; 0.0278002826809506; 0.00535859811159383; 0.0263030884980115; 0.0198921193827871];
 
-if strcmp(options.pixelValueSelectionMethod, 'rgb')
+if strcmp(pixelValueSelectionMethod, 'rgb')
     load(precomputedFile, 'Coefficients');
     coeff = squeeze(Coefficients(id.CoeffID, 3, 1:7))'; %id.CoeffID %id.Index
     coeff = [coeff(2), mean([coeff(4), coeff(5)]), mean([coeff(6), coeff(7)])];
 else
     load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
-    pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
+    pvmIdx = min(find(strcmp(pixelValueSelectionMethods, pixelValueSelectionMethod)), 3);
     coeff = squeeze(Coefficients(id.CoeffID, pvmIdx, 1:7))'; %id.CoeffID %id.Index
 end
 
@@ -104,9 +88,10 @@ end
 coeff = coeff * 5; % to adapt coefficients from bandwidth 1nm to bandwidth 5nm (Source is 1x141, esimation is 1x81)
 H = diag(coeff) * H; % illumination x sensitivity
 
-if isfield(options, 'SVDTol')
+svdtol = getSetting('SVDTol');
+if ~isempty(svdtol)
     hasSVDTol = true;
-    tol = options.SVDTol;
+    tol = svdtol;
 else
     hasSVDTol = false;
     tol = 1;
@@ -118,7 +103,7 @@ end
 
 G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
 [msibands, height, width] = size(G);
-%G = G ./ options.luminanceCorrection;
+%G = G ./ getSetting('luminanceCorrection');
 
 % computed beforehand with prepareSmoothingMatrix
 isBenign = id.IsBenign;
@@ -229,11 +214,12 @@ switch smoothingMatrixMethod
     case 'adaptive'
 
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
-        adaptiveOptions = options;
-        adaptiveOptions.showImages = false;
-        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
-        rhat = estimateReflectance(MSI, mask, spectrum, id, adaptiveOptions);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma, alpha);
+        setSetting('showImages', false);
+        setSetting('smoothingMatrixMethod', 'Cor_Sample');
+        rhat = estimateReflectance(MSI, mask, spectrum, id);
+        M = adaptiveSmoothingMatrix(rhat, getSetting('systemdir'), gamma, alpha);
+        setSetting('showImages');
+        setSetting('smoothingMatrixMethod');
 
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
@@ -246,36 +232,37 @@ HMH = H * M * H';
 
 %% Covariance matrix of the additive noise
 noiseParts = strsplit(noiseType, {' ', ','});
-if (numel(noiseParts) > 1);
-    options.noiseParam = cellfun(@str2double, noiseParts(2:end));
+if (numel(noiseParts) > 1)
+    setSetting( 'noiseParam', cellfun(@str2double, noiseParts(2:end)));
 end
-hasNoiseParam = isfield(options, 'noiseParam');
+noiseParam = getSetting('noiseParam');
+hasNoiseParam = ~isempty(noiseParam);
 
 if contains(noiseType, 'sameForChannel')
-    if (hasNoiseParam);
-        variance = options.noiseParam * ones(msibands, 1);
-    else;
+    if (hasNoiseParam)
+        variance = noiseParam * ones(msibands, 1);
+    else
         variance = 0.001 * ones(msibands, 1);
     end
 
 elseif contains(noiseType, 'diffForChannel')
-    if (hasNoiseParam);
-        variance = options.noiseParam;
-    else;
+    if (hasNoiseParam)
+        variance = noiseParam;
+    else
         variance = [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024];
     end
 
 elseif contains(noiseType, 'SNR')
-    if (hasNoiseParam);
-        variance = (trace(HMH) / (msibands * 10^(options.noiseParam / 10))) * ones(msibands, 1);
-    else;
+    if (hasNoiseParam)
+        variance = (trace(HMH) / (msibands * 10^(noiseParam / 10))) * ones(msibands, 1);
+    else
         variance = (trace(HMH) / (msibands * 10^(17 / 10))) * ones(msibands, 1);
     end
 
 elseif contains(noiseType, 'white gaussian')
-    if (hasNoiseParam);
-        variance = (randn(1, msibands) .* options.noiseParam).^2;
-    else;
+    if (hasNoiseParam)
+        variance = (randn(1, msibands) .* noiseParam).^2;
+    else
         variance = (randn(1, msibands) .* 0.0001).^2;
     end
 
@@ -287,21 +274,21 @@ elseif contains(noiseType, 'fromOlympus')
         0.0000083800; ...
         0.0001480000; ...
         0.0000148000]';
-    if (hasNoiseParam);
-        variance = variance .* options.noiseParam;
+    if (hasNoiseParam)
+        variance = variance .* noiseParam;
     end
-    if ~strcmp(options.pixelValueSelectionMethod, 'rgb');
+    if ~strcmp(pixelValueSelectionMethod, 'rgb')
         variance = variance .* 10^4;
-    else;
+    else
         variance = variance .* 10^2;
     end
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
 
 elseif contains(noiseType, 'spatial') || contains(noiseType, 'spatiospectral')
-    if isfield(options, 'windowDim');
-        windowDim = options.windowDim;
-    else;
+    if ~iempty(getSetting('windowDim'))
+        windowDim = getSetting('windowDim');
+    else
         windowDim = 5;
     end
     [windowKernel, windowElements] = makeKernel(windowDim, height, width);
@@ -313,18 +300,18 @@ elseif contains(noiseType, 'spatial') || contains(noiseType, 'spatiospectral')
             0.0000083800; ...
             0.0001480000; ...
             0.0000148000]';
-        if (hasNoiseParam);
-            variance = variance .* options.noiseParam;
+        if (hasNoiseParam)
+            variance = variance .* noiseParam;
         end
-        if ~strcmp(options.pixelValueSelectionMethod, 'rgb');
+        if ~strcmp(pixelValueSelectionMethod, 'rgb')
             variance = variance .* 10^6;
         end
     else
         if (hasNoiseParam)
-            if length(options.noiseParam) == 2
-                variance = ones(msibands, 1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2;
+            if length(noiseParam) == 2
+                variance = ones(msibands, 1) * (sqrt(0.5) * noiseParam(1) + noiseParam(2))^2;
             else
-                variance = ones(msibands, 1) * (options.noiseParam)^2;
+                variance = ones(msibands, 1) * (noiseParam)^2;
             end
         else
             variance = ones(msibands, 1) * (sqrt(0.5) * 0.001 + 0.03)^2;
@@ -356,10 +343,10 @@ if contains(noiseType, 'spatiospectral')
     kronNoise = kron(I, Kn);
     %kronNoise = repmat(Kn, windowDim^2, windowDim^2);
     %sigma2 = var(G,0,'all')^2;
-    %sigma2 = options.sigma2;
+    %sigma2 = getSetting('sigma2');
     sigma2 = 0.001; %for brights
     %sigma2 = 0.0075; %for darks
-    %     loads = load(fullfile(options.systemdir, 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
+    %     loads = load(fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
     %     sigma2 = loads.sigma .^2;
     %     clear('loads');
     xx = sigma2 .* markovian;

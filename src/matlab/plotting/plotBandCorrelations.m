@@ -1,15 +1,5 @@
-function [] = plotBandCorrelations(correlations, msiType, figTitle, fig, saveOptions)
+function [] = plotBandCorrelations(correlations, msiType, figTitle, fig)
   
-	if (nargin < 4)
-		fig = figure;
-	else     
-		figure(fig);
-        clf(fig);
-	end
-	if (nargin < 5)
-		saveOptions.SaveImage = false;
-    end
-    
     imagesc(correlations);
     xticklabels(getBands(msiType));
     yticklabels(getBands(msiType));
@@ -20,7 +10,7 @@ function [] = plotBandCorrelations(correlations, msiType, figTitle, fig, saveOpt
     colorbar();
     caxis([0 1]);
     
-    saveOptions.cropBorders = true;
-	savePlot(fig, saveOptions);
+    setSetting('cropBorders', true);
+	savePlot(fig);
     
 end 

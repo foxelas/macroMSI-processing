@@ -1,14 +1,16 @@
-function [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions( msi, rgb, mask, measured, idd, options, methods)
+function [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions( msi, rgb, mask, measured, idd, methods)
 
 	wavelength = 380:5:780;
 	lines = length(methods);
 	reconstructedArray = zeros(length(measured), lines);
 	gfcArray = zeros(1, lines);
 	nmseArray = zeros(1, lines);
-
+    
 	for i = 1:lines 
 		method = methods{i};
-		currentOptions = options; 
+        currentOptions = []; 
+        currentOptions.pixelValueSelectionMethod = getSetting('pixelValueSelectionMethod');
+        currentOptions.noiseType = getSetting('noiseType');
 		currentOptions.smoothingMatrixMethod = 'Cor_Sample';
 		if strcmp(method, 'RGB-Simple')
 			currentOptions.pixelValueSelectionMethod = 'rgb';
@@ -38,16 +40,14 @@ function [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceRecon
 		
 		[reconstructedArray(:, i), gfcArray(i), nmseArray(i)] = estimateReflectance(img, mask, measured, idd, currentOptions);
 		
-
     end
 	
-    if (options.showImages)     
+    if (getSetting('showImages'))     
 		spectra = [measured' , reconstructedArray];
         lineNames = ['Measured', methods];    
-        options.saveOptions.plotName = fullfile(options.saveOptions.savedir, getOutputDirectoryMap('reflectanceEstimation'), options.action,...
-        strcat( options.action, '_', num2str(idd.Index)));  
-        plotReconstructedCurves(spectra, lineNames, wavelength, 'Reflectance Estimation Comparison',...
-            1,options.saveOptions);        
+        setSetting('plotName',  fullfile(getSetting('savedir'), getSetting('reflectanceEstimation'), getSetting('action'),...
+        strcat( getSetting('action'), '_', num2str(idd.Index))));  
+        plotReconstructedCurves(spectra, lineNames, wavelength, 'Reflectance Estimation Comparison', 1);        
         pause(0.1)
     end
 	

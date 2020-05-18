@@ -1,4 +1,4 @@
-function [Spectra,CompleteSpectra,SpectraNames] = bulkReadSpectra(ID, data, wavelengthN, options)
+function [Spectra,CompleteSpectra,SpectraNames] = bulkReadSpectra(ID, data, wavelengthN)
     %% Read raw spectra 
     fprintf('Reading spectral data according to ID file.\n');
 
@@ -34,7 +34,7 @@ function [Spectra,CompleteSpectra,SpectraNames] = bulkReadSpectra(ID, data, wave
         CompleteSpectra(i,:) = completeUniqueSpectra(uniqueSpectraIdxsInID(i),:);
         SpectraNames{i} = strcat(strrep(ID(i).SpectrumFile, '\', '_'), ', ', ID(i).T);
     end 
-    save(generateName('matfilein', options), 'Spectra', 'CompleteSpectra', ...
+    save( getSetting('matfilein'), 'Spectra', 'CompleteSpectra', ...
         'SpectraNames', '-append');
 
 end

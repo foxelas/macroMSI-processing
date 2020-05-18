@@ -1,13 +1,13 @@
-function [] = createCoefficientTable(ID, CompleteSpectra, options)
+function [] = createCoefficientTable(ID, CompleteSpectra)
     disp('Reading coefficients from excel file...')
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
     Coefficients = ones(length(ID), 3, 7);
-    xls = dir(fullfile(options.systemdir, 'coeff*'));
-    src = fullfile(options.systemdir, xls(1).name);
+    xls = dir(fullfile(getSetting('systemdir'), 'coeff*'));
+    src = fullfile(getSetting('systemdir'), xls(1).name);
     msiN = length(ID);
     for k = 1:msiN
         idd = ID(k);
-        load( fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(idd.Index), '.mat')),...
+        load( fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(idd.Index), '.mat')),...
             'poiRAW', 'roiSeeds');
         % Retrieve MSI data
         raw = poiRAW;
@@ -25,6 +25,6 @@ function [] = createCoefficientTable(ID, CompleteSpectra, options)
             Coefficients(k, m, :) = ctemp;
         end
     end
-    save(fullfile(options.systemdir, 'precomputedParams.mat'), 'Coefficients', '-append');
+    save(fullfile(getSetting('systemdir'), 'precomputedParams.mat'), 'Coefficients', '-append');
 end
 

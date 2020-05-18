@@ -1,14 +1,6 @@
-function [] = plotSegmentation(Iorig, segmentMask, Isegment, coordinates, fig,saveOptions)
+function [] = plotSegmentation(Iorig, segmentMask, Isegment, coordinates, fig)
 %% Plot Segmentation results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if (nargin < 5)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 6)
-        saveOptions.SaveImage = false;
-    end
+
     warning('off')
 
     h1 = subplot(1,2,1);
@@ -36,8 +28,7 @@ function [] = plotSegmentation(Iorig, segmentMask, Isegment, coordinates, fig,sa
     %plotName = strcat(plotName, '_segments');
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
 
-    saveOptions.cropBorders = true;
-    savePlot(fig, saveOptions);
+    savePlot(fig);
     warning('on')
         
 end

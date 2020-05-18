@@ -5,11 +5,11 @@ MMLbpFeatures = cell(maxScale, 1);
 SumLbpFeatures = cell(maxScale, 1);
 
 for k = 1:msiN
-    infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+    infile = fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
     load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
         'roiSeeds', 'measuredSpectrum', 'poiWhite');
     for lbp_operator = {'MMLBP', 'SumLBP', 'CatLBP', 'LBP'}
-        lbpFeats = getLBPFeatures(lbp_operator, options, k, maxScale);
+        lbpFeats = getLBPFeatures(lbp_operator, k, maxScale);
 
         if strcmp(lbp_operator, 'LBP')
             RgbLbpFeatures = addToLBPStruct(RgbLbpFeatures, lbpFeats, k, maxScale);
@@ -27,18 +27,18 @@ for k = 1:msiN
 
 end
 
-filename = mkNewDir(fullfile(options.saveOptions.savedir, getOutputDirectoryMap('features'), 'out.mat'));
+filename = mkNewDir(fullfile(getSetting('savedir'), getSetting('features'), 'out.mat'));
 if exist(filename, 'file')
     save(filename, 'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures', 'RgbLbpFeatures', '-append');
 else
     save(filename, 'ConcatLbpFeatures', 'SumLbpFeatures', 'MMLbpFeatures', 'RgbLbpFeatures');
 end
 
-if (options.showImages)
+if getSetting('showImages')
     for g = 1:max([ID.Group])
-        infile = fullfile(options.systemdir, 'infiles', strcat('group_', num2str(g), '.mat'));
+        infile = fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(g), '.mat'));
         load(infile, 'poiName', 'raw', 'whiteReference', 'specimenMask');
-        visualizeLBP(raw, whiteReference, specimenMask, g, options.saveOptions);
+        visualizeLBP(raw, whiteReference, specimenMask, g);
     end
 end
 

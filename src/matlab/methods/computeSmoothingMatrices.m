@@ -1,7 +1,7 @@
-function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID, options)
+function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID)
     %% Precompute correlation smoothing Matrices 
     fprintf('Pre-computing smoothing matrices.\n');
-    precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
+    precomputedFile = fullfile(getSetting('systemdir'), 'precomputedParams.mat'); %pre-set parameters
     samples = unique({ID.Sample});
 
     specN = length(measuredSpectraNames);
@@ -140,11 +140,7 @@ function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wa
     breakdownDataset(ID);
 
     %% Smoothing matrix based on markovian process 
-    if isfield(options, 'rho')
-        rho = options.rho;
-    else 
-        rho = 0.98;
-    end
+    rho = getSetting('rho');
 
     M_row = ones(1,wavelengthN);
     for i=2:wavelengthN

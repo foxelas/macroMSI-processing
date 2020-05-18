@@ -1,9 +1,8 @@
-function name = generateName(namingCase, options, idx)
+function name = generateName(namingCase, idx)
 %GENERATEOUTNAME generates the name of the file,
 %where the result will be saved.
 % Inputs:
 % namingCase - the naming case or specific filename 
-% options - running options
 % idx - the information of present data sample
 % 
 % Outputs: 
@@ -16,28 +15,15 @@ end
 name = [];
 
 switch namingCase
-    case 'matfilein'
-        name = fullfile(options.systemdir, 'in.mat');
-        
-    case 'matfilein-v7.3'
-        name = fullfile(options.systemdir, 'in-v73.mat');
-
-    case 'matfileout'
-        name = fullfile(options.saveOptions.savedir, options.action, 'out.mat');
-        
-%     case 'action detail'
-%         name = generateName(options, 'current', idx);
+%     case 'matfilein'
+%         name = fullfile(getSetting('systemdir'), 'in.mat');
+%         
+%     case 'matfilein-v7.3'
+%         name = fullfile(getSetting('systemdir'), 'in-v73.mat');
 % 
-%         extra = {options.smoothingMatrixMethod, options.noiseType};
-%         if strcmp(options.action, 'ReflectanceEstimation')
-%             if strcmp(options.smoothingMatrixMethod, 'markovian')
-%                 extra{end+1} = num2str(options.rho);
-%             end
-%         end
-%         extra{end+1} = name;
-%         name = strjoin(extra, '_');
-%         name = fullfile(options.saveOptions.savedir, options.action, name);
-
+%     case 'matfileout'
+%         name = fullfile(getSetting('savedir'), getSetting('action'), 'out.mat');
+        
     case 'csv'
         if isempty(idx.SpectrumFile)
             name = num2str(idx.MsiID);
@@ -51,48 +37,43 @@ switch namingCase
         name = splits{1};
 
     case 'current'  
-        csv = generateName('csv', options, idx);
+        csv = generateName('csv', idx);
         time = strrep(idx.T, ':', ' ');
         time = strrep(time, '.', ',');
         un = strcat('(', num2str(idx.MsiID) , ')');
         sample = idx.Sample;
-%         load(fullfile(options.systemdir, 'data.mat'), 'data');
-%         datax = data(:, idx.RgbID);
-%         if (~isempty(datax) && isnumeric(datax.Sample))
-%             datax.Sample = num2str(datax.Sample);
-%         end
         name = strjoin({csv, time, sample, un }, '_');
 
     case 'read'    
-        currentName = generateName('current', options, idx);
-        name = fullfile(options.saveOptions.savedir, 'Cropped', currentName);
+        currentName = generateName('current', idx);
+        name = fullfile(getSetting('savedir'), 'Cropped', currentName);
 
     case 'plot'
-        currentName = generateName('current', options, idx);
-        name = fullfile(options.saveOptions.savedir, options.action, currentName);
+        currentName = generateName('current', idx);
+        name = fullfile(getSetting('savedir'), getSetting('action'), currentName);
 
     case 'input'
-        if isempty(options)
+        if isempty(getSetting('input'))
             name = fullfile('..', '..', '..', 'input');
         else
-            name = options.systemdir;
+            name = getSetting('systemdir');
         end
         
     case 'output'
-        if isempty(options)
+        if isempty(getSetting('output'))
             name = fullfile('..', '..', '..', 'output');
         else
-            name = fullfile(options.saveOptions.savedir, options.action);
+            name = fullfile(getSetting('savedir'), getSetting('action'));
         end
         
     case 'id'
-        name = fullfile(options.systemdir, 'ID.mat');
+        name = fullfile(getSetting('systemdir'), 'ID.mat');
         
     case 'system'
-        name = fullfile(options.systemdir, 'system.mat');
+        name = fullfile(getSetting('systemdir'), 'system.mat');
         
     otherwise
-        name = fullfile(options.saveOptions.savedir, options.action, namingCase);
+        name = fullfile(getSetting('savedir'), getSetting('action'), namingCase);
 
 end
 

@@ -1,21 +1,24 @@
-function [] = plotMap(I, fig, saveOptions)
-
-    if (nargin < 3)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
+function [] = plotMap(I, type, fig)
     
     c = imagesc(I);
     c.Parent.Visible = 'off';
     colorbar;
-    title(saveOptions.figTitle);
+    switch type 
+        case 'opticalDensityMelanin'
+            title('OD630nm - Melanin Map');
+        case 'opticalDensityHemoglobin'
+            title('OD575nm - 1.15 OD630nm - Hemoglobin Map');
+        case 'deepMelanin'
+            title('Deep Melanin');
+        case 'totalMelanin'
+            title('Total Melanin');
+    end
     
-    saveOptions.cropBorders = true;
-    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('map'), saveOptions.relativeDir, saveOptions.outName);
+    setSetting('cropBorders', true);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), getSetting('map'), ...
+        type, getSetting('outName')));
 
-    savePlot(fig, saveOptions);
+    savePlot(fig);
 
 end
 

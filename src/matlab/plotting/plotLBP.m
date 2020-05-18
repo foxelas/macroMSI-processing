@@ -1,15 +1,6 @@
-function [] = plotLBP( lbpImage, figTitle, fig,saveOptions)
+function [] = plotLBP( lbpImage, figTitle, fig)
 %% Plot LBP values on image %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if (nargin < 3)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 4)
-        saveOptions.SaveImage = false;
-    end
-    
+
     im = imagesc(imrotate(lbpImage,90));
     colormap('parula');
     if max(lbpImage(:)) > 0.3
@@ -30,7 +21,7 @@ function [] = plotLBP( lbpImage, figTitle, fig,saveOptions)
 %     set(gcf, 'Position', get(0, 'Screensize'));
     
     %%add the other textures 
-    saveOptions.cropBorders = true;
-    savePlot(fig, saveOptions);  
+    setSetting('cropBorders', true);
+    savePlot(fig);  
 
 end

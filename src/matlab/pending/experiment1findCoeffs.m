@@ -1,18 +1,18 @@
 close all; clc; 
 k =  17; %20;
 msiType = 'extended'; %'extended'; % 'max';
-options.saveOptions.saveImages = false; 
+setSetting('saveImages', false);
 
 % % for all pixels without bg removal 
 % removebg = false; 
-% [msi, ~, ~, ~, ~, ~] = getImage(k, options, msiType, removebg, true);
+% [msi, ~, ~, ~, ~, ~] = getImage(k, msiType, removebg, true);
 % [coeff, scores, latent,explained]  = doPixelPCA(msi);
 
-[msiFull] = getImage(k, options, msiType, true);
-% plotMSI(msiFull, 1, options.saveOptions);
+[msiFull] = getImage(k, msiType, true);
+% plotMSI(msiFull, 1);
 % 
 % for only the pixels of the specimen
-[msi, ~, specimenMask, height, width, channels] = getImage(k, options, msiType, false, true);
+[msi, ~, specimenMask, height, width, channels] = getImage(k, msiType, false, true);
 [msi, ~] = getDifMSI(msi, 'toAverage') ;
 
 specimenIdxs = find(specimenMask == 1)';
@@ -44,7 +44,7 @@ for i = 1 : 9
     healthySkinComponent = sum(sc(:,1:2),2) + mean(colMsi);
     enhancedImage(specimenIdxs, :)  = (colMsi - healthySkinComponent) * w + colMsi ;
     enhancedImage = reshape(enhancedImage', channels, height, width);
-    plotMSI(enhancedImage, 2, options.saveOptions);
+    plotMSI(enhancedImage, 2);
 end 
 
 % pc1 healthy skin, pc2 hemoglobin, pc3 

@@ -1,4 +1,4 @@
-function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivity, illumination,fig,saveOptions)
+function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivity, illumination,fig)
 
 	%{
 		% Arguments  ( wavelength, bandWavelength, illumination )
@@ -6,21 +6,11 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 		% bandWavelength: the names of the bands
 		% illumination: the illumination light 401x7
 	%}
-	
-	if (nargin < 5)
-        fig = figure;
-    else     
-        figure(fig);
-        clf(fig);
-    end
-    if (nargin < 6)
-        saveOptions.SaveImage = false;
-    end
+
     
-	
 	if contains(lower(plotType), 'sensitivity')
 		sensitivityN = size(sensitivity, 2);
-		if (saveOptions.saveInBW)
+		if getSetting('saveInBW')
 			color(1,:)=HInt2RGB(1,100); % red, darkest 
 			color(2,:)=HInt2RGB(3,64); % green, less dark 
 			color(3,:)=HInt2RGB(7,10); % blue cyan, lightest
@@ -50,7 +40,7 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 	if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination')); yyaxis right; end
 
 	if contains(lower(plotType), 'illumination')
-		if (saveOptions.saveInBW)
+		if getSetting('saveInBW')
 			color(7,:)=HInt2RGB(1,100); % red, darkest 
 			color(6,:)=HInt2RGB(7,82); % cyan, less dark 
 			color(5,:)=HInt2RGB(3,64); % green, less dark 
@@ -80,8 +70,7 @@ function [] = plotSystemSpectralCharacteristics(plotType, wavelength, sensitivit
 	l = legend;
 	l.FontSize = 13;
 	
-    saveOptions.saveImages = true;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', plotType);
-	savePlot(fig, saveOptions);
+    setSetting('plotName', fullfile(getSetting('savedir'), 'general', plotType));
+	savePlot(fig);
 
 end

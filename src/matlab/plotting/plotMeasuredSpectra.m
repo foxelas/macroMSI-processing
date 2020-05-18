@@ -1,15 +1,4 @@
-function [] = plotMeasuredSpectra(ID, Spectra, fig, saveOptions)
-
-    if (nargin < 3)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
-
-    if (nargin < 4)
-        saveOptions.SaveImage = false;
-    end 
+function [] = plotMeasuredSpectra(ID, Spectra, fig)
 
     warning('off');
     
@@ -42,9 +31,8 @@ function [] = plotMeasuredSpectra(ID, Spectra, fig, saveOptions)
     xlabel('Wavelength (nm)', 'FontSize', 15);
     ylabel('Reflectance %', 'FontSize', 15);
     ylim([0,100]);
-    saveOptions.saveImages = true;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'allMeasuredSpectra');
-    savePlot(fig, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'allMeasuredSpectra'));
+    savePlot(fig);
      
     %% Malignancy average
     figure(fig+1);
@@ -64,8 +52,8 @@ function [] = plotMeasuredSpectra(ID, Spectra, fig, saveOptions)
     ylim([0,40]);
     legend('FontSize', 20, 'Location','northwest')
     set(gcf, 'Position', get(0, 'Screensize'));
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'averageSpectra');
-    savePlot(fig+1, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'averageSpectra'));
+    savePlot(fig+1);
     
     %% Fixing average
     figure(fig+1);
@@ -86,25 +74,21 @@ function [] = plotMeasuredSpectra(ID, Spectra, fig, saveOptions)
     ylim([0,40]);
     legend('FontSize', 20, 'Location','northwest')
     set(gcf, 'Position', get(0, 'Screensize'));
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'averageSpectraFixing');
-    savePlot(fig+1, saveOptions);
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'averageSpectraFixing'));
+    savePlot(fig+1);
     
     benId = 85;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'benunf.png');
-    plotReconstructedCurves(Spectra(benId, :)', {'Benign, Unfixed'}, 380:5:780,  '', ...
-      1,saveOptions)
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'benunf.png'));
+    plotReconstructedCurves(Spectra(benId, :)', {'Benign, Unfixed'}, 380:5:780,  '', 1);
     malId = 84;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'malunf.png');
-    plotReconstructedCurves(Spectra(malId, :)', {'Malignant, Unfixed'}, 380:5:780,  '', ...
-      1,saveOptions)
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'malunf.png'));
+    plotReconstructedCurves(Spectra(malId, :)', {'Malignant, Unfixed'}, 380:5:780,  '', 1);
     fixedBenId  = 79;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'benf.png');
-    plotReconstructedCurves(Spectra(fixedBenId, :)', {'Benign, Fixed'}, 380:5:780,  '', ...
-      1,saveOptions)
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'benf.png'));
+    plotReconstructedCurves(Spectra(fixedBenId, :)', {'Benign, Fixed'}, 380:5:780,  '', 1);
     fixedMalId = 78;
-    saveOptions.plotName = fullfile(saveOptions.savedir, 'general', 'malf.png');
-    plotReconstructedCurves(Spectra(fixedMalId, :)', {'Malignant, Fixed'}, 380:5:780,  '', ...
-      1,saveOptions)
+    setSetting( 'plotName', fullfile(getSetting('savedir'), 'general', 'malf.png'));
+    plotReconstructedCurves(Spectra(fixedMalId, :)', {'Malignant, Fixed'}, 380:5:780,  '', 1);
   
     warning('on');
 end

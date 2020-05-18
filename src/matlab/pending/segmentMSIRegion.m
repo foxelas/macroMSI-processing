@@ -1,8 +1,8 @@
-function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion( files, coordinates, options, accTheta, regionRadius, thresVal)
+function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = segmentMSIRegion( files, coordinates, accTheta, regionRadius, thresVal, plotNames)
 %%segmentMSIRegion Read an MSI segment from raw RGB subimages
 %
 % [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = 
-%     segmentMSIRegion( files, coordinates, options, accTheta, 
+%     segmentMSIRegion( files, coordinates, accTheta, 
 %     regionRadius, thresVal)
 % Reads subimages with given filenames and loads the area obtained after 
 % region growing from original point at coordinates to a 4D matrix. 
@@ -12,7 +12,6 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = se
 % Inputs:
 % files - filenames of subimages related to the MSI
 % coordinates - [x,y] of the seed pixel for region growing 
-% options - running configurations
 % accTheta - agreement threshold for the MSI channel 
 % regionRadius - maximum radius of the grown region
 % thresVal - pixel intensity threshold 
@@ -27,7 +26,7 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = se
 %     
 % Usage:
 % [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = 
-%     readMSI(files, coordinates, width, height, options, fc)
+%     readMSI(files, coordinates, width, height,  fc)
 % Reads the area of the image contained in bounding box with upper 
 % left corner at [coordinates], with dimensions [width], [height]
 % segmentMSI = readMSI(files)
@@ -91,11 +90,9 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = se
         segmentMSI{roi} = MSI(:, patchY, patchX, :);
         segmentMask{roi} = mask(patchY, patchX);
 
-        if (options.showImages)
-            currentOptions = options.saveOptions;
-            currentOptions.plotName = options.saveOptions.plotName{roi};
-            plots('segmentation', 1, 'Image', whiteReference, 'Overlay', maskAgreement, ...
-                'AdditionalImage',  whiteReference + mask, 'Coordinates', [x,y], 'SaveOptions', currentOptions);
+        if getSetting('showImages')
+            setOption('plotName', plotNames{roi}); 
+            plotSegmentation(whiteReference, maskAgreement, whiteReference + mask, [x,y], 1);
         end
 
         if ~isempty(whiteReference)

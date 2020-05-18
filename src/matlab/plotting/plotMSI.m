@@ -1,23 +1,13 @@
-function [] = plotMSI(raw,fig,saveOptions, isSeparateImages)
-
-    if (nargin < 2)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
+function [] = plotMSI(raw, fig, isSeparateImages)
 
     if (nargin < 3)
-        saveOptions.SaveImage = false;
-    end 
-
-    if (nargin < 4)
         isSeparateImages = false;
     end 
     
     warning('off');
-    saveOptions.plotName  = fullfile(saveOptions.savedir, 'MSI', 'msi');
-    saveOptions.cropBorders = true;
+    setSetting('cropBorders', true);
+    plotName = fullfile(getSetting('savedir'), 'MSI', 'msi');
+    setSetting('plotName', plotName);
 
     if ndims(raw) > 3 
         msi = raw2msi(raw, 'extended');    
@@ -28,19 +18,19 @@ function [] = plotMSI(raw,fig,saveOptions, isSeparateImages)
     channels = size(msi, 1);
 
     if (isSeparateImages)
-        origPlotName = saveOptions.plotName;
+        origPlotName = plotName;
         for i=1:channels
             imshow(squeeze(msi(i,:,:)));
-            saveOptions.plotName = strcat(origPlotName,'_', num2str(i));
+            setSetting('plotName', strcat(origPlotName,'_', num2str(i)));
             pause(0.1)
-            savePlot(fig, saveOptions);
+            savePlot(fig);
         end
     else
         imageList = num2cell(msi, [2, 3]);
         imageList = cellfun(@squeeze, imageList, 'un', 0);
         montage(imageList, 'Size', [2, ceil(channels/2)]);
         pause(0.1)
-        savePlot(fig, saveOptions);
+        savePlot(fig);
     end 
 
     warning('on');

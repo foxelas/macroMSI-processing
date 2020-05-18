@@ -1,4 +1,4 @@
-function [lbpFeats] = getLBPFeatures(type, options, k, maxScale, neighbors, mapping)
+function [lbpFeats] = getLBPFeatures(type, k, maxScale, neighbors, mapping)
 %main code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
     if (nargin < 4)
         maxScale = 3;
@@ -24,7 +24,7 @@ function [lbpFeats] = getLBPFeatures(type, options, k, maxScale, neighbors, mapp
         mmlbpFeatures = zeros(1, 4 * riubins);
         rgblbpFeatures = zeros(1, riubins);
 
-        infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+        infile = fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
         load(infile,  'poiRAW','poiWhite');
         msi = raw2msi(poiRAW, 'extended');
         rgb = poiWhite;
