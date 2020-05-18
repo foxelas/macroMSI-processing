@@ -25,8 +25,8 @@ if (saveOptions.saveImages)
 
         [filepath,name,~] = fileparts(filename);
         filepathBW = fullfile(filepath, 'bw');    
-        mkdir_custom(filepath);
-        mkdir_custom(filepathBW);
+        mkNewDir(filepath);
+        mkNewDir(filepathBW);
 
         if (saveOptions.saveInHQ)
             filename = fullfile(filepath, strcat(name, '.png'));

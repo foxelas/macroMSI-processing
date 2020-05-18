@@ -17,7 +17,7 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
     end
   
 	
-	if strcmp(dimred, 'PCA') && ~isempty(latent) && ~isempty(explained)
+	if contains(dimred, 'PCA') && ~isempty(latent) && ~isempty(explained)
 		subplot(1, 3, 1);
 		plot(1:length(latent), latent, '-mx');
 		xlabel('Sorted eigenvalue index');
@@ -29,53 +29,32 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
 		subplot(1, 3, [2, 3]);
 	end
 	
-	marker = ['o', 'x', 'd', '^', '*', 'h', 'p', 'v', 's', '<', '+', '>'];
 	observations = size(coefficients, 1);
-	attr = split(labels, ' ');
-	sample = {attr{:, 1}}';
-	type = {attr{:, 2}}';
-	isBenign = {attr{:, 3}}';
-	idx = strcmp(isBenign, 'Normal') | strcmp(isBenign, 'Benign');
-	colors(idx) = 'b';
-	colors(~ismember(idx, 1:length(isBenign))) = 'r';
-	
+    
 	%dummy legends
-	h = zeros(2, 1);
-	hold on
-	h(1) = plot([NaN, NaN], 'Color', 'r', 'DisplayName', 'Malignant');
-	h(2) = plot([NaN, NaN], 'Color', 'b', 'DisplayName', 'Benign');
-	hold off
-	
-	if contains(figTitle, 'Fix', 'IgnoreCase', true)
-		hold on
-		h(3) = plot([NaN, NaN], 'Color', 'k', 'Marker', marker(1), 'DisplayName', 'Fixed');
-		h(4) = plot([NaN, NaN], 'Color', 'k', 'Marker', marker(2), 'DisplayName', 'Unfixed');
-		hold off
-		markers = repmat(marker(1), observations, 1);
-		idx = arrayfun(@(x) any(strcmp(x, 'unfixed')), type);
-		markers(idx) = marker(2);
-	end
-	
-	if contains(figTitle, 'Sample', 'IgnoreCase', true)
-		markers = repmat(marker(1), observations, 1);
-		samples = unique(sample, 'stable');
-		for i = 1:length(samples)
-			hold on
-			h(i+2) = plot([NaN, NaN], 'Color', 'k', 'Marker', marker(i), 'DisplayName', samples{i});
-			hold off
-			idx = arrayfun(@(x) any(strcmp(x, samples{i})), sample);
-			markers(idx) = marker(i);
-		end
-	end
-	%dummy legends
-	
-	hold on
+    markerStyleMap = getMarkerStyleMap(getStyleName(labels)); 
+    lineColorMap = getLineColorMap(getStyleName(labels));
+    
+    key = keys(lineColorMap);
+    hold on; 
+    h = zeros(1,length(key));
+    for i = 1:length(key)
+        h(i) = plot(nan, nan, markerStyleMap(key{i}), 'MarkerSize', 12,  'Color', lineColorMap(key{i}), ...
+                'MarkerFaceColor', lineColorMap(key{i}),  'LineWidth', 3, 'DisplayName', key{i});
+    end
+    hold off;
+    
+    hold on
 	for i = 1:observations
-		scatter(coefficients(i, 1), coefficients(i, 2), [], colors(i), markers(i));
+		scatter(coefficients(i, 1), coefficients(i, 2), [], ...
+            lineColorMap(labels{i}), markerStyleMap(labels{i}), ...            
+            'MarkerEdgeColor', lineColorMap(labels{i}), ... 'k',...
+            'MarkerFaceColor', lineColorMap(labels{i}), ...
+            'LineWidth', 3);
 	end
 	hold off
 	
-	if strcmp(dimred, 'pca')
+	if contains(dimred, 'PCA')
 		title('PCA scores for PC1&2')
 		xlabel('Principal component 1');
 		ylabel('Principal component 2');
@@ -87,14 +66,17 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
 	ax = gca;
 	ax.XRuler.Exponent = 0;
 	ax.YRuler.Exponent = 0;
-	titl = strsplit(saveOptions.plotName, '\');
-	figTitle = strrepAll(titl{end});
-	suptitle(figTitle);
+    
+    if contains(dimred, 'PCA') && ~isempty(latent) && ~isempty(explained)
+        sgtitle(figTitle);
+    end
 	
 	legend(h, 'Location', 'best');
 	set(gcf, 'Position', get(0, 'Screensize'));
 	
-	saveOptions.saveInHQ = true;	
+	saveOptions.saveInHQ = true;
+    outputFolderMap = getOutputDirectoryMap();
+    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('dimred'), dimred);
     savePlot(fig, saveOptions);
 
 end

@@ -40,7 +40,7 @@ function [] = plotClassificationPerformanceBars(performance, barLabels, legends,
         %figTitleCur = strcat(['Cross Validated ', figTitleCur]);
     end
     hasLegend = true;
-    GetBarPlot(barLabels, performance * 100, color, '', labelx, labely, legends, legTitle, lims, 15, hasLegend);
+    plotBars(barLabels, performance * 100, color, '', labelx, labely, legends, legTitle, lims, 15, hasLegend);
     savePlot(fig, saveOptions);
 
 end

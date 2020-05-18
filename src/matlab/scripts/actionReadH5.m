@@ -1,0 +1,1 @@
+hread5('suzuki.h5', '/SpectralImage');
