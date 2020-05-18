@@ -6,7 +6,7 @@ reference = getReference(options, height, width);
 reference = raw2msi(reference, msiType);
 
 %sRGB = createSRGB(raw, 'medium', ID(z), options, 'cmccat2000', specimenMask);
-%outfile = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('group_', num2str(k), '.mat'));
+%outfile = fullfile(options.saveOptions.savedir, getOutputDirectoryMap('sRGB'), strcat('group_', num2str(k), '.mat'));
 %save(outfile, 'sRGB');
 %end
 

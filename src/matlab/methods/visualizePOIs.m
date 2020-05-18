@@ -13,7 +13,7 @@ for g=1:max([ID.Group])
     [m,n,~] = size(baseImage);
     labels = {gMembers.Label};
     options.saveOptions.plotName = fullfile('..','..','..', 'output', ...
-        dataset,  outputFolderMap('labels'), strcat('labelled_bright_', num2str(g)));
+        dataset,  getOutputDirectoryMap('labels'), strcat('labelled_bright_', num2str(g)));
     plotVisualResult(baseImage, zeros(m,n), '', labels, coordinates, 'jet', true, 2, options.saveOptions);
 %     for i = 1:length(coordinates)
 %         plotVisualResult(whiteReference, zeros(size(whiteReference,1),...

@@ -75,8 +75,7 @@ function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, lat
 	set(gcf, 'Position', get(0, 'Screensize'));
 	
 	saveOptions.saveInHQ = true;
-    outputFolderMap = getOutputDirectoryMap();
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('dimred'), dimred);
+    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('dimred'), dimred);
     savePlot(fig, saveOptions);
 
 end

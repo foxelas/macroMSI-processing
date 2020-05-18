@@ -8,7 +8,7 @@ for k = 1:max([ID.Group])
     imshow(whiteReference);
     z = find([ID.Group] == k, 1);
     sRGB = createSRGB(raw, 'medium', ID(z), options, 'cmccat2000', specimenMask);
-    outfile = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('group_', num2str(k), '.mat'));
+    outfile = fullfile(options.saveOptions.savedir, getOutputDirectoryMap('sRGB'), strcat('group_', num2str(k), '.mat'));
     save(outfile, 'sRGB');
 end
 

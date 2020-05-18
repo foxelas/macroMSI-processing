@@ -5,11 +5,11 @@ filename = fullfile('..', '..', '..', 'output', currdir, 'msiclas.csv');
 
 fixing = {'unfixed', 'fixed', 'mixed'};
 if contains(filename, 'only_spect')
-    savedir = fullfile('..', '..', '..', 'output', currdir, outputFolderMap('classifierPerformanceOnlySpect'));
+    savedir = fullfile('..', '..', '..', 'output', currdir, getOutputDirectoryMap('classifierPerformanceOnlySpect'));
     lbps = {'spect'};
     classifiers = {'SVM', 'KNN'}; % , 'LDA' , 'QDA'
 else
-    savedir = fullfile('..', '..', '..', 'output', currdir, outputFolderMap('classifierPerformance'));
+    savedir = fullfile('..', '..', '..', 'output', currdir, getOutputDirectoryMap('classifierPerformance'));
     classifiers = {'SVM', 'KNN', 'Random Forest'};
 end
 

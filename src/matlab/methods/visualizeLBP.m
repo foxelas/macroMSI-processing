@@ -4,7 +4,6 @@ msi = raw2msi(raw, 'extended');
 [B, M, N] = size(msi);
 neighbors = 8;
 mapping = getmapping(neighbors, 'riu2');
-outputFolderMap = getOutputDirectoryMap();
 
 figure(1);
 figure(2);
@@ -29,19 +28,19 @@ for scale = 1:3
     LBPImage = im2double(lbp(rgb2gray(whiteReference).*specimenMask, scale, neighbors, mapping, 'e'));
 
     type = 'SumLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
+    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
     plotLBP(sumLBPImage, type, 1, saveOptions);
 
     type = 'CatLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
+    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
     plotLBP(catLBPImage.*100, type, 2, saveOptions);
 
     type = 'MMLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
+    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
     plotLBP(mmLBPImage.*100, type, 3, saveOptions);
 
     type = 'LBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
+    saveOptions.plotName = fullfile(saveOptions.savedir, getOutputDirectoryMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
     plotLBP(LBPImage, type, 4, saveOptions);
 
 

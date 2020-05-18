@@ -1,4 +1,4 @@
-outfile = matfile(fullfile(options.saveOptions.savedir, outputFolderMap('features'), 'out.mat'));
+outfile = matfile(fullfile(options.saveOptions.savedir, getOutputDirectoryMap('features'), 'out.mat'));
 color = outfile.EstimatedSpectra';
 mmlbp = outfile.MMLbpFeatures;
 texture = [mmlbp{1}, mmlbp{2}]';
