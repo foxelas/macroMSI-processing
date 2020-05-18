@@ -137,7 +137,7 @@ function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wa
         'Cor_SampleMalignantUnfixed', 'Cor_Sample', 'Cor_SampleMalignant', 'Cor_SampleBenign', '-append');
 
     %% Count dataset
-    datasetBreakdown(ID);
+    breakdownDataset(ID);
 
     %% Smoothing matrix based on markovian process 
     if isfield(options, 'rho')

@@ -1,4 +1,4 @@
-function [] = datasetBreakdown(ID,options)
+function [] = breakdownDataset(ID,options)
 %%DATASETBREAKDOWN Count and analyze the contents of the dataset
 % 
 % Input: 
@@ -9,8 +9,8 @@ function [] = datasetBreakdown(ID,options)
 % void
 % 
 % Usage:
-% datasetBreakdown(ID,options)
-% datasetBreakdown(ID)
+% breakdownDataset(ID,options)
+% breakdownDataset(ID)
 
     [~, idx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}));
     measuredSpectraCount = length(idx);

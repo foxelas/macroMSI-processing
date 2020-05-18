@@ -1,4 +1,4 @@
-function [W, score, latent, explained] = dimensionReduction(method, input, labels, priors, targetDimension)
+function [W, score, latent, explained] = reduceDimension(method, input, labels, priors, targetDimension)
 
 %% DIMENSIONREDUCTION provides data projections for dimension reduction
 % Available methods
@@ -9,7 +9,7 @@ function [W, score, latent, explained] = dimensionReduction(method, input, label
 % 'PCALDA' Combination or PCA and LDA
 %
 % Use:
-% [W, score, latent, explained] = dimensionReduction(method, input, varargin)
+% [W, score, latent, explained] = reduceDimension(method, input, varargin)
 %
 % W         = discovered projections
 % score     = projection scores
@@ -18,10 +18,10 @@ function [W, score, latent, explained] = dimensionReduction(method, input, label
 %
 % Example:
 %
-% [W, score, latent, explained] = dimensionReduction('PCA', X);
-% [W, score] = dimensionReduction('PCA', X, [], [], 2);
-% [W, score] = dimensionReduction('LDA', X, labels);
-% [W, score] = dimensionReduction('LDA', X, labels, [0.3, 0.7], 2 );
+% [W, score, latent, explained] = reduceDimension('PCA', X);
+% [W, score] = reduceDimension('PCA', X, [], [], 2);
+% [W, score] = reduceDimension('LDA', X, labels);
+% [W, score] = reduceDimension('LDA', X, labels, [0.3, 0.7], 2 );
 
 [n, m] = size(input); %n observations, m variables
 
@@ -143,8 +143,8 @@ switch method
         score = [ones(n, 1), input] * W';
 
     case 'PCALDA'
-        [~, score, ~, ~] = dimensionReduction('PCA', input, labels);
-        [W, score] = dimensionReduction('LDA', score(:, 1:10), labels);
+        [~, score, ~, ~] = reduceDimension('PCA', input, labels);
+        [W, score] = reduceDimension('LDA', score(:, 1:10), labels);
 
     otherwise
         error('Not implemented dimension reduction method')
