@@ -1,6 +1,10 @@
 function [ID] = switchIds(ID, data, arr)
+%     SWITHCIDS switches the ids depending on the raw image illumination settings 
+% 
+%     Usage:
+%     ID = switchIds(ID, data, 'brights')
+%     ID = switchIds(ID, data, 'darks')
 
-%% Input args 'ID', 'data', 'brights' or 'darks'
 groups = findgroups([ID.MsiID]);
 for g = 1:max(groups)
     gIdxs = find(groups == g);

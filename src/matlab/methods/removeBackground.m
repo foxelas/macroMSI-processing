@@ -1,8 +1,12 @@
 function specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+%     REMOVEBACKGROUND removes the background from the specimen image
+% 
+%     Usage: 
+%     specimenMask = removeBackground(whiteReference, idd)
+%     specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, 
+%         attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+%     See also https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
 
-%load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\ID.mat'));
-%load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\data.mat'));
-%dataset = 'saitama_v7_min_region_e';
 
 if (nargin < 4)
     colorLevelsForKMeans = 6;
@@ -25,7 +29,6 @@ end
 
 [m, n, ~] = size(whiteReference);
 
-%https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
 lab_he = rgb2lab(whiteReference);
 %     figure(1);
 %     imshow(lab_he);

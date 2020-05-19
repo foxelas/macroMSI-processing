@@ -1,6 +1,10 @@
 function [] = plotFeatureImportance(importance, fig)
+%     PLOTFEATUREIMPORTANCE plots feature importance 
+% 
+%     Usage: 
+%     plotFeatureImportance(importance, fig)
 
-%% Plot important features %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plot important features %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (nargin < 1)
     importance = [0.02170081, 0.03423029, 0.04734384, 0.07019354, 0.08864051, 0.1096366, 0.13921365, 0.14391144, 0.17794282];
 end

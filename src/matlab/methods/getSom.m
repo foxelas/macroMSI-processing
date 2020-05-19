@@ -1,4 +1,8 @@
 function [net, outputs] = getSom(inputs, dimension1, dimension2, inputName)
+%     GETSOM returns som topology 
+% 
+%     Usage: 
+%     [~, outputs] = getSom(inputs, dimension1, dimension2, 'spect');
 
 net = selforgmap([dimension1, dimension2]);
 

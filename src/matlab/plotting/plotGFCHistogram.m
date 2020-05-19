@@ -1,4 +1,8 @@
 function [] = plotGFCHistogram(gfcs, fig)
+%     PLOTGFCHISTOGRAM plots the GFC histogram
+% 
+%     Usage: 
+%     plotGFCHistogram(gfcs, fig)
 
 histogram(gfcs, 7);
 ax = get(gca);

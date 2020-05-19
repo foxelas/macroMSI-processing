@@ -1,4 +1,9 @@
 function [val] = getSpectralHistogramSimilarity(h1, h2)
+%     GETSPECTRALHISTOGRAMSIMILARITY returns spectral histogram similarity of two msi
+% 
+%     Usage:
+%     [val] = getSpectralHistogramSimilarity(h1, h2)
+
 val = 0;
 for i = 1:size(h1, 1)
     val = val + sum((h1 - h2).^2./(h1 + h2));

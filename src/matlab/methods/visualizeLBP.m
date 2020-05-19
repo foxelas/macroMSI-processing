@@ -1,4 +1,8 @@
 function [] = visualizeLBP(raw, whiteReference, specimenMask, g)
+%     VISUALIZELBP visualizes the lbp features 
+% 
+%     Usage: 
+%     visualizeLBP(raw, whiteReference, specimenMask, g)
 
 msi = raw2msi(raw, 'extended');
 [B, M, N] = size(msi);

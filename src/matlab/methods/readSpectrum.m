@@ -1,17 +1,17 @@
 function spectrum = readSpectrum(csvpath, time)
-%%READSPECTRUM Read the contents of a csvfile to a vector of spectral data
-%
-% Inputs:
-% csvpath - the path and filename of the csvfile containing multiple
-% spectral info
-% time - the time value for the spectal info
-%
-% Outputs:
-% spectrum - the read spectrum
-%
-% Usage:
-% spectrum = readSpectrum(csvpath, time)
-% spectrum = readSpectrum(csvpath)
+%     READSPECTRUM Read the contents of a csvfile to a vector of spectral data
+% 
+%     Inputs:
+%     csvpath - the path and filename of the csvfile containing multiple
+%     spectral info
+%     time - the time value for the spectal info
+% 
+%     Outputs:
+%     spectrum - the read spectrum
+% 
+%     Usage:
+%     spectrum = readSpectrum(csvpath, time)
+%     spectrum = readSpectrum(csvpath)
 
 
 if (nargin < 2)

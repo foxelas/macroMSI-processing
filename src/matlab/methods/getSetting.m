@@ -1,4 +1,9 @@
 function [value] = getSetting(parameter)
+%     GETSETTING returns the value of a configurationParameter
+% 
+%     Usage: 
+%     value = getSetting('savedir')
+
 settingsFile = 'configuration.mat';
 variableInfo = who('-file', settingsFile);
 if ismember(parameter, variableInfo)

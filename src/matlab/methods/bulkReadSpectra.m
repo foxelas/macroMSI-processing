@@ -1,4 +1,8 @@
 function [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN)
+%     BULKREADSPECTRA reads spectra from data file in bulk.
+% 
+%     Usage: 
+%     [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN)
 
 %% Read raw spectra
 fprintf('Reading spectral data according to ID file.\n');

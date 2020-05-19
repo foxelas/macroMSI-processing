@@ -1,6 +1,8 @@
 function [normMsi] = getNormMSI(msi)
-
-%% getNormMSI returns normalizations of each channel by removing its mean
+%     GETNORMMSI returns normalizations of each channel by removing its mean
+% 
+%     Usage:
+%     normMsi = getNormMsi(msi)
 
 if ndims(msi) == 3
     normMsi = zeros(size(msi));

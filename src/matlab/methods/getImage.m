@@ -1,25 +1,29 @@
 function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage)
-
-%% FUNCTION getImage returns the msi and other useful parameters
+%     GETIMAGE returns the msi and other useful parameters
+% 
+%     Input arguments
+%     k: the index of the requested image file f
+%     msiType: the msi construction type  {'green', 'rms', 'adjusted',
+%     'extended', 'unchanged', 'max'}
+%     removeBg: the boolean variable showing whether background pixels should
+%     be set to 0 (if TRUE) or background pixels are left as is (if FALSE)
+%     isColumnImage: the boolean variable showing whether the each MSI band
+%     subimage should be covnerted to a column vector (if TRUE) or remain as
+%     is (if FALSE)
+% 
+%     Output arguments
+%     msi: the multispectral image
+%     whiteReference: the respective RGB image
+%     specimenMask: the specimen binary mask
+%     height: the 2D channel subimage height
+%     width: the 2D channel subimage width
+%     channels: the number of channels
 %
-%   Input arguments
-%   k: the index of the requested image file f
-%   msiType: the msi construction type  {'green', 'rms', 'adjusted',
-%   'extended', 'unchanged', 'max'}
-%   removeBg: the boolean variable showing whether background pixels should
-%   be set to 0 (if TRUE) or background pixels are left as is (if FALSE)
-%   isColumnImage: the boolean variable showing whether the each MSI band
-%   subimage should be covnerted to a column vector (if TRUE) or remain as
-%   is (if FALSE)
-%
-%   Output arguments
-%   msi: the multispectral image
-%   whiteReference: the respective RGB image
-%   specimenMask: the specimen binary mask
-%   height: the 2D channel subimage height
-%   width: the 2D channel subimage width
-%   channels: the number of channels
-%
+%     Usage: 
+%     [msi, whiteReference, specimenMask, height, width, channels] = getImage(k)
+%     [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType)
+%     [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg)
+%     [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage)
 
 if nargin < 2
     msiType = 'max'; %'extended'; % 'max';

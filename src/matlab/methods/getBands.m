@@ -1,4 +1,8 @@
 function bands = getBands(method)
+%     GETBANDS returns the channel names depending on the method 
+% 
+%     Usage: 
+%     bands = getBands('extended')
 
 switch method
     case 'extended'

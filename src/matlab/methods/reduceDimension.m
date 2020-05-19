@@ -1,27 +1,26 @@
 function [W, score, latent, explained] = reduceDimension(method, input, labels, priors, targetDimension)
-
-%% DIMENSIONREDUCTION provides data projections for dimension reduction
-% Available methods
-% 'PCA' Principal Component Analysis, MATLAB built-in
-% 'PCA b' Variation of PCA
-% 'LDA' Linear Dimension Analysis
-% 'LDA b' Variation of LDA
-% 'PCALDA' Combination or PCA and LDA
-%
-% Use:
-% [W, score, latent, explained] = reduceDimension(method, input, varargin)
-%
-% W         = discovered projections
-% score     = projection scores
-% latent    = (only for PCA)
-% explained = (only for PCA)
-%
-% Example:
-%
-% [W, score, latent, explained] = reduceDimension('PCA', X);
-% [W, score] = reduceDimension('PCA', X, [], [], 2);
-% [W, score] = reduceDimension('LDA', X, labels);
-% [W, score] = reduceDimension('LDA', X, labels, [0.3, 0.7], 2 );
+%     DIMENSIONREDUCTION provides data projections for dimension reduction
+%     Available methods
+%     'PCA' Principal Component Analysis, MATLAB built-in
+%     'PCA b' Variation of PCA
+%     'LDA' Linear Dimension Analysis
+%     'LDA b' Variation of LDA
+%     'PCALDA' Combination or PCA and LDA
+% 
+%     Usage:
+%     [W, score, latent, explained] = reduceDimension(method, input, labels, priors, targetDimension)
+% 
+%     W         = discovered projections
+%     score     = projection scores
+%     latent    = (only for PCA)
+%     explained = (only for PCA)
+% 
+%     Example:
+% 
+%     [W, score, latent, explained] = reduceDimension('PCA', X);
+%     [W, score] = reduceDimension('PCA', X, [], [], 2);
+%     [W, score] = reduceDimension('LDA', X, labels);
+%     [W, score] = reduceDimension('LDA', X, labels, [0.3, 0.7], 2 );
 
 [n, m] = size(input); %n observations, m variables
 

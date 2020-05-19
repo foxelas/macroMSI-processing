@@ -1,11 +1,16 @@
-function [outputArg1, outputArg2] = getMap(msi, mapType, systemdir)
+function [map] = getMap(msi, mapType)
+%     GETMAP returns an optical map showing chromophore components of the macropathology image 
+% 
+%     Usage: 
+%     [map] = getMap(msi)
+%     [map] = getMap(msi, 'opticalDensityMelanin')
 
 if varargin > 1
     mapType = 'opticalDensityMelanin';
 end
 
 [height, width, channels] = size(msi);
-reference = getReference(systemdir, height, width);
+reference = getReference(getSetting('systemdir'), height, width);
 
 
 switch mapType

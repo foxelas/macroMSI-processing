@@ -1,5 +1,14 @@
 function [lbpFeats] = getLBPFeatures(type, k, maxScale, neighbors, mapping)
-%main code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
+%     GETLBPFEATURES returns a cell array with lbp features at different scales.
+% 
+%     Usage: 
+%     [lbpFeats] = getLBPFeatures(type, k)
+%     [lbpFeats] = getLBPFeatures(type, k, maxScale)
+%     [lbpFeats] = getLBPFeatures(type, k, maxScale, neighbors)
+%     [lbpFeats] = getLBPFeatures(type, k, 3, 8, 'riu2')
+% 
+%     Core code provided by http://www.cse.oulu.fi/CMV/Downloads/LBPMatlab
+
 if (nargin < 4)
     maxScale = 3;
 end

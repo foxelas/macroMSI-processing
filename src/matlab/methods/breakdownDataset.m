@@ -1,14 +1,14 @@
 function [] = breakdownDataset(ID)
-%%DATASETBREAKDOWN Count and analyze the contents of the dataset
+%   DATASETBREAKDOWN Counts and analyzes the contents of the dataset
 %
-% Input:
-% ID - struct containing dataset information
+%   Input:
+%   ID - struct containing dataset information
 %
-% Output:
-% void
+%   Output:
+%   void
 %
-% Usage:
-% breakdownDataset(ID)
+%   Usage:
+%   breakdownDataset(ID)
 
 [~, idx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}));
 measuredSpectraCount = length(idx);

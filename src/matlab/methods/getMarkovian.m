@@ -1,4 +1,8 @@
 function M = getMarkovian(N, rho)
+%     GETMARKOVIAN returns a markovian matrix of correlations 
+% 
+%     Usage: 
+%     M = getMarkovian(81, 0.998)
 
 if (nargin < 2)
     rho = 0.97;

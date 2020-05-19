@@ -1,4 +1,9 @@
 function [] = plotGFC(x, y, xlab, ylab, figTitle, fig)
+%     plotGFC plots the GFC
+% 
+%     Usage: 
+%     plotGFC(x, y, xlab, ylab, figTitle, fig)
+
 
 warning('off');
 

@@ -1,13 +1,16 @@
 function name = generateName(namingCase, idx)
-%GENERATEOUTNAME generates the name of the file,
-%where the result will be saved.
-% Inputs:
-% namingCase - the naming case or specific filename
-% idx - the information of present data sample
+%   GENERATENAME generates the name of the file,
+%   where the result will be saved.
+%   Inputs:
+%   namingCase - the naming case or specific filename
+%   idx - the information of present data sample
 %
-% Outputs:
-% dirCurrentName - directory only
+%   Outputs:
+%   dirCurrentName - directory only
 %
+%   Usage: 
+%   name = generateName('csv', idx)
+
 if (nargin < 3)
     idx = [];
 end

@@ -1,8 +1,8 @@
 function segmentMask = segment(raw, idd, whiteReference, specimenMask, regionRadius, thresVal, accTheta)
-%load('C:\Users\elena\Google Drive\titech\research\input\saitama_v7_min_region_e\ID.mat');
-%load('C:\Users\elena\Google Drive\titech\research\input\saitama_v7_min_region_e\data.mat')
-%load('C:\Users\elena\Google Drive\titech\research\input\saitama_v7_min_region_e\specimenMasks.mat')
-%dataset = 'saitama_v8_min_region_bright';
+%     SEGMENT returns the segment mask of the specimen ROI
+% 
+%     Usate:
+%     segmentMask = segment(raw, idd, whiteReference, specimenMask, regionRadius, thresVal, accTheta)
 
 if (nargin < 5)
     regionRadius = [];

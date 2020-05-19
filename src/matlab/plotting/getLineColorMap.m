@@ -1,5 +1,10 @@
 function [lineColorMap] = getLineColorMap(style)
+%     GETLINECOLORMAP returns a linecolor map based on the style 
+% 
+%     Usage: 
+%     [lineColorMap] = getLineColorMap('class')
 
+getLineColorMap()
 if (nargin < 1)
     style = 'class';
 end

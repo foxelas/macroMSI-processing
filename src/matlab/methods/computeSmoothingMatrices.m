@@ -1,4 +1,8 @@
 function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID)
+%     COMPUTESMOOTHINGMATRICES computes smoothing matrices from measured spectra.
+% 
+%     Usage:
+%     computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID)
 
 %% Precompute correlation smoothing Matrices
 fprintf('Pre-computing smoothing matrices.\n');

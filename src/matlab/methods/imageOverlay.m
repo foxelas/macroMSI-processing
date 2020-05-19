@@ -1,5 +1,5 @@
 function [] = imageOverlay(B, F, climF, cmap, alpha, haxes)
-% IMOVERLAY(B,F) displays the image F transparently over the image B.
+% IMAGEOVERLAY(B,F) displays the image F transparently over the image B.
 %    If the image sizes are unequal, image F will be scaled to the aspect
 %    ratio of B.
 %

@@ -1,12 +1,8 @@
 function [sRGB, Lab16] = createSRGB(I, method, id, adaptationModel, mask)
-%CREATESGB generates the sRGB based on the MSI reflectances
-%   Use: sRGB = createSRGB( g, 'out.jpg', [50, 465, 505, 525, 575, 605,
-%   630], 'd65');
-%   reflectance: the input matrix with size MxNx7, if it's 4D then converts
-%   to MxNx7 using 'adjusted'
-%   outName: if it exists, then the sRGB image is saved
-%   adaptationModel: creates the conversion matrixn from XYZ to sRGB based
-%   on an color adaptation model
+%   CREATESGB generates the sRGB based on the MSI reflectances
+%
+%   Usage: sRGB = createSRGB( I, 'medium', id, 'vonKries', mask);
+
 
 wavelength = 380:5:780;
 [~, r, c, ~] = size(I);

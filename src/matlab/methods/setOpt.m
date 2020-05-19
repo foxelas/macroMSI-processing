@@ -1,4 +1,9 @@
 function [] = setOpt(inputSettingsFile)
+%     SETOPT configures parameters for running 
+% 
+%     Usage:
+%     setOpt()
+%     setOpt('settings.csv')
 
 if nargin < 1
     inputSettingsFile = '..\..\conf\defaultSettings.csv';

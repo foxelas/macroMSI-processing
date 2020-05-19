@@ -1,4 +1,10 @@
 function [] = createCoefficientTable(ID, CompleteSpectra)
+%     CREATECOEFFICIENTTABLE creats the coefficient table from
+%     the measured spectra.
+% 
+%     Usage:
+%     createCoefficientTable(ID, CompleteSpectra)
+
 disp('Reading coefficients from excel file...')
 pixelValueSelectionMethods = {'green', 'rms', 'adjusted'};
 Coefficients = ones(length(ID), 3, 7);

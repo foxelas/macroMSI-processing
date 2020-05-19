@@ -1,4 +1,8 @@
 function [] = plotDimensionReduction(dimred, figTitle, coefficients, labels, latent, explained, fig)
+%     PLOTDIMENSIONREDUCTION plots the result of dimension reduction 
+% 
+%     Usage:
+%     plotDimensionReduction(dimred, figTitle, coefficients, labels, latent, explained, fig)
 
 if (nargin < 5)
     latent = [];
