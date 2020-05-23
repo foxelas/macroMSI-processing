@@ -16,9 +16,9 @@ reference = raw2msi(reference, msiType);
 %msi = bsxfun(@times, msi, foregroundMask);
 opticalDensity = double(log10(msi./reference));
 
-plotMSI(msi, 1);
-plotMSI(reference, 2);
-plotMSI(opticalDensity, 3);
+plotFunWrapper(1, @plotMSI, msi);
+plotFunWrapper(2, @plotMSI, reference);
+plotFunWrapper(3, @plotMSI, opticalDensity);
 
 figure(4);
 od630 = squeeze(opticalDensity(7, :, :));

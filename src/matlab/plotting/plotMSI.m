@@ -1,16 +1,13 @@
-function [] = plotMSI(raw, fig, isSeparateImages)
+function [] = plotMSI(raw, isSeparateImages, fig)
 
-if (nargin < 3)
+if isempty(isSeparateImages)
     isSeparateImages = false;
-end
+end  
 
 warning('off');
 setSetting('cropBorders', true);
-plotName = fullfile(getSetting('savedir'), 'MSI', 'msi');
-setSetting('plotName', plotName);
-
 if ndims(raw) > 3
-    msi = raw2msi(raw, 'extended');
+    msi = raw2msi(raw, 'adjusted');
     %msi = permute(msi, [2, 3, 1]);
 else
     msi = raw;
@@ -18,6 +15,7 @@ end
 channels = size(msi, 1);
 
 if (isSeparateImages)
+    plotName = fullfile(getSetting('savedir'), 'MSI', 'msi');
     origPlotName = plotName;
     for i = 1:channels
         imshow(squeeze(msi(i, :, :)));

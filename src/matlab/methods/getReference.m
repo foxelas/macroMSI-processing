@@ -5,7 +5,7 @@ function [reference] = getReference(systemdir, h, w)
 %     reference = getReference(systemdir, h, w)
 
 
-infile = fullfile(systemdir, 'infiles', strcat('reference.mat'));
+infile = fullfile(systemdir, 'infiles', getSetting('whiteReference'));
 load(infile, 'raw');
 [~, height, width, ~] = size(raw);
 
@@ -22,6 +22,6 @@ wStart = floor(yCenter-w/2);
 
 reference = raw(:, hStart:h+hStart-1, wStart:w+wStart-1, :);
 setSetting('saveImages', false);
-plotMSI(reference, 1);
+plotFunWrapper(1, @plotMSI, reference, false);
 setSetting('saveImages');
 end

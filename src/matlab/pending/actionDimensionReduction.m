@@ -48,7 +48,7 @@ setSetting('plotName', generateName([dimredMethodCap, ' of ', input, ' spectra b
 %plots(dimredMethod, 8, Gun*WMeasured, [dimredMethodCap, ' Sample'], 'LineNames', lineNamesun)
 
 setSetting('plotName', generateName([dimredMethodCap, ' of ', input, ' spectra by sample (only unfixed) [by projection base of measured]']));
-plotDimensionReduction(dimredMethod, [dimredMethodCap, ' Sample'], Gfx*WMeasuredUnfixed);
+plotFunWrapper(fig, @plotDimensionReduction, dimredMethod, [dimredMethodCap, ' Sample'], Gfx*WMeasuredUnfixed);
 %plots(dimredMethod, 9, Gfx*WMeasuredUnfixed, [dimredMethodCap, ' Sample'], 'LineNames', lineNamesfx);
 
 warning(w)

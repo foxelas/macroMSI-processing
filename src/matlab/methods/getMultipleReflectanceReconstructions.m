@@ -51,7 +51,7 @@ if (getSetting('showImages'))
     lineNames = ['Measured', methods];
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimation'), getSetting('action'), ...
         strcat(getSetting('action'), '_', num2str(idd.Index))));
-    plotReconstructedCurves(spectra, lineNames, wavelength, 'Reflectance Estimation Comparison', 1);
+    plotFunWrapper(1, @plotReconstructedCurves, (spectra, lineNames, wavelength, 'Reflectance Estimation Comparison');
     pause(0.1)
 end
 
@@ -59,7 +59,7 @@ end
 end
 
 function [rgb] = readRGBImage(whiteImg)
-load('saved parameters\color_correction.mat', 'illuminant_gw1');
+load('parameters\color_correction.mat', 'illuminant_gw1');
 tempRGB = chromadapt(whiteImg, illuminant_gw1, 'ColorSpace', 'linear-rgb'); %color adjustment
 rgb = reshape(tempRGB, [3, size(tempRGB, 1), size(tempRGB, 2)]);
 end

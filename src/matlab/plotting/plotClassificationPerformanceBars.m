@@ -31,7 +31,8 @@ else
     %figTitleCur = strcat(['Cross Validated ', figTitleCur]);
 end
 hasLegend = true;
-plotBars(barLabels, performance*100, color, '', labelx, labely, legends, legTitle, lims, 15, hasLegend);
+plotFunWrapper( fig, @plotBars, barLabels, performance*100, color, '',...
+    labelx, labely, legends, legTitle, lims, 15, hasLegend);
 savePlot(fig);
 
 end

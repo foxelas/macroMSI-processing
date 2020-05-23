@@ -18,5 +18,5 @@ nbins = 10;
 for i = 1:length(patchNames)
     patch = patches{i};
     c = getBandCorrelation(patch);
-    plotBandCorrelations(c, msiType, sprintf('Band Correlation for %s', patchNames{i}), i);
+    plotFunWrapper(1, @plotBandCorrelations, c, msiType, sprintf('Band Correlation for %s', patchNames{i}), i);
 end

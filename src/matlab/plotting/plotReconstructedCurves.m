@@ -1,5 +1,5 @@
 function [] = plotReconstructedCurves(reflectanceSpectra, curveNames, wavelength, figTitle, ...
-    fig, markers)
+    markers, fig)
 
 %{
 		% returns a comparative plot of the estimation reflectanceSpectra versus the measured spectrum.

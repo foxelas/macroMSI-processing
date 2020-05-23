@@ -1,20 +1,13 @@
 function [] = savePlot(fig)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
-
-if (nargin < 1)
-    fig = gcf;
-else
-    figure(fig);
-    clf(fig);
-end
+%SAVEPLOT saves the plot shown in figure fig
+%   savePlot(2);
 
 saveImages = getSetting('saveImages');
-saveInHQ = getSetting('saveInHQ');
-saveInBW = getSetting('saveInBW');
-plotName = getSetting('plotName');
 
 if (saveImages)
+    saveInHQ = getSetting('saveInHQ');
+    saveInBW = getSetting('saveInBW');
+    plotName = getSetting('plotName');
     if (~isempty(plotName))
         filename = strrep(plotName, '.mat', '');
 

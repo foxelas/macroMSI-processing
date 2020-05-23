@@ -7,7 +7,7 @@ load(fullfile(getSetting('systemdir'), 'data.mat')); % image data
 load(fullfile(getSetting('systemdir'), 'ID.mat')); % image data id and info struct
 %load(fullfile(getSetting('systemdir'), 'precomputedParams.mat')); %pre-set parameters
 
-if (contains(dataset, 'bright'))
+if (contains(getSetting('dataset'), 'bright'))
     ID = IDbrights;
 else
     ID = IDdarks;
@@ -83,7 +83,7 @@ if getSetting('tryReadData')
     [raw, whiteReference, darkReference] = readMSI(files);
     specimenMask = ones(size(raw, 2), size(raw, 3));
 
-    infile = mkNewDir(fullfile(getSetting('systemdir'), 'infiles', strcat('reference.mat')));
+    infile = mkNewDir(fullfile(getSetting('systemdir'), 'infiles', getSetting('whiteReference')));
     save(infile, 'raw', 'whiteReference', 'darkReference', 'specimenMask', '-v7.3');
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

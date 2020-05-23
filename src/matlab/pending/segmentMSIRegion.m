@@ -92,7 +92,7 @@ for roi = 1:ROIs
 
     if getSetting('showImages')
         setOption('plotName', plotNames{roi});
-        plotSegmentation(whiteReference, maskAgreement, whiteReference+mask, [x, y], 1);
+        plotFunWrapper(1, @plotSegmentation, whiteReference, maskAgreement, whiteReference+mask, [x, y]);
     end
 
     if ~isempty(whiteReference)

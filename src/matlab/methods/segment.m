@@ -63,6 +63,6 @@ else
 end
 setSetting('plotName', fullfile(getSetting('savedir'), folder, strcat('segment_', num2str(idd.Index), '_', idd.Sample, '_', mal)));
 baseImage = whiteReference .* specimenMask;
-plotSegmentation(baseImage, maskAgreement, baseImage.*mask, [x, y], 1);
+plotFunWrapper(1, @plotSegmentation, (baseImage, maskAgreement, baseImage.*mask, [x, y]);
 
 end

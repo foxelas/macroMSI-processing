@@ -1,5 +1,5 @@
 close all;
-locationDir = '..\..\..\..\..\..\mspi\saitama_v2\white\unfixed\right';
+locationDir = 'D:\temp\mspi\saitamav2\white\unfixed\right';
 whiteFilename = 'P2270082.tif';
 msiFilenames = {'P2270083.tif', 'P2270084.tif', 'P2270085.tif', 'P2270086.tif', 'P2270087.tif', 'P2270088.tif', 'P2270089.tif'};
 allFilenames = [whiteFilename, msiFilenames];
@@ -16,7 +16,7 @@ title('Original, minimally processed image before and after gamma correction')
 %     title('Draw a polygon around the chart')
 %     mask_chart = roipoly;
 %     mask_chart = imdilate(mask_chart,ones(7));
-load('saved parameters\mask_chart.mat', 'mask_chart');
+load('parameters\mask_chart.mat', 'mask_chart');
 
 % Use the provided estimate of ROI center coordinates.
 x = [1262, 1778, 2274, 2746, 3210, 3690];
@@ -133,4 +133,4 @@ figure(8);
 imshow(B_wp2_sRGB)
 title('White balanced image using White Patch Retinex with percentile=1')
 
-save('saved parameters\color_correction.mat', 'illuminant_gw1')
+save('parameters\color_correction.mat', 'illuminant_gw1')

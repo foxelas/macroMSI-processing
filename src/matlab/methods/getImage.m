@@ -63,7 +63,7 @@ if isColumnImage
     specimenMask = fgColumn;
 else
     setSetting('saveImages', false);
-    plotMSI(msi, 1);
+    plotFunWrapper(1, @plotMSI, msi, false);
     getSetting('saveImages');
 end
 end

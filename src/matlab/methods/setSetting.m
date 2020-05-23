@@ -10,6 +10,7 @@ m = matfile(settingsFile, 'Writable', true);
 if nargin < 2 %write default value
     v = m.options;
     m.(parameter) = v.(parameter);
+    value = v.(parameter);
 else
     m.(parameter) = value;
 end

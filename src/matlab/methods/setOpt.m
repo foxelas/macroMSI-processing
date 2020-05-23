@@ -35,7 +35,7 @@ for i = 1:length(tmp.raw)
 
     switch varType
         case 'string'
-            value = rawValue; %string(rawValue)
+            value = strrep(rawValue, ' ', ''); %string(rawValue)
         case 'int'
             value = str2num(rawValue);
         case 'double'

@@ -47,39 +47,39 @@ else
     disp('Classifier comparison')
     setSetting('plotName', fullfile(getSetting('savedir'), 'unfixed_classifier_auc'));
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s, lbps, classifiers, 'AUC', 'Accuracy', 'unfixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 1);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 1);
     setSetting('plotName', fullfile(getSetting('savedir'), 'unfixed_classifier_dor'));
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
-    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 1);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 1);
 
     setSetting('plotName', fullfile(getSetting('savedir'), 'mixed_classifier_auc'));
     [barAccInfo1, idxs] = performanceComparisonArray(tab, class_s, lbps, classifiers, 'AUC', 'Accuracy', 'mixed');
-    plotClassificationPerformanceBars(barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 2);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barAccInfo1, lbpsShow, {'SVM', 'KNN', 'RF'}, 'ROC AUC', [50, 100], 2);
 
     setSetting('plotName', fullfile(getSetting('savedir'), 'mixed_classifier_dor'));
     barDORInfo1 = getRespectiveValues(barAccInfo1, idxs, tab.DOR);
-    plotClassificationPerformanceBars(barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 2);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barDORInfo1./100, lbpsShow, {'SVM', 'KNN', 'RF'}, 'DOR', [0, 30], 2);
 
     disp('Fixing comparison')
     [barAccInfo2, idx1] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'KNN');
     setSetting('plotName', fullfile(getSetting('savedir'), 'knn_tissue_auc'));
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 3);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 3);
     [barAccInfo2, idx2] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'SVM');
     setSetting('plotName', fullfile(getSetting('savedir'), 'svm_tissue_auc'));
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 4);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 4);
     [barAccInfo2, idx3] = performanceComparisonArray(tab, class_s, lbps, fixing, 'AUC', 'Accuracy', 'Random Forest');
     ssetSetting('plotName', fullfile(getSetting('savedir'), 'rf_tissue_auc'));
-    plotClassificationPerformanceBars(barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 5);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barAccInfo2, lbpsShow, {'Unfixed', 'Fixed', 'Mixed'}, 'ROC AUC', [50, 100], 5);
 
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx1, tab.DOR);
     setSetting('plotName', fullfile(getSetting('savedir'), 'knn_tissue_dor'));
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 3);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 3);
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx2, tab.DOR);
     setSetting('plotName', fullfile(getSetting('savedir'), 'svm_tissue_dor'));
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 4);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 4);
     barDORInfo1 = getRespectiveValues(barAccInfo1, idx3, tab.DOR);
     setSetting('plotName', fullfile(getSetting('savedir'), 'rf_tissue_dor'));
-    plotClassificationPerformanceBars(barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 5);
+    plotFunWrapper(fig, @plotClassificationPerformanceBars, barDORInfo1./100, lbps, {'Unfixed', 'Fixed', 'Mixed'}, 'DOR', [0, 30], 5);
 
     disp('Dimred comparison')
     %lbps = {'spect|fixed','spect+CatLBP|fixed', 'spect+MMLBP|fixed',

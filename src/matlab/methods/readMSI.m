@@ -62,14 +62,16 @@ if (width == 0) || (height == 0)
 end
 
 if (nargin < 5)
-    setSetting('plotName', fullfile(getSetting('savedir'), 'cropped'));
+    plotNames = [];
+    baseDir = fullfile(getSetting('savedir'), 'cropped');
+    setSetting('plotName', baseDir);
 end
 
 if (nargin < 5) || isempty(fc)
     fc = [1, 450, 465, 505, 525, 575, 605, 630];
 end
 
-load('saved parameters\color_correction.mat', 'illuminant_gw1');
+load('parameters\color_correction.mat', 'illuminant_gw1');
 
 extraImages = 0;
 [hasWhiteReference, idx] = ismember(1, fc);
@@ -120,8 +122,13 @@ else
         if hasWhiteReference
             segmentWhite{roi} = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
             if getSetting('showImages')
-                setSetting('plotName', plotNames{roi});
-                plotMSIWithPOI(whiteReference+maskI, [x, y], 1);
+                if isempty(plotNames)
+                    currentPlotName = fullfile(baseDir, strcat('Image', num2str(roi)));
+                else 
+                    currentPlotName = plotNames{roi};
+                end 
+                setSetting('plotName', currentPlotName);
+                plotFunWrapper(1, @plotMSIWithPOI, whiteReference+maskI, [x, y]);
             end
         end
 

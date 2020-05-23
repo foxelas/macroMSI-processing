@@ -17,17 +17,20 @@
 	visualTool, 11-VisualTool, string
 	som, 12-Som, string
 	dimred, 13-DimensionReduction, string
-	map, 14-Maps , string
+	map, 14-Maps, string
 	pixelValueSelectionMethod, extended, string
 	noiseType, sameForChannel, string
 	saveImages, 1, logical
 	tryReadData, 0, logical
 	saveImages, 0, logical
 	saveInHQ, 0, logical
+	saveInBW, 0, logical
 	showImages, 1, logical
 	luminanceCorrection, 1.0, double
 	rho, 0.98, double
 	action, test, double
+	whiteReference, reference.mat, string
+	whiteReferenceMacbeth, parameters/whiteReferencePatchFromMacbeth.mat, string
 	matfilein, , string
 	matfileinv73, , string
 	matfileout, , string

@@ -1,4 +1,4 @@
-function [] = plotVisualResultAfterClassification(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, outName, fig, imgTitle)
+function [] = plotVisualResultAfterClassification(cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, outName, imgTitle, fig )
 
 key = {0, 1, 2};
 value = {'Benign', 'Malignant', 'Atypical'};
@@ -14,5 +14,5 @@ end
 
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('visualTool'), outName));
 %labels = {isPositive, ~[ID(roiIndexes).IsBenign]};
-plotVisualResult(sRGB, malignancyMap, imgTitle, predictedClasses, coordinates, 'hsv', false, fig);
+plotFuncWrapper( fig, @plotVisualResult, sRGB, malignancyMap, imgTitle, predictedClasses, coordinates, 'hsv', false);
 end

@@ -79,16 +79,16 @@ savePlot(fig+1);
 
 benId = 85;
 setSetting('plotName', fullfile(getSetting('savedir'), 'general', 'benunf.png'));
-plotReconstructedCurves(Spectra(benId, :)', {'Benign, Unfixed'}, 380:5:780, '', 1);
+plotFunWrapper(1, @plotReconstructedCurves, Spectra(benId, :)', {'Benign, Unfixed'}, 380:5:780, '');
 malId = 84;
 setSetting('plotName', fullfile(getSetting('savedir'), 'general', 'malunf.png'));
-plotReconstructedCurves(Spectra(malId, :)', {'Malignant, Unfixed'}, 380:5:780, '', 1);
+plotFunWrapper(1, @plotReconstructedCurves, Spectra(malId, :)', {'Malignant, Unfixed'}, 380:5:780, '');
 fixedBenId = 79;
 setSetting('plotName', fullfile(getSetting('savedir'), 'general', 'benf.png'));
-plotReconstructedCurves(Spectra(fixedBenId, :)', {'Benign, Fixed'}, 380:5:780, '', 1);
+plotFunWrapper(1, @plotReconstructedCurves, Spectra(fixedBenId, :)', {'Benign, Fixed'}, 380:5:780, '');
 fixedMalId = 78;
 setSetting('plotName', fullfile(getSetting('savedir'), 'general', 'malf.png'));
-plotReconstructedCurves(Spectra(fixedMalId, :)', {'Malignant, Fixed'}, 380:5:780, '', 1);
+plotFunWrapper(1, @plotReconstructedCurves, Spectra(fixedMalId, :)', {'Malignant, Fixed'}, 380:5:780, '');
 
 warning('on');
 end

@@ -11,7 +11,7 @@ else
     %color = flip(color);
 end
 isStacked = true;
-barPlot = plotBars(lineNames, performance*100, color, figTitle, 'Malignancy', 'NRMSE(%)', ...
+plotFunWrapper(fig, @plotBars, lineNames, performance*100, color, figTitle, 'Malignancy', 'NRMSE(%)', ...
     {'unfixed', 'fixed', 'sectioned'}, {'Fixing'}, [0, 10], 12, true, isStacked);
 
 savePlot(fig);
