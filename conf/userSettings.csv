@@ -25,9 +25,12 @@
 	saveImages, 1, logical
 	saveInHQ, 0, logical
 	saveInBW, 0, logical
+	cropBorders, 0, logical
 	showImages, 1, logical
+	SVDTol, 0, logical	SVDTol, 0, logical
 	luminanceCorrection, 1.0, double
 	rho, 0.98, double
+	noiseParam, , int
 	action, test, double
 	whiteReference, reference.mat, string
 	whiteReferenceMacbeth, parameters/whiteReferencePatchFromMacbeth.mat, string

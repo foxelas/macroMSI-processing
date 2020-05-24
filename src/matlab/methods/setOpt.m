@@ -42,6 +42,8 @@ for i = 1:length(tmp.raw)
             value = str2double(rawValue);
         case 'logical'
             value = strcmp(rawValue, '1');
+        case 'doubleArray'
+            
         otherwise
             fprintf('Unsupported type %s for parameter %s.\n', varType, parameterName);
     end

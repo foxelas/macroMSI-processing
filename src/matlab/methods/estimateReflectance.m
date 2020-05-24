@@ -2,7 +2,7 @@ function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spec
 %     ESTIMATEREFLECTANCE Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %   
 %     Input arguments
-%     g = the input MSI struct (name, index, 4D-MSI, RegionMask), where 4D-MSI(filter band, x , y , image rgb values)
+%     MSI = the input MSI struct (name, index, 4D-MSI, RegionMask), where 4D-MSI(filter band, x , y , image rgb values)
 %     mask = the mask of the ROI that needs to be estimated 
 %     spectrum = the measured originalReflectance spectrum of the sample
 %     id = the point id information
@@ -100,13 +100,16 @@ end
 % Argument parsing ends
 
 %% Generate smoothing matrix for estimation
-
-G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
+if ndims(MSI) == 3
+    G = MSI;
+else
+    G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
+end
 [msibands, height, width] = size(G);
 %G = G ./ getSetting('luminanceCorrection');
 
 % computed beforehand with prepareSmoothingMatrix
-isBenign = id.IsBenign;
+isBenign = id.Label;
 if (id.IsCut)
     fixing = 'Cut';
 elseif (id.IsFixed)
@@ -422,8 +425,11 @@ end
 if (height > 200 || width > 200) %in this case the mask is ones(height, width)
     estimatedReflectances = max(estimatedReflectances, 0);
     estimatedReflectances = min(estimatedReflectances, 1);
-
-    estimatedReflectance = reshape(estimatedReflectances, size(H, 2), height, width);
+    if sum(mask(:) == 0) > 1 % Reflectances were calculated excluding bg pixels 
+        estimatedReflectance = zeros(size(H, 2), height * width);
+        estimatedReflectance(:, activeRegionIdx) = estimatedReflectances;
+    end
+    estimatedReflectance = reshape(estimatedReflectance, size(H, 2), height, width);
 else
 
     idx = ~(any(estimatedReflectances < 0) | any(estimatedReflectances > 1));
