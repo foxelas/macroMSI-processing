@@ -23,7 +23,7 @@ if (saveImages)
         else
             filename = fullfile(filepath, name);
             if getSetting('cropBorders')
-                export_fig(filename, '-png', '-native');
+                export_fig(filename, '-png', '-native', '-transparent');
             else
                 saveas(fig, filename, 'png');
             end

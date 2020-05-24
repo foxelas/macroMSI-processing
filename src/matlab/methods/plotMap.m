@@ -1,4 +1,4 @@
-function plotMap(I, cmap, hideColorbar, barTitle, limits, ticks, tickLabels, figTitle, fig)
+function plotMap(I, mask, cmap, hideColorbar, barTitle, limits, ticks, tickLabels, figTitle, fig)
 % PLOTMAP plots a map with a colorbar (optional)
 %
 %     Usage: 
@@ -27,7 +27,15 @@ axes(gcf);
 
 warning('off')
 
-imagesc(I);
+h = imagesc(I);
+axis off;
+alphaI = mask > 0;
+opacity = 1;
+set(h, 'AlphaData', alphaI*opacity);
+if isempty(limits)
+    importantPixels = I(mask & abs(I) < Inf);
+    limits = [min(importantPixels(:)), max(importantPixels(:))];
+end
 if ~isempty(limits) && ~hideColorbar
     set(gca, 'CLim', limits);
 end
@@ -41,10 +49,14 @@ if ~hideColorbar
     c.Label.FontWeight = 'bold';
     if ~isempty(limits)
         c.Limits = limits ; % [0, 1]
-        c.Ticks = ticks; % [0, 0.5, 1]
-        c.TickLabels = tickLabels; %  {'low', 'medium', 'high'}
         c.LimitsMode = 'manual';
     end
+    if ~isempty(ticks) 
+        c.Ticks = ticks; % [0, 0.5, 1]
+    end 
+    if ~isempty(tickLabels)
+        c.TickLabels = tickLabels; %  {'low', 'medium', 'high'}
+    end 
     set(gcf, 'Visible', 'on');
 end
 
