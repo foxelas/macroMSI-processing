@@ -14,7 +14,7 @@ end
 if ndims(I) == 2
     spectralMean = mean(I, 2);
     spectralMax = max(I, [], 2);
-    idxs = spectralMean > meanLimit & spectralMax < maxLimit;
+    idxs = spectralMean > meanLimit & spectralMax < maxLimit & spectralMean > 0;
     newI = I(idxs, :);
 else
     disp('Not supported')

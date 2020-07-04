@@ -2,6 +2,9 @@
 	systemdir, , string
 	datadir, , string
 	savedir, , string
+	rawdatadir, , string
+	webdir, , string
+	common, 0-Common, string
 	backgroundRemoval, 1-BackgroundRemoval, string
 	labels, 2-Labels, string
 	segments, 3-Segments, string
@@ -18,6 +21,8 @@
 	som, 12-Som, string
 	dimred, 13-DimensionReduction, string
 	map, 14-Maps, string
+	pca, 15-Pca, string
+	registration, 16-Registration, string
 	pixelValueSelectionMethod, extended, string
 	noiseType, sameForChannel, string
 	saveImages, 1, logical

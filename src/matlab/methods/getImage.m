@@ -1,4 +1,4 @@
-function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage)
+function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage, normType)
 %     GETIMAGE returns the msi and other useful parameters
 % 
 %     Input arguments
@@ -10,6 +10,7 @@ function [msi, whiteReference, specimenMask, height, width, channels] = getImage
 %     isColumnImage: the boolean variable showing whether the each MSI band
 %     subimage should be covnerted to a column vector (if TRUE) or remain as
 %     is (if FALSE)
+%     normType: the normalization type ['none', 'divByMax', 'divMacbeth']
 % 
 %     Output arguments
 %     msi: the multispectral image
@@ -41,8 +42,9 @@ infile = fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(k
 load(infile, 'raw', 'whiteReference', 'specimenMask');
 
 [~, height, width, ~] = size(raw);
-msi = raw2msi(raw, msiType);
+msi = getNormalizedMsi(raw, normType, msiType);
 [channels, ~, ~] = size(msi);
+
 
 if removebg
     foregroundMask = permute(repmat(double(specimenMask), 1, 1, channels), [3, 1, 2]);

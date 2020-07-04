@@ -421,6 +421,7 @@ if (false)
     pause(0.2)
 end
 
+
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 || width > 200) %in this case the mask is ones(height, width)
     estimatedReflectances = max(estimatedReflectances, 0);

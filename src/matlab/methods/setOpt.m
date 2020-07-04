@@ -26,8 +26,10 @@ for i = 1:length(tmp.raw)
                 rawValue = fullfile(options.('savedir'), options.('action'), 'out.mat');
             case 'systemdir'
                 rawValue = fullfile('..\..\..\input', options.('dataset'));
+            case 'webdir'
+                rawValue = fullfile('..\..\..\input', '3_spectra_from_web');
             case 'datadir'
-                rawValue = fullfile('.\..\..\..\..\..\mspi\', options.('dataset'));
+                rawValue = fullfile('..\..\..\..\..\..\..\mspi\', 'saitamav2');
             case 'savedir'
                 rawValue = fullfile('..\..\..\output\', options.('dataset'));
         end
