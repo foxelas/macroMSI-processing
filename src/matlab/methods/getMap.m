@@ -1,4 +1,4 @@
-function [melMap, hbMap] = getMap(raw, mapType, mask, id)
+function [melMap, hbMap] = getMap(msi, mapType, mask, id, msiType)
 %     GETMAP returns an optical map showing chromophore components of the macropathology image 
 % 
 %     Usage: 
@@ -14,13 +14,16 @@ if nargin < 2
     mapType = 'ding';
 end
 
-msiType = 'adjusted';
-msi = raw2msi(raw, msiType);
 [channels, height, width] = size(msi);
 
 if nargin < 3
     mask = ones(height, width);
+end
+
+if nargin < 5 
+    msiType = 'adjusted';
 end 
+
 % reference = getReference(getSetting('systemdir'), height, width);
 reference = getReferenceFromMacbeth(height, width);
 reference = raw2msi(reference, msiType);
@@ -45,11 +48,11 @@ switch mapType
         melMap = squeeze(opticalDensity(7, :, :));
         melBarTitle = 'Optical Density of Melanin';
         melSaveName = 'DingMel';
-        melMapLimits = [-2.0, 0.2];
+        melMapLimits = [-1.5, 0.5];
         hbMap = squeeze(opticalDensity(5, :, :)) - 1.15 .* squeeze(opticalDensity(7, :, :));
         hbBarTitle = 'Optical Density of Hemoglobin';
         hbMapSaveName = 'DingHb';
-        hbMapLimits = [-3.0,1.0];
+        hbMapLimits = [-5, 1];
 
     case 'vasefi'
         logIm = log10(normalizedReflectance);
@@ -60,24 +63,26 @@ switch mapType
         setSetting('plotName', fullfile(savedir, mapdir, 'scaledMap.png'));
         melBarTitle =  'Melanin Absorbance Slope (a.u.)';
         melSaveName = 'VasefiMel';
-        melMapLimits = [-0.1, 0.02];
+        melMapLimits = [-0.06, 0.01];
         range = [505, 575];
         hbMap = estimateSlope(absorption, range, fc);
         setSetting('plotName', fullfile(savedir, mapdir, 'scaledMap.png'));
         hbBarTitle =  'Hemoglobin Absorbance Slope (a.u.)';
         hbMapSaveName = 'VasefiHb';
-        hbMapLimits = [-0.04,0.04];
+        hbMapLimits = [-0.06, 0.06];
+        
     case 'diebele'
         logIm = log10(normalizedReflectance);
         opticalDensity = logIm;
         melMap = squeeze(opticalDensity(7, :, :));
         melBarTitle = 'Melanin Index';
         melSaveName = 'DiebeleMel';
-        melMapLimits = [-2.0, 0.2];
+        melMapLimits = [-1.5, 0.5];
         hbMap = squeeze(opticalDensity(7, :, :)) - squeeze(opticalDensity(5, :, :));
         hbBarTitle = 'Erythema Index';
         hbMapSaveName = 'DiebeleHb';
-        hbMapLimits = [-3.0,1.0];
+        hbMapLimits = [-1, 5];
+        
     case 'kapsokalyvas'
         %totalRed = squeeze(sum(squeeze(raw(:,:,:,3)), 1));
         %totalGreen = squeeze(sum(squeeze(raw(:,:,:,2)), 1));
@@ -89,11 +94,29 @@ switch mapType
         melMap = (totalBlue - totalGreen) ./ (totalBlue + totalGreen);
         melBarTitle = 'Superficial Melanin';
         melSaveName = 'KapsokalyvasMel';
-        melMapLimits = [0, 1];
+        melMapLimits = [-0.6, 1];
         hbMap = (totalGreen - totalRed) ./ (totalGreen + totalRed);
         hbBarTitle = 'Hemoglobin Contrast';
         hbMapSaveName = 'KapsokalyvasHb';
-        hbMapLimits = [-1, 1];
+        hbMapLimits = [-1, 0.8];
+        
+    case 'kuzmina'
+        load(getSetting('channelCorrection'), 'redCoeff', 'greenCoeff', 'blueCoeff');
+        calibCoeff = 1; 
+        totalRed = squeeze(msi(7, :, :));
+        totalGreen =  squeeze(msi(5, :, :));
+        totalBlue = squeeze(msi(1, :, :));
+        calibCoeff = blueCoeff / redCoeff;
+        melMap = calibCoeff * totalBlue ./ totalRed;
+        melBarTitle = 'Melanin Index';
+        melSaveName = 'KuzminaMel';
+        melMapLimits = [0, 25];
+        calibCoeff = redCoeff / greenCoeff;
+        hbMap = calibCoeff * totalRed ./ totalGreen; 
+        hbBarTitle = 'Hemoglobin Index';
+        hbMapSaveName = 'KuzminaHb';
+        hbMapLimits = [];
+        
     case 'ours'
         [absorption, wavelength] = getAbsorptionByEstimatedReflectance(msi, mask, id);
         range = [605, 630];
@@ -101,19 +124,24 @@ switch mapType
         melMap = estimateSlope(absorption, range, wavelength);
         melBarTitle =  'Melanin Absorbance Slope (a.u.)';
         melSaveName = 'oursMel';
-        melMapLimits =  [];%[-1.505 * 0.001, -1.49 * 0.001];
+        melMapLimits =  [-1.49, -1.472] .* 0.001; 
         range = [505, 575];
         hbMap = estimateSlope(absorption, range, wavelength);
         hbBarTitle =  'Hemobglobin Absorbance Slope (a.u.)';
         hbMapSaveName = 'oursHb';
-        hbMapLimits = []; %[1.45 * 0.001, 1.5 * 0.001];
+        hbMapLimits = [1.41, 1.50] .* 0.001; 
         
     otherwise
         disp('Unsupported type')
 end
-setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName,'ScaledMap.png')));
+melMap = removeInf(melMap);
+hbMap = removeInf(hbMap);
+if isstruct(id)
+    id = id.Index;
+end 
+setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName, '_', num2str(id),'_','ScaledMap.png')));
 plotFunWrapper(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
-setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName,'ScaledMap.png')));
+setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName, '_', num2str(id),'_','ScaledMap.png')));
 plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle,hbMapLimits);
 
 end
@@ -147,3 +175,20 @@ normalizedReflectance = reshape(normalizedReflectance, size(estimatedReflectance
 absorption = -log10(normalizedReflectance);
 load(fullfile(getSetting('systemdir'), 'system.mat'), 'wavelength');
 end
+
+function newMap = removeInf(inMap)
+    origDim = size(inMap);
+    inMap = reshape(inMap, [origDim(1) * origDim(2), 1]);
+    maxMap = max(inMap(~isinf(inMap)));
+    maxLim = round( maxMap, -floor(log10(abs(maxMap))) );
+  
+    inMap(isinf(inMap)) = maxLim;
+    
+    minMap = min(inMap(~(isinf(abs(inMap)) & (inMap <0))));
+    minLim = round( minMap, -ceil(log10(abs(minMap))) );
+
+    inMap((isinf(abs(inMap)) & (inMap <0))) = minLim ;
+    
+    newMap =reshape(inMap, [origDim(1), origDim(2)]);
+    
+end 

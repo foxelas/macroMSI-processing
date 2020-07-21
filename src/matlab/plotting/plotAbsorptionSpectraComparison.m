@@ -19,9 +19,10 @@ clf;
 hold on; 
 %plot(eumelaninLambda, log10(eumelanin1), 'DisplayName', 'Eumelanin1', 'LineWidth', 2); %cm-1 / (mg/ml)
 plot(eumelaninLambda, log10(eumelanin2), 'DisplayName', 'Eumelanin2', 'LineWidth', 2); %cm-1 / (moles/liter)
-plot(hbLambda, log10(hbO2), 'DisplayName', 'HbO2', 'LineWidth', 2); %cm-1/M
+plot(hbLambda, log10(hbO2), 'DisplayName', 'HbR', 'LineWidth', 2); %cm-1/M
 plot(hbLambda, log10(hb), 'DisplayName', 'Hb', 'LineWidth', 2); %cm-1/M
 hold off 
+xlim([300,700]);
 xlabel('Wavelength (nm)', 'FontSize', 15);
 ylabel('log_{10}(Absorption) (cm^{-1}/ M)', 'FontSize', 15);
 l = legend('Location', 'northeastoutside');
@@ -34,7 +35,7 @@ end
 hold off; 
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
 
-setSetting('saveInHQ', true);
+setSetting('saveInHQ', false);
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('common'), 'skinChromophoreAbsorption'));
 savePlot(fig);
 

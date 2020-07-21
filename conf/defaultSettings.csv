@@ -39,6 +39,7 @@
 	action, test, double
 	whiteReference, reference.mat, string
 	whiteReferenceMacbeth, parameters/whiteReferencePatchFromMacbeth.mat, string
+	channelCorrection, parameters/channelCorrectionFromMacbeth.mat, string
 	matfilein, , string
 	matfileinv73, , string
 	matfileout, , string

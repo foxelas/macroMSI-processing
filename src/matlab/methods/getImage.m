@@ -1,4 +1,4 @@
-function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage, normType)
+function [msi, whiteReference, specimenMask, height, width, channels] = getImage(k, msiType, removebg, isColumnImage, normType, tform, newDims)
 %     GETIMAGE returns the msi and other useful parameters
 % 
 %     Input arguments
@@ -11,6 +11,8 @@ function [msi, whiteReference, specimenMask, height, width, channels] = getImage
 %     subimage should be covnerted to a column vector (if TRUE) or remain as
 %     is (if FALSE)
 %     normType: the normalization type ['none', 'divByMax', 'divMacbeth']
+%     tform: translation transform for rotation and scaling 
+%     newDims: the new dimensions for the translated image
 % 
 %     Output arguments
 %     msi: the multispectral image
@@ -38,8 +40,23 @@ if nargin < 4
     isColumnImage = false;
 end
 
+if nargin < 5 
+    normType  = 'none';
+end 
+
+if nargin < 6 
+    tform = [];
+    newDims = [];
+end 
+
 infile = fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(k), '.mat'));
 load(infile, 'raw', 'whiteReference', 'specimenMask');
+
+if ~isempty(tform) && ~isempty(newDims) 
+    raw = registerImage(raw, tform, newDims);
+    whiteReference = permute(registerImage(permute(whiteReference, [3, 1, 2]), tform, newDims), [2, 3, 1]);
+    specimenMask = registerImage(specimenMask, tform, newDims);
+end 
 
 [~, height, width, ~] = size(raw);
 msi = getNormalizedMsi(raw, normType, msiType);
