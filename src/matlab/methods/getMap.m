@@ -32,19 +32,20 @@ savedir = getSetting('savedir');
 mapdir = getSetting('map');
 % setSetting('plotName', fullfile(savedir, mapdir, 'msi.png'));
 % plotFunWrapper(2, @plotMSI, msi);
+mask3d = permute(repmat(mask, [1, 1, size(msi,1)]), [3,1,2]);
+msi(~mask3d) = nan;
+
 normalizedReflectance = msi ./ reference;
 % setSetting('plotName', fullfile(savedir, mapdir, 'normalizedMsi.png'));
 % plotFunWrapper(3, @plotMSI, normalizedReflectance);
+        
 logIm = log10(normalizedReflectance);
 opticalDensity = logIm;
 absorption = -logIm; 
 % setSetting('plotName', fullfile(savedir, mapdir, 'absoprtion.png'));
 % plotFunWrapper(4, @plotMSI, absorption);
-        
 switch mapType
     case 'ding'
-        logIm = log10(normalizedReflectance);
-        opticalDensity = logIm;
         melMap = squeeze(opticalDensity(7, :, :));
         melBarTitle = 'Optical Density of Melanin';
         melSaveName = 'DingMel';
@@ -55,8 +56,6 @@ switch mapType
         hbMapLimits = [-5, 1];
 
     case 'vasefi'
-        logIm = log10(normalizedReflectance);
-        absorption = -logIm; 
         fc = [450,465,505,525,575,605,630]';
         range = [605, 630];
         melMap = estimateSlope(absorption, range, fc);
@@ -72,8 +71,6 @@ switch mapType
         hbMapLimits = [-0.06, 0.06];
         
     case 'diebele'
-        logIm = log10(normalizedReflectance);
-        opticalDensity = logIm;
         melMap = squeeze(opticalDensity(7, :, :));
         melBarTitle = 'Melanin Index';
         melSaveName = 'DiebeleMel';
@@ -142,7 +139,7 @@ end
 setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName, '_', num2str(id),'_','ScaledMap.png')));
 plotFunWrapper(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
 setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName, '_', num2str(id),'_','ScaledMap.png')));
-plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle,hbMapLimits);
+plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle, hbMapLimits);
 
 end
 
@@ -177,18 +174,18 @@ load(fullfile(getSetting('systemdir'), 'system.mat'), 'wavelength');
 end
 
 function newMap = removeInf(inMap)
+
     origDim = size(inMap);
     inMap = reshape(inMap, [origDim(1) * origDim(2), 1]);
     maxMap = max(inMap(~isinf(inMap)));
     maxLim = round( maxMap, -floor(log10(abs(maxMap))) );
-  
+
     inMap(isinf(inMap)) = maxLim;
-    
+
     minMap = min(inMap(~(isinf(abs(inMap)) & (inMap <0))));
     minLim = round( minMap, -ceil(log10(abs(minMap))) );
 
     inMap((isinf(abs(inMap)) & (inMap <0))) = minLim ;
-    
+
     newMap =reshape(inMap, [origDim(1), origDim(2)]);
-    
 end 

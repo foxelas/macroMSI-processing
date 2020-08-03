@@ -30,6 +30,7 @@
 	saveImages, 0, logical
 	saveInHQ, 0, logical
 	saveInBW, 0, logical
+	saveEps, 0, logical
 	cropBorders, 0, logical
 	showImages, 1, logical
 	SVDTol, 0, logical

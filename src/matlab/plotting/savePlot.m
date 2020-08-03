@@ -8,6 +8,9 @@ if (saveImages)
     saveInHQ = getSetting('saveInHQ');
     saveInBW = getSetting('saveInBW');
     plotName = getSetting('plotName');
+    cropBorders = getSetting('cropBorders'); 
+    saveEps = getSetting('saveEps');
+    
     if (~isempty(plotName))
         filename = strrep(plotName, '.mat', '');
 
@@ -16,25 +19,27 @@ if (saveImages)
         mkNewDir(filepath);
         mkNewDir(filepathBW);
 
-        if (saveInHQ)
-            filename = fullfile(filepath, strcat(name, '.png'));
-            export_fig(filename, '-png', '-native', '-nocrop');
-            %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
+        filename = fullfile(filepath, strcat(name, '.png'));
+        if (cropBorders) 
+            export_fig(filename, '-png', '-native', '-transparent');
         else
-            filename = fullfile(filepath, name);
-            if getSetting('cropBorders')
-                export_fig(filename, '-png', '-native', '-transparent');
-            else
+            if (saveInHQ)
+                export_fig(filename, '-png', '-native', '-nocrop');
+                %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
+            else 
                 saveas(fig, filename, 'png');
             end
-            if (saveInBW)
-                filename = fullfile(filepathBW, strcat(name, '.eps'));
-                %export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
-            else
-                filename = fullfile(filepath, strcat(name, '.eps'));
-                %export_fig(filename , '-eps', '-transparent', '-r900',  '-RGB');
-            end
         end
+        if (saveEps)
+            namext = strcat(name, '.eps'); 
+            if (saveInBW)
+                filename = fullfile(filepathBW, namext);
+                export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
+            else
+                filename = fullfile(filepath, namext);
+                export_fig(filename , '-eps', '-transparent', '-r900', '-RGB');
+            end
+        end 
     else
         warning('Empty plotname')
     end
