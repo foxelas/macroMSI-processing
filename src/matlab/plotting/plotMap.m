@@ -4,6 +4,13 @@ function plotMap(I, mask, cmap, hideColorbar, barTitle, limits, ticks, tickLabel
 %     Usage: 
 %     plotMap(msi, 'jet', false, 'Scale', [0,1], [0, 0.5, 1], {'low', 'medium', 'high'}, 'Map', 1);
 
+if (nargin < 7)
+    ticks = [];
+    tickLabels = [];
+    figTitle = '';
+    fig = [];
+end
+    
 if isempty(cmap)
     cmap = 'jet';
 end 
@@ -22,8 +29,9 @@ if ischar(cmap)
     end
 end
 
-clf(gcf);
-axes(gcf);
+% clf(gcf);
+% axes(gcf);
+axes(gca);
 
 warning('off')
 
@@ -44,9 +52,12 @@ colormap(cmap(15:cmapSize, :));
 
 if ~hideColorbar
     c = colorbar('location', 'southoutside');
-    c.Label.String = barTitle;
-    c.Label.FontSize = 15;
-    c.Label.FontWeight = 'bold';
+    if ~isempty(barTitle)
+        c.Label.String = barTitle;
+        c.Label.FontSize = 15;
+        c.Label.FontWeight = 'bold';
+    end 
+    
     if ~isempty(limits)
         c.Limits = limits ; % [0, 1]
         c.LimitsMode = 'manual';

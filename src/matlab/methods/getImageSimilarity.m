@@ -5,11 +5,11 @@ function [metrics] = getImageSimilarity(base, ref, filename, id1, id2, name1, na
 
 savedir = getSetting('savedir');
 if ~isempty(filename)
-    filename = fullfile(savedir, '14-MapComparison', strcat(num2str(id1), 'vs', num2str(id2), '_', filename)); 
+    filename = fullfile(savedir, '14-MapComparison', filename, strcat(num2str(id1), 'vs', num2str(id2), '_', filename)); 
 end 
 
-setSetting('plotName', strcat(filename, '.png'));
-plotFunWrapper(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));
+% setSetting('plotName', strcat(filename, '.png'));
+% plotFunWrapper(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));
 
 baseMask = ~isnan(base);
 refMask = ~isnan(ref);
