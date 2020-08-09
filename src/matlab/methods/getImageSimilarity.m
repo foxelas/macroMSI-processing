@@ -4,7 +4,9 @@ function [metrics] = getImageSimilarity(base, ref, filename, id1, id2, name1, na
 %   num2str(i)), getSetting('pca'), unfixedId, fixedId, name1, name2);
 
 savedir = getSetting('savedir');
-filename = fullfile(savedir, '14-MapComparison', strcat(num2str(id1), 'vs', num2str(id2), '_', filename)); 
+if ~isempty(filename)
+    filename = fullfile(savedir, '14-MapComparison', strcat(num2str(id1), 'vs', num2str(id2), '_', filename)); 
+end 
 
 setSetting('plotName', strcat(filename, '.png'));
 plotFunWrapper(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));
@@ -50,13 +52,15 @@ plotFunWrapper(3, @plotScaledImage, ccmap, figTitle, []);
 cr = nan;
 
 %% Similarity of histogram intersection 
-n = 20; 
+n = 20;
+figure(3);
 hBase = histogram(base(baseMask),n);
 setSetting('plotName', strcat(filename, '_hist_', name1, '.png'));
 savePlot(gcf);
 counts1 = hBase.Values;
 edges = hBase.BinEdges;
 centers1 = edges(1:end-1)' + diff(edges)' / 2;  
+figure(4);
 hRef = histogram(ref(refMask),n);
 setSetting('plotName', strcat(filename, '_hist_', name2, '.png'));
 savePlot(gcf);
