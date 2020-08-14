@@ -16,7 +16,7 @@ y = 2498;
 
 x = round(x);
 y = round(y);
-r = 145; 
+r = 145;
 
 mask = false(size(A, 1), size(A, 2));
 mask(y-r:y+r, x-r:x+r) = true;
@@ -33,11 +33,11 @@ A_patches = imoverlay(A, mask_patches);
 figure(1); imshow(A_patches)
 title('The selected pixels are highlighted in yellow');
 
-height = length(y-r:y+r); 
+height = length(y-r:y+r);
 width = length(x-r:x+r);
-coordinates = [x-r, y-r,];
+coordinates = [x - r, y - r,];
 
-[referencePatchMSI, ~, ~, segmentMask, segmentMaskI] = readMSI(allFilenames, coordinates, width, height); 
-columnMSI = reshape(referencePatchMSI, size(referencePatchMSI, 1), size(referencePatchMSI, 2) * size(referencePatchMSI, 3), size(referencePatchMSI, 4) );
+[referencePatchMSI, ~, ~, segmentMask, segmentMaskI] = readMSI(allFilenames, coordinates, width, height);
+columnMSI = reshape(referencePatchMSI, size(referencePatchMSI, 1), size(referencePatchMSI, 2)*size(referencePatchMSI, 3), size(referencePatchMSI, 4));
 referenceWhite = mean(columnMSI, 2);
 save(getSetting('whiteReferenceMacbeth'), 'referenceWhite', 'referencePatchMSI');

@@ -1,6 +1,6 @@
 function [style] = getStyleName(labels)
-%     GETSTYLENAME returns style depending on labels 
-% 
+%     GETSTYLENAME returns style depending on labels
+%
 %     Usage:
 %     [style] = getStyleName(labels)
 

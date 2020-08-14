@@ -1,6 +1,6 @@
 function [] = setOpt(inputSettingsFile)
-%     SETOPT configures parameters for running 
-% 
+%     SETOPT configures parameters for running
+%
 %     Usage:
 %     setOpt()
 %     setOpt('settings.csv')
@@ -45,7 +45,7 @@ for i = 1:length(tmp.raw)
         case 'logical'
             value = strcmp(rawValue, '1');
         case 'doubleArray'
-            
+
         otherwise
             fprintf('Unsupported type %s for parameter %s.\n', varType, parameterName);
     end

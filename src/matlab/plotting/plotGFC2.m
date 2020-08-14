@@ -1,7 +1,7 @@
 function [] = plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig)
 %     PLOTGFC2 plots the GFC2
-% 
-%     Usage: 
+%
+%     Usage:
 %     plotGFC2(x1, x2, y, x1lab, x2lab, ylab, figTitle, fig)
 
 if contains(x1lab, 'sigma')

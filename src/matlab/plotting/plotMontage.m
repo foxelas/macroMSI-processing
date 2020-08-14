@@ -1,20 +1,20 @@
 function [] = plotMontage(left, right, figTitle, fig)
 
-hasTitle = true; 
+hasTitle = true;
 if nargin < 4
     hasTitle = isnumeric(figTitle);
     if ~hasTitle
-        fig = figTitle; 
+        fig = figTitle;
         figTitle = '';
-    end 
-end 
+    end
+end
 
 warning('off');
 
 imshowpair(left, right, 'montage');
-if hasTitle 
+if hasTitle
     title(figTitle);
-end 
+end
 pause(0.1)
 savePlot(fig);
 

@@ -1,17 +1,18 @@
-%% Required settings 
-% msiType = 'extended'; 
+
+%% Required settings
+% msiType = 'extended';
 % normType = 'divMacbeth';
 % removeBg = 'true';
-% fixedId = 16; 
-% unfixedId = 17; 
+% fixedId = 16;
+% unfixedId = 17;
 
 %% Handle Fixed Image
 [fixedMsi, fixedWhiteReference, fixedMask] = readAndNormalize(fixedId, ID, msiType, removeBg, normType);
 
-%% Handle Unfixed Image 
+%% Handle Unfixed Image
 [unfixedMsi, unfixedWhiteReference, unfixedMask] = readAndNormalize(unfixedId, ID, msiType, removeBg, normType);
 
-%% Register 
+%% Register
 setSetting('saveImages', true);
 % close all;  tform1 = getRegistrationTransform(fixedMsi, unfixedMsi, 'surf');
 close all;  tform2 = getRegistrationTransform(fixedMsi, unfixedMsi, 'regconfig');

@@ -1,6 +1,6 @@
 function [val] = getSpectralHistogramSimilarity(h1, h2)
 %     GETSPECTRALHISTOGRAMSIMILARITY returns spectral histogram similarity of two msi
-% 
+%
 %     Usage:
 %     [val] = getSpectralHistogramSimilarity(h1, h2)
 

@@ -1,6 +1,6 @@
 function [] = setSetting(parameter, value)
 %     SETSETTING sets a parameter according to a value or by default
-% 
+%
 %     Usage:
 %     setSetting('savedir', 'out\out')
 %     setSetting('savedir')

@@ -1,7 +1,7 @@
 function [ID] = selectCoeffIndex()
 %     SELECTCOEFFINDEX  updates the values of CoeffIndex of ID.mat based on the image point which produces minimum average
 %     estimation rmse, when coefficient values are adjusted to it.
-% 
+%
 %     Usage: selectCoeffIndex();
 
 % setSetting('action', 'ReflectanceEstimationPreset');

@@ -1,7 +1,7 @@
 function [] = plotGFC(x, y, xlab, ylab, figTitle, fig)
 %     plotGFC plots the GFC
-% 
-%     Usage: 
+%
+%     Usage:
 %     plotGFC(x, y, xlab, ylab, figTitle, fig)
 
 

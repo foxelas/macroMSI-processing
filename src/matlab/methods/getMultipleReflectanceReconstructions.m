@@ -1,7 +1,7 @@
 function [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions(msi, rgb, mask, measured, idd, methods)
-% GETMULTIPLEREFLECTANCERECONSTRUCTIONS returns an array of reconstructed reflectances using different methods 
-% 
-% Usage: 
+% GETMULTIPLEREFLECTANCERECONSTRUCTIONS returns an array of reconstructed reflectances using different methods
+%
+% Usage:
 % [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions(msi, rgb, mask, measured, idd, methods)
 
 wavelength = 380:5:780;

@@ -1,7 +1,7 @@
 function [reference] = getReference(systemdir, h, w)
-%     GETREFERENCE returns white reference image 
-% 
-%     Usage: 
+%     GETREFERENCE returns white reference image
+%
+%     Usage:
 %     reference = getReference(systemdir, h, w)
 
 

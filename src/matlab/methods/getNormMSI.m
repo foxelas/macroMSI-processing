@@ -1,6 +1,6 @@
 function [normMsi] = getNormMSI(msi)
 %     GETNORMMSI returns normalizations of each channel by removing its mean
-% 
+%
 %     Usage:
 %     normMsi = getNormMsi(msi)
 

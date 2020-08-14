@@ -1,7 +1,7 @@
 function [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN)
 %     BULKREADSPECTRA reads spectra from data file in bulk.
-% 
-%     Usage: 
+%
+%     Usage:
 %     [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN)
 
 %% Read raw spectra

@@ -1,11 +1,11 @@
 function [G] = raw2msi(A, method)
 %     RAW2MSI Selects one appropriate pixel intensity value from
-% 
+%
 %     raw2msi chooses the appropriate values from the image to be used in
 %     the processing, depending on the 'method'
 %     method : {'green', 'rms', 'adjusted', 'extended', 'unchanged', 'max'}
-% 
-%     Usage: 
+%
+%     Usage:
 %     msi = raw2msi(I, 'extended')
 
 

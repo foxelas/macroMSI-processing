@@ -1,26 +1,26 @@
 function normMsi = getNormalizedMsi(raw, normType, msiType)
-%     GETNORMALIZEDMSI returns the normalized msi 
-    
+%     GETNORMALIZEDMSI returns the normalized msi
+
 %     Input arguments
 %     raw: the RAW multispectral image
 %     normType: the normalization type ['none', 'divByMax', 'divMacbeth']
 %     msiType: the msi construction type  {'green', 'rms', 'adjusted',
 %     'extended', 'unchanged', 'max'}
-%     
+%
 %     Output arguments
-%     normMsi: the normalized msi 
-%     
-%     Usage: 
+%     normMsi: the normalized msi
+%
+%     Usage:
 %     normMsi = getNormalizedMsi(raw, 'divByMax');
 %     normMsi = getNormalizedMsi(raw, 'divByMax', 'extended');
 
-if nargin < 3 
+if nargin < 3
     msiType = 'extended';
 end
 
 msi = raw2msi(raw, msiType);
 
-switch normType 
+switch normType
     case 'none'
         normMsi = msi;
     case 'divByMax'
@@ -33,5 +33,5 @@ switch normType
         reference = getReferenceFromMacbeth(height, width);
         reference = raw2msi(reference, msiType);
         normMsi = msi ./ reference;
-end                 
-end 
+end
+end

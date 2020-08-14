@@ -1,7 +1,7 @@
 function plotMap(I, mask, cmap, hideColorbar, barTitle, limits, ticks, tickLabels, figTitle, fig)
 % PLOTMAP plots a map with a colorbar (optional)
 %
-%     Usage: 
+%     Usage:
 %     plotMap(msi, 'jet', false, 'Scale', [0,1], [0, 0.5, 1], {'low', 'medium', 'high'}, 'Map', 1);
 
 if (nargin < 7)
@@ -10,14 +10,14 @@ if (nargin < 7)
     figTitle = '';
     fig = [];
 end
-    
+
 if isempty(cmap)
     cmap = 'jet';
-end 
+end
 
 if isempty(hideColorbar)
-    hideColorbar = false; 
-end 
+    hideColorbar = false;
+end
 
 cmapSize = 100; % default size of 60 shows visible discretization
 if ischar(cmap)
@@ -48,7 +48,7 @@ if ~isempty(limits) && ~hideColorbar
     set(gca, 'CLim', limits);
 end
 
-colormap(cmap(15:cmapSize, :)); 
+colormap(cmap(15:cmapSize, :));
 
 if ~hideColorbar
     c = colorbar('location', 'southoutside');
@@ -56,18 +56,18 @@ if ~hideColorbar
         c.Label.String = barTitle;
         c.Label.FontSize = 15;
         c.Label.FontWeight = 'bold';
-    end 
-    
+    end
+
     if ~isempty(limits)
-        c.Limits = limits ; % [0, 1]
+        c.Limits = limits; % [0, 1]
         c.LimitsMode = 'manual';
     end
-    if ~isempty(ticks) 
+    if ~isempty(ticks)
         c.Ticks = ticks; % [0, 0.5, 1]
-    end 
+    end
     if ~isempty(tickLabels)
         c.TickLabels = tickLabels; %  {'low', 'medium', 'high'}
-    end 
+    end
     set(gcf, 'Visible', 'on');
 end
 
@@ -78,4 +78,4 @@ end
 savePlot(fig);
 warning('on')
 
-end 
+end

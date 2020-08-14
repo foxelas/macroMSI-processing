@@ -1,6 +1,6 @@
 function [ID] = switchIds(ID, data, arr)
-%     SWITHCIDS switches the ids depending on the raw image illumination settings 
-% 
+%     SWITHCIDS switches the ids depending on the raw image illumination settings
+%
 %     Usage:
 %     ID = switchIds(ID, data, 'brights')
 %     ID = switchIds(ID, data, 'darks')

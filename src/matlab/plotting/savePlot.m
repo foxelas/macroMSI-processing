@@ -8,9 +8,9 @@ if (saveImages)
     saveInHQ = getSetting('saveInHQ');
     saveInBW = getSetting('saveInBW');
     plotName = getSetting('plotName');
-    cropBorders = getSetting('cropBorders'); 
+    cropBorders = getSetting('cropBorders');
     saveEps = getSetting('saveEps');
-    
+
     if (~isempty(plotName))
         filename = strrep(plotName, '.mat', '');
 
@@ -20,26 +20,26 @@ if (saveImages)
         mkNewDir(filepathBW);
 
         filename = fullfile(filepath, strcat(name, '.png'));
-        if (cropBorders) 
+        if (cropBorders)
             export_fig(filename, '-png', '-native', '-transparent');
         else
             if (saveInHQ)
                 export_fig(filename, '-png', '-native', '-nocrop');
                 %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
-            else 
+            else
                 saveas(fig, filename, 'png');
             end
         end
         if (saveEps)
-            namext = strcat(name, '.eps'); 
+            namext = strcat(name, '.eps');
             if (saveInBW)
                 filename = fullfile(filepathBW, namext);
-                export_fig(filename , '-eps', '-transparent', '-r900',  '-gray');
+                export_fig(filename, '-eps', '-transparent', '-r900', '-gray');
             else
                 filename = fullfile(filepath, namext);
-                export_fig(filename , '-eps', '-transparent', '-r900', '-RGB');
+                export_fig(filename, '-eps', '-transparent', '-r900', '-RGB');
             end
-        end 
+        end
     else
         warning('Empty plotname')
     end

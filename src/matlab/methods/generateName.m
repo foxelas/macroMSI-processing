@@ -8,7 +8,7 @@ function name = generateName(namingCase, idx)
 %   Outputs:
 %   dirCurrentName - directory only
 %
-%   Usage: 
+%   Usage:
 %   name = generateName('csv', idx)
 
 if (nargin < 3)

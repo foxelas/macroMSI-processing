@@ -1,9 +1,9 @@
 function specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
 %     REMOVEBACKGROUND removes the background from the specimen image
-% 
-%     Usage: 
+%
+%     Usage:
 %     specimenMask = removeBackground(whiteReference, idd)
-%     specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, 
+%     specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans,
 %         attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
 %     See also https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
 

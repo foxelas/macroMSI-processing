@@ -1,7 +1,7 @@
 function [lineColorMap] = getLineColorMap(style)
-%     GETLINECOLORMAP returns a linecolor map based on the style 
-% 
-%     Usage: 
+%     GETLINECOLORMAP returns a linecolor map based on the style
+%
+%     Usage:
 %     [lineColorMap] = getLineColorMap('class')
 
 getLineColorMap()

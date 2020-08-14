@@ -1,6 +1,6 @@
 function [varargout] = applyOnQualityPixels(func, varargin)
 % APPLYONQUALITYPIXELS Apply a function on only goog quality functions.
-%   
+%
 %   Usage:
 %   [coeff] = applyOnQualityPixels(@doPixelPCA, colMsi);
 %   applies function 'doPixelPCA' on good quality pixels of array colMsi

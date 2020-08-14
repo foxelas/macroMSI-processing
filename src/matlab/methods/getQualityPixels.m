@@ -1,6 +1,6 @@
 function [newI, idxs] = getQualityPixels(I, meanLimit, maxLimit)
 %     GETQUALITYPIXELS removes over-saturated and under-exposed pixels from base image
-% 
+%
 %     Usage:
 %     [newI, idxs] = getQualityPixels(I, meanLimit, maxLimit)
 

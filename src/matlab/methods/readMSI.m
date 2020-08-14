@@ -1,19 +1,19 @@
 function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = readMSI(files, coordinates, width, height, fc, plotNames)
 %     READMSI Read the MSI image from raw RGB subimages
-% 
+%
 %     [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] =
 %       readMSI(files, coordinates, width, height, fc)
 %     Reads subimages with given filenames and loads the area contained in a
 %     given bounding box to a 4D matrix. Additionally, produces the respective
 %     white and dark RGB images and binary masks of the read area.
-% 
+%
 %     Inputs:
 %     files - filenames of subimages related to the MSI
 %     coordinates - [x,y] of the upper left corner of the bounding box
 %     width - width of bounding box to be read (x axis)
 %     height - height of bounding box to be read (y axis)
 %     fc - a vector of frequency bands of the MSI
-% 
+%
 %     Outputs:
 %     segmentMSI - the 4D raw MSI created from RGB subimages
 %     segmentWhite - the respective RGB image under white light
@@ -21,7 +21,7 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
 %     segmentMask - binary mask of the points of interest inside the bounding box
 %     segmentMaskI - binary masks of the points of interest inside the entire
 %         dimensions of the MSI
-% 
+%
 %     Usage:
 %     [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] =
 %         readMSI(files, coordinates, width, height, fc)
@@ -124,9 +124,9 @@ else
             if getSetting('showImages')
                 if isempty(plotNames)
                     currentPlotName = fullfile(baseDir, strcat('Image', num2str(roi)));
-                else 
+                else
                     currentPlotName = plotNames{roi};
-                end 
+                end
                 setSetting('plotName', currentPlotName);
                 plotFunWrapper(1, @plotMSIWithPOI, whiteReference+maskI, [x, y]);
             end

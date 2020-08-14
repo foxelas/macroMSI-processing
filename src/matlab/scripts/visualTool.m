@@ -22,7 +22,7 @@ for k = [20, 19, 18]
         %         predictedLabels = [1 1 1 1 0 1];
         cancerProb = [0.83883908, 0.84836129, 0.70056079, 0.67005854, 0.79753921, 0.70401719];
         predictedLabels = [1, 1, 1, 1, 1, 1];
-        plotFunWrapper(3, @plotVisualResultAfterClassification, cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Svm_unfixed',  'Unfixed');
+        plotFunWrapper(3, @plotVisualResultAfterClassification, cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'Svm_unfixed', 'Unfixed');
 
         % KNN-3-chebyshev-distance-spect+mlbp-PCA-20-None-None
         % 2 scales
@@ -33,7 +33,7 @@ for k = [20, 19, 18]
         %2 scales
         cancerProb = [0.55, 0.56, 0.56, 0.54, 0.61, 0.45];
         predictedLabels = [1, 1, 1, 1, 1, 0];
-        plotFunWrapper(2, @plotVisualResultAfterClassification, cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'RF_unfixed',  'Unfixed');
+        plotFunWrapper(2, @plotVisualResultAfterClassification, cancerProb, predictedLabels, coordinates, orderedRois, segmentMasks, sRGB, 'RF_unfixed', 'Unfixed');
 
         trueLabels = [1, 1, 1, 1, 0, 0];
         plotFunWrapper(2, @plotVisualResultAfterClassification, [0, 0, 0, 0, 0, 0], trueLabels, coordinates, orderedRois, segmentMasks, sRGB, 'GD_unfixed', 'Fixed');

@@ -1,7 +1,7 @@
 function [] = notifySetting(paramName, paramValue)
-%     NOTIFYSETTING notifies about configuration parameter change 
-% 
-%     Usage: 
+%     NOTIFYSETTING notifies about configuration parameter change
+%
+%     Usage:
 %     notifySetting('savedir', '\out\dir\')
 
 onOffOptions = {'OFF', 'ON'};

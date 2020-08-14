@@ -1,26 +1,26 @@
 function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id)
 %     ESTIMATEREFLECTANCE Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
-%   
+%
 %     Input arguments
 %     MSI = the input MSI struct (name, index, 4D-MSI, RegionMask), where 4D-MSI(filter band, x , y , image rgb values)
-%     mask = the mask of the ROI that needs to be estimated 
+%     mask = the mask of the ROI that needs to be estimated
 %     spectrum = the measured originalReflectance spectrum of the sample
 %     id = the point id information
-% 
+%
 %     Optional configurations to be set behoredhand
 %     'pixelValueSelectionMethod' = {'green', 'rms', 'adjusted', 'extended', 'unchanged'} for selecting a single value from the 3 RGB values
 %     'smoothingMatrixMethod' = {'markovian 0.99', 'adaptive', 'KCor all data', 'KCor macbeth', 'KCor all specimen', ...
-%                    'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'}; 
-%     'rho' =  parameter for markovian smoothing matrix , default: 0.99 'variance' =  parameter for noise covariance matrix , default: 1 
-%     'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'SNR', 'white gaussian', 'fromOlympus'} 
-%     'reference' = the  reference white image values 
-%     'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3 
+%                    'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'};
+%     'rho' =  parameter for markovian smoothing matrix , default: 0.99 'variance' =  parameter for noise covariance matrix , default: 1
+%     'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'SNR', 'white gaussian', 'fromOlympus'}
+%     'reference' = the  reference white image values
+%     'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
 %     'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false
-% 
-%     Output arguments estimatedReflectance = the estimated reflectance for every pixel in the sample area 
+%
+%     Output arguments estimatedReflectance = the estimated reflectance for every pixel in the sample area
 %     gfc = measure of quality of estimation compared to the measured spectrum nmse = normalized mean square error
-% 
-%     Usage: 
+%
+%     Usage:
 %     [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id)
 %     [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, , spectrum, id)
 
@@ -421,13 +421,12 @@ if (false)
     pause(0.2)
 end
 
-
 %% Perform Wiener estimation for all pixels in an image area
 if (height > 200 || width > 200) %in this case the mask is ones(height, width)
     estimatedReflectances = max(estimatedReflectances, 0);
     estimatedReflectances = min(estimatedReflectances, 1);
-    if sum(mask(:) == 0) > 1 % Reflectances were calculated excluding bg pixels 
-        estimatedReflectance = zeros(size(H, 2), height * width);
+    if sum(mask(:) == 0) > 1 % Reflectances were calculated excluding bg pixels
+        estimatedReflectance = zeros(size(H, 2), height*width);
         estimatedReflectance(:, activeRegionIdx) = estimatedReflectances;
     end
     estimatedReflectance = reshape(estimatedReflectance, size(H, 2), height, width);

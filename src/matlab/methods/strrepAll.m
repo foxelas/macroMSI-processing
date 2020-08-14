@@ -1,7 +1,7 @@
 function [outname] = strrepAll(inname)
-%     STRREPALL fomats an inname to outname 
-% 
-%     Usage: 
+%     STRREPALL fomats an inname to outname
+%
+%     Usage:
 %     [outname] = strrepAll(inname)
 
 [~, outname] = fileparts(inname);

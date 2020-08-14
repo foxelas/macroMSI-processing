@@ -20,14 +20,14 @@ for i = 1:nComps
     pcComp = zeros(length(colSpecimenMask), 1);
     pcComp(specimenIdxs) = sc(:, i);
     pcCompImage = reshape(pcComp, height, width);
-%     figure(i);
-%     imagesc(pcCompImage);
-%     colorbar;
-%     title(sprintf('Principal Component %d', i))
-%     axis off;
-%     %caxis([-2,2])
-    
-    pcComps(i, :, :) = pcCompImage; 
+    %     figure(i);
+    %     imagesc(pcCompImage);
+    %     colorbar;
+    %     title(sprintf('Principal Component %d', i))
+    %     axis off;
+    %     %caxis([-2,2])
+
+    pcComps(i, :, :) = pcCompImage;
     setSetting('plotName', fullfile(savedir, mapdir, strcat('norm_', normType), strcat(num2str(id), '_PC_', num2str(i), '.png')));
     plotFunWrapper(i, @plotMap, pcCompImage, specimenMask, [], false, strcat('PC', num2str(i)));
 end

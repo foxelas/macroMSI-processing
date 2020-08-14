@@ -1,6 +1,6 @@
 function [c] = getBandCorrelation(I, hasPixelSelection)
 %     GETBANDCORRELATION returns the array of band correlation for an msi I
-% 
+%
 %     Usage:
 %     [c] = getBandCorrelation(I)
 %     [c] = getBandCorrelation(I, hasPixelSelection)

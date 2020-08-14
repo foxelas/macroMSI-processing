@@ -1,7 +1,7 @@
 function [] = createCoefficientTable(ID, CompleteSpectra)
 %     CREATECOEFFICIENTTABLE creats the coefficient table from
 %     the measured spectra.
-% 
+%
 %     Usage:
 %     createCoefficientTable(ID, CompleteSpectra)
 

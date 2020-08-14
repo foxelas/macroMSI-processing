@@ -1,6 +1,6 @@
 function segmentMask = segment(raw, idd, whiteReference, specimenMask, regionRadius, thresVal, accTheta)
 %     SEGMENT returns the segment mask of the specimen ROI
-% 
+%
 %     Usate:
 %     segmentMask = segment(raw, idd, whiteReference, specimenMask, regionRadius, thresVal, accTheta)
 
@@ -63,6 +63,6 @@ else
 end
 setSetting('plotName', fullfile(getSetting('savedir'), folder, strcat('segment_', num2str(idd.Index), '_', idd.Sample, '_', mal)));
 baseImage = whiteReference .* specimenMask;
-plotFunWrapper(1, @plotSegmentation, (baseImage, maskAgreement, baseImage.*mask, [x, y]);
+plotFunWrapper(1, @plotSegmentation, (baseImage, maskAgreement, baseImage .* mask, [x, y]);
 
 end

@@ -1,17 +1,17 @@
 function [inputSubset, subsetSamples, subsetIndexes, malignancy] = subset(input, name, criterion)
 %     SUBSET select a subset of the dataset based on a criterion
-% 
+%
 %     Inputs:
 %     input - dataset for input (measured or estimated)
 %     name - dataset version name
 %     criterion - 'unique', 'unfixed', 'fixed', 'all', etc.
-% 
+%
 %     Outputs:
 %     inputSubset - the subset
 %     subsetSamples - the names of the subset samples
 %     subsetIndexes - indexes of the samples contained in the subset
 %     malignancy - true/false values for malignancy in the subset
-% 
+%
 %     Usage:
 %     [inputSubset, subsetSamples, subsetIndexes, malignancy] = subset('estimated', 'saitama_v3', 'fixed')
 

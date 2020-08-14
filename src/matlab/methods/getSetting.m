@@ -1,7 +1,7 @@
 function [value] = getSetting(parameter)
 %     GETSETTING returns the value of a configurationParameter
-% 
-%     Usage: 
+%
+%     Usage:
 %     value = getSetting('savedir')
 
 settingsFile = 'configuration.mat';

@@ -1,7 +1,7 @@
 function [] = plotGFCHistogram(gfcs, fig)
 %     PLOTGFCHISTOGRAM plots the GFC histogram
-% 
-%     Usage: 
+%
+%     Usage:
 %     plotGFCHistogram(gfcs, fig)
 
 histogram(gfcs, 7);

@@ -1,7 +1,7 @@
 function [] = plotFeatureImportance(importance, fig)
-%     PLOTFEATUREIMPORTANCE plots feature importance 
-% 
-%     Usage: 
+%     PLOTFEATUREIMPORTANCE plots feature importance
+%
+%     Usage:
 %     plotFeatureImportance(importance, fig)
 
 % Plot important features %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

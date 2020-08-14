@@ -1,7 +1,7 @@
 function [difMsi, avgMsi] = getDifMSI(msi, type)
 %     GETDIFMSI returns an msi created from differences among channel subimages
-% 
-%     Usage: 
+%
+%     Usage:
 %     [difMsi, avgMsi] = getDifMSI(msi, 'toAverage')
 %     [difMsi, avgMsi] = getDifMSI(msi, 'toNextBand')
 

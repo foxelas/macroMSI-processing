@@ -2,7 +2,7 @@ function [] = plotMSI(raw, isSeparateImages, fig)
 
 if isempty(isSeparateImages)
     isSeparateImages = false;
-end  
+end
 
 warning('off');
 setSetting('cropBorders', true);

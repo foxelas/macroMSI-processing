@@ -1,47 +1,26 @@
-% normType = 'divMacbeth';
-% removeBg = 'true';
-% fixedId = 27; 
-% unfixedId = 28; 
-%  
-% % %% Preprocessing for PCA 
-% % 
-% % % msiType = 'extended'; 
-% % % preprocessingForMaps; 
-% % % 
-% % % %% PCA maps 
-% % % 
-% % % close all; pcCompsFixed = getPCMaps(fixedId, msiType, normType, removeBg, tform2, newDims);
-% % % close all; pcCompsUnfixed = getPCMaps(unfixedId, msiType, normType, removeBg, tform2, newDims);
-% % % 
-% % % %% PCA Similarity 
-% % % close all;
-% % % for i = 1: 3
-% % %     pc_fixed = squeeze(pcCompsFixed(i,:,:)); 
-% % %     pc_unfixed = squeeze(pcCompsUnfixed(i,:,:)); 
-% % %     [ssimval, cc] = getImageSimilarity(pc_unfixed, pc_fixed, strcat('_pc', ...
-% % %         num2str(i)), getSetting('pca'), unfixedId, fixedId, name1, name2);
-% % %     pause(0.5);
-% % % end 
-% 
-% %% Preprocessing for Maps  
-% 
-% msiType = 'adjusted'; 
-% preprocessingForMaps; 
 
-%% Chromophore Absorbance Maps 
+%% Preprocessing for Maps
+
+msiType = 'adjusted';
+preprocessingForMaps;
+
+%% Chromophore Absorbance Maps
 
 roiNames = {'Hb', 'Norm', 'Mel'};
 roiCorners = {[316, 382, 242, 295], [159, 252, 167, 214], [398, 440, 83, 137]};
-roiColors = {'m', 'g', 'c'}; 
-mapMethods =  { 'vasefi', 'ding', 'diebele', 'kapsokalyvas'};
- %{ 'vasefi', 'ding', 'ours', 'diebele', 'kapsokalyvas', 'kuzmina'};
+roiColors = {'m', 'g', 'c'};
+mapMethods = {'vasefi', 'ding', 'diebele', 'kapsokalyvas'};
+%{ 'vasefi', 'ding', 'ours', 'diebele', 'kapsokalyvas', 'kuzmina'};
 
+thetaq = 0.2;
 masks = {unfixedMask, fixedMask};
 msis = {preprocUnfixed, preprocFixed};
 whites = {unfixedWhiteReference, fixedWhiteReference};
 indexes = [unfixedId, fixedId];
 imageNames = {'unfixed', 'fixed'};
-mapData = struct('Name', [], 'Msi', [], 'Mask', [], 'White', [], 'Iaug', [], 'RoiMasks', [], 'RoiBboxes', [], 'ID', [], 'Index', [], 'MelMaps', [], 'HbMaps', [], 'RoiMelMaps', [], 'RoiHbMaps', []);
+mapData = struct('Name', [], 'Msi', [], 'Mask', [], 'White', [], 'Iaug', [], ...
+    'RoiMasks', [], 'RoiBboxes', [], 'ID', [], 'Index', [], 'MelMaps', [], ...
+    'HbMaps', [], 'RoiMelMaps', [], 'RoiHbMaps', [], 'MapQualities', []);
 for j = 1:2
     mapData(j).Name = imageNames{j};
     mapData(j).Msi = msis{j};
@@ -49,35 +28,51 @@ for j = 1:2
     mapData(j).White = whites{j};
     mapData(j).Index = indexes(j);
     mapData(j).ID = ID(indexes(j));
-    
+
     Iaug = mapData(j).White;
     roiMask = cell(numel(roiNames), 1);
     bbox = cell(numel(roiNames), 1);
     for i = 1:numel(roiNames)
-        [roiMask{i}, bbox{i}] = getBoundingBoxMask(roiCorners{i},  masks{j});
-        Iaug = insertShape(Iaug,'rectangle', bbox{i},'LineWidth',5, 'Color', roiColors{i});
+        [roiMask{i}, bbox{i}] = getBoundingBoxMask(roiCorners{i}, masks{j});
+        Iaug = insertShape(Iaug, 'rectangle', bbox{i}, 'LineWidth', 5, 'Color', roiColors{i});
     end
     mapData(j).RoiMasks = roiMask;
     mapData(j).RoiBboxes = bbox;
     mapData(j).Iaug = Iaug;
-    
+
     melMaps = cell(numel(mapMethods), 1);
     hbMaps = cell(numel(mapMethods), 1);
     roiMelMaps = cell(numel(mapMethods), numel(roiNames));
     roiHbMaps = cell(numel(mapMethods), numel(roiNames));
+    mapQualities = zeros(numel(mapMethods), 0);
     for i = 1:length(mapMethods)
-        msi =  msis{j};
+        msi = msis{j};
         mask = masks{j};
-        id =  ID(indexes(j));
-        close all; [melMaps{i}, hbMaps{i}] = getMap(msi, mapMethods{i}, mask, id);     
+        id = ID(indexes(j));
+        close all;
+        [melMaps{i}, hbMaps{i}] = getMap(msi, mapMethods{i}, mask, id);
+        quality = 0;
         for k = 1:numel(roiNames)
-            roiMelMaps{i, k} = imcrop(melMaps{i}, mapData(j).RoiBboxes{k});
-            roiHbMaps{i, k} = imcrop(hbMaps{i}, mapData(j).RoiBboxes{k});
+            roiMelMap = imcrop(melMaps{i}, mapData(j).RoiBboxes{k});
+            roiHbMap = imcrop(hbMaps{i}, mapData(j).RoiBboxes{k});
+            roiMelMaps{i, k} = roiMelMap;
+            roiHbMaps{i, k} = roiHbMap;
+
+            if strcmp(roiNames{i}, 'Mel')
+                quality = quality + (sum(roiMelMap(:) > (1 + thetaq)*mean(roiMelMap(:))) / length(roiMelMap(:)));
+            elseif strcmp(roiNames{i}, 'Hb')
+                quality = quality + (sum(roiHbMap(:) > (1 + thetaq)*mean(roiHbMap(:))) / length(roiMelMap(:)));
+            else
+                quality = quality + (sum(roiHbMap(:) < (1 - thetaq)*mean(roiHbMap(:))) / length(roiMelMap(:))) ...
+                    +(sum(roiHbMap(:) < (1 - thetaq)*mean(roiMelMap(:))) / length(roiMelMap(:)));
+            end
         end
-        %% GetMap quality 
-        ;
-            
-    end 
+
+        %% GetMap quality
+        mapQualities(i) = quality / numel(roiNames);
+
+    end
+    mapData(j).MapQualities = mapQualities;
     mapData(j).MelMaps = melMaps;
     mapData(j).HbMaps = hbMaps;
     mapData(j).RoiMelMaps = roiMelMaps;
@@ -86,12 +81,12 @@ for j = 1:2
 end
 
 % setSetting('saveImages', false);
-metricsNames = {'SSIM', 'SSD', 'NCC', 'CC', 'CR', 'SimilarityHistIntersection', 'KLDivergece', 'EarthMoversDistance'}; 
+metricsNames = {'SSIM', 'SSD', 'NCC', 'CC', 'CR', 'SimilarityHistIntersection', 'KLDivergece', 'EarthMoversDistance'};
 metricsMel = zeros(length(mapMethods), length(metricsNames));
 metricsHb = zeros(length(mapMethods), length(metricsNames));
 roiMetricsMel = zeros(length(mapMethods), length(roiNames), length(metricsNames));
 roiMetricsHb = zeros(length(mapMethods), length(roiNames), length(metricsNames));
-imageNames =  makeNameList(mapMethods, {mapData.Name}); 
+imageNames = makeNameList(mapMethods, {mapData.Name});
 vsName = strcat(num2str(indexes(1)), 'vs', num2str(indexes(2)));
 
 setSetting('saveImages', true);
@@ -107,31 +102,31 @@ plotFunWrapper(2, @plotMontageScaled, makeImageList(mapData(1).MelMaps, mapData(
     {mapData.Mask}, imageNames, strcat(vsName, '_Full_Mel'));
 plotFunWrapper(3, @plotMontageScaled, makeImageList(mapData(1).HbMaps, mapData(2).HbMaps), ...
     {mapData.Mask}, imageNames, strcat(vsName, '_Full_Hb'));
-    
+
 for k = 1:length(roiNames)
-    masks = {ones(size(mapData(1).RoiMelMaps(1,k))) ones(size(mapData(1).RoiMelMaps(2,k)))};
-    plotFunWrapper(4, @plotMontageScaled, makeImageList(mapData(1).RoiMelMaps(:,k), mapData(2).RoiMelMaps(:,k)), ...
-        masks, imageNames, strcat(vsName,'_', roiNames{k}, '_Mel'));
-    plotFunWrapper(5, @plotMontageScaled, makeImageList(mapData(1).RoiHbMaps(:,k), mapData(2).RoiHbMaps(:,k)), ...
-        masks, imageNames, strcat(vsName, '_', roiNames{k}, '_Hb'));  
+    masks = {ones(size(mapData(1).RoiMelMaps(1, k))), ones(size(mapData(1).RoiMelMaps(2, k)))};
+    plotFunWrapper(4, @plotMontageScaled, makeImageList(mapData(1).RoiMelMaps(:, k), mapData(2).RoiMelMaps(:, k)), ...
+        masks, imageNames, strcat(vsName, '_', roiNames{k}, '_Mel'));
+    plotFunWrapper(5, @plotMontageScaled, makeImageList(mapData(1).RoiHbMaps(:, k), mapData(2).RoiHbMaps(:, k)), ...
+        masks, imageNames, strcat(vsName, '_', roiNames{k}, '_Hb'));
 end
-  
-%% Get Similarity Metrics 
-close all; 
+
+%% Get Similarity Metrics
+close all;
 for i = 1:length(mapMethods)
     indexes = [mapData.Index];
-    [metricsMel(i,:)] = getImageSimilarity(mapData(1).MelMaps{i}, mapData(2).MelMaps{i}, strcat(mapMethods{i}, '_mel'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
-    [metricsHb(i,:)] = getImageSimilarity(mapData(1).HbMaps{i}, mapData(2).HbMaps{i}, strcat(mapMethods{i}, '_hb'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
-    
+    [metricsMel(i, :)] = getImageSimilarity(mapData(1).MelMaps{i}, mapData(2).MelMaps{i}, strcat(mapMethods{i}, '_mel'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
+    [metricsHb(i, :)] = getImageSimilarity(mapData(1).HbMaps{i}, mapData(2).HbMaps{i}, strcat(mapMethods{i}, '_hb'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
+
     for k = 1:length(roiNames)
-        
-        roiMetricsMel(i,k,:) = getImageSimilarity(mapData(1).RoiMelMaps{i,k}, mapData(2).RoiMelMaps{i,k},...
-            strcat(mapMethods{i}, '_', roiNames{k} , '_mel'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
-        roiMetricsHb(i,k,:) = getImageSimilarity(mapData(1).RoiHbMaps{i,k}, mapData(2).RoiHbMaps{i,k},...
-            strcat(mapMethods{i}, '_', roiNames{k} , '_hb'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name); 
+
+        roiMetricsMel(i, k, :) = getImageSimilarity(mapData(1).RoiMelMaps{i, k}, mapData(2).RoiMelMaps{i, k}, ...
+            strcat(mapMethods{i}, '_', roiNames{k}, '_mel'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
+        roiMetricsHb(i, k, :) = getImageSimilarity(mapData(1).RoiHbMaps{i, k}, mapData(2).RoiHbMaps{i, k}, ...
+            strcat(mapMethods{i}, '_', roiNames{k}, '_hb'), indexes(1), indexes(2), mapData(1).Name, mapData(2).Name);
     end
-    
-end 
+
+end
 
 metricsMelTable = makeTable(metricsMel, metricsNames, mapMethods');
 metricsHbTable = makeTable(metricsHb, metricsNames, mapMethods');
@@ -139,39 +134,37 @@ metricsHbTable = makeTable(metricsHb, metricsNames, mapMethods');
 roiMetricsHbTable = makeTable(roiMetricsHb, metricsNames, mapMethods', roiNames');
 roiMetricsMelTable = makeTable(roiMetricsMel, metricsNames, mapMethods', roiNames');
 
-
-%% Functions 
+%% Functions
 function T = makeTable(metrics, names, methods, rois)
-    if nargin < 4 
-        T = array2table(metrics);
-        T.Properties.VariableNames(1:length(names)) = names;
-        T.MappingMethod = methods;
-        T = [T(:,end) T(:,1:end-1)];
-    else
-        metrics = reshape(metrics, [size(metrics,1) * size(metrics, 2), size(metrics, 3)]);
-        T = array2table(metrics);
-        T.Properties.VariableNames(1:length(names)) = names;
-        T.MappingMethod = repmat(methods, [size(metrics,1) / numel(methods), 1]);
-        T.RoiType = reshape(repmat(rois, [1 , numel(methods)])', [numel(methods)*numel(rois), 1]);
-        T = [T(:,(end-1):end) T(:,1:end-2)];
-    end
-end 
+if nargin < 4
+    T = array2table(metrics);
+    T.Properties.VariableNames(1:length(names)) = names;
+    T.MappingMethod = methods;
+    T = [T(:, end), T(:, 1:end-1)];
+else
+    metrics = reshape(metrics, [size(metrics, 1) * size(metrics, 2), size(metrics, 3)]);
+    T = array2table(metrics);
+    T.Properties.VariableNames(1:length(names)) = names;
+    T.MappingMethod = repmat(methods, [size(metrics, 1) / numel(methods), 1]);
+    T.RoiType = reshape(repmat(rois, [1, numel(methods)])', [numel(methods) * numel(rois), 1]);
+    T = [T(:, (end -1):end), T(:, 1:end-2)];
+end
+end
 
 function imageList = makeImageList(images1, images2)
-    imageList = cell(numel(images1) * 2, 1);
-    for i = 1:(numel(images1))
-        imageList{i*2-1} = images1{i};
-        imageList{i*2} = images2{i};
-    end
+imageList = cell(numel(images1)*2, 1);
+for i = 1:(numel(images1))
+    imageList{i*2-1} = images1{i};
+    imageList{i*2} = images2{i};
+end
 end
 
 function nameList = makeNameList(namesRows, namesColumns)
-nameList = cell(numel(namesRows) * numel(namesColumns), 1);
+nameList = cell(numel(namesRows)*numel(namesColumns), 1);
 for i = 1:numel(namesRows)
     for j = 1:numel(namesColumns)
-        nameList{(i-1)*numel(namesColumns) + j} = strcat(namesColumns{j}, '_', namesRows{i});
+        nameList{(i - 1)*numel(namesColumns)+j} = strcat(namesColumns{j}, '_', namesRows{i});
     end
 end
 
-end 
-
+end

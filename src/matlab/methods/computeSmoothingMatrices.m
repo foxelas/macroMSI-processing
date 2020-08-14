@@ -1,6 +1,6 @@
 function [] = computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID)
 %     COMPUTESMOOTHINGMATRICES computes smoothing matrices from measured spectra.
-% 
+%
 %     Usage:
 %     computeSmoothingMatrices(measuredSpectra, measuredSpectraNames, wavelengthN, ID)
 

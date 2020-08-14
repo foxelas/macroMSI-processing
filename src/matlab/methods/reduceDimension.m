@@ -6,17 +6,17 @@ function [W, score, latent, explained] = reduceDimension(method, input, labels, 
 %     'LDA' Linear Dimension Analysis
 %     'LDA b' Variation of LDA
 %     'PCALDA' Combination or PCA and LDA
-% 
+%
 %     Usage:
 %     [W, score, latent, explained] = reduceDimension(method, input, labels, priors, targetDimension)
-% 
+%
 %     W         = discovered projections
 %     score     = projection scores
 %     latent    = (only for PCA)
 %     explained = (only for PCA)
-% 
+%
 %     Example:
-% 
+%
 %     [W, score, latent, explained] = reduceDimension('PCA', X);
 %     [W, score] = reduceDimension('PCA', X, [], [], 2);
 %     [W, score] = reduceDimension('LDA', X, labels);
