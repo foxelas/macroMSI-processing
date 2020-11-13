@@ -12,5 +12,6 @@ normType = 'divMacbeth';
 removeBg = 'true';
 fixedId = 27; 
 unfixedId = 28; 
+
 %actionGetMaps; 
 

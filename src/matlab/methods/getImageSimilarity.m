@@ -70,18 +70,21 @@ centers2 = edges(1:end-1)' + diff(edges)' / 2;
 similarityHistIntersection = sum(min(counts1, counts2)) / sum(counts2);
 fprintf('Similarity of histogram intersection is %.5f \n', similarityHistIntersection);
 
+%% Histogram to Probability 
+p1 = counts1' / sum(counts1, 'all');
+p2 = counts2' / sum(counts2, 'all');
+
 %% Kullback Leiler divergence
-klDist = KLDiv(counts2, counts1); %P||Q from Q to P , Q is prior, P is posterior
+klDist = KLDiv(p2', p1'); %P||Q from Q to P , Q is prior, P is posterior
 fprintf('Kullback-Leibler divergence from Unfixed to Fixed of histograms is %.5f \n', klDist);
 
 %% Earth Mover's Distance
-w1 = counts1' / sum(counts1);
-w2 = counts2' / sum(counts2);
-[flow, fval] = emd(centers1, centers2, w1, w2, @gdf);
+
+[flow, fval] = emd(centers1, centers2, p1, p2, @gdf);
 fprintf('Earth Movers Distance of histograms is %.5f \n', fval);
 
 %% Results
-metrics = [ssimval, ssd, ncc, cc, cr, similarityHistIntersection, klDist, fval];
+metrics = [ssimval, ncc, similarityHistIntersection, klDist, fval,  ssd, cc];
 % metricsMaps = {ssimmap, ccmap};
 
 end

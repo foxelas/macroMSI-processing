@@ -3,6 +3,7 @@ function [] = savePlot(fig)
 %   savePlot(2);
 
 saveImages = getSetting('saveImages');
+figure(fig);
 
 if (saveImages)
     saveInHQ = getSetting('saveInHQ');
@@ -24,8 +25,10 @@ if (saveImages)
             export_fig(filename, '-png', '-native', '-transparent');
         else
             if (saveInHQ)
+                warning('off');
                 export_fig(filename, '-png', '-native', '-nocrop');
                 %print(handle, strcat(plotName, '.png'), '-dpng', '-r600');
+                warning('on');
             else
                 saveas(fig, filename, 'png');
             end

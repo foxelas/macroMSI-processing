@@ -14,20 +14,34 @@ setSetting('saveImages', false);
 cropBorders = getSetting('cropBorders');
 setSetting('cropBorders', false);
 
-set(gcf, 'Position', [407, -54, 675, 738]);
+set(gcf, 'Position', [500, 50, 760, 700]);
 t = tiledlayout(rows, cols);
 for i = 1:rows
     curIdx = i * cols - 1;
     map1 = imageList{curIdx};
     map2 = imageList{curIdx+1};
-    mapLimits = [min(min(map1(:)), min(map2(:))), max(max(map1(:)), max(map2(:)))];
+    mapLimits = []; % [min(min(map1(:)), min(map2(:))), max(max(map1(:)), max(map2(:)))];
 
-    nexttile; %subplot(rows, cols, curIdx);
-    plotMap(map1, mask1, [], false, [], mapLimits); %imageNames{curIdx}
-    nexttile; %subplot(rows, cols, curIdx + 1);
-    plotMap(map2, mask2, [], false, [], mapLimits); % imageNames{curIdx + 1}
+    h(1) = nexttile; 
+    plotMap(map1, mask1, [], true, [], mapLimits); %imageNames{curIdx}
+    if i == 1
+        title('Unfixed');
+    end 
+    if i == rows 
+        pos = get(h(1), 'OuterPosition');
+        text(pos(1) - pos(3)/2, -0.22 , 'Relative Chromophore Distribution', 'FontSize',15, 'Units', 'normalized'); 
+    end 
+    h(2) = nexttile; 
+    plotMap(map2, mask2, [], true, [], mapLimits); % imageNames{curIdx + 1}
+    if i == 1
+        title('Fixed');
+    end
+    if i == rows 
+        cb = colorbar(h(2), 'Location', 'southoutside'); 
+    end 
 end
-t.Padding = 'none';
+
+t.Padding = 'compact';
 t.TileSpacing = 'none';
 
 setSetting('saveImages', saveImages);

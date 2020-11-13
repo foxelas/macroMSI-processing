@@ -38,10 +38,12 @@ for i = 2:length(bands)
 end
 hold off;
 set(gca, 'yscale', 'log');
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
+%set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0, 1, 1]);
 
 saveEps = getSetting('saveEps');
 setSetting('saveEps', true);
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('common'), 'skinChromophoreExtinctionCoeff'));
 savePlot(fig);
 setSetting('saveEps', saveEps);
+
+save('parameters\extinctionCoefficients.mat', 'extCoeffEumelanin2', 'extCoeffHbO', 'extCoeffHbR', 'eumelaninLambda', 'hbLambda');

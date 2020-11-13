@@ -24,6 +24,10 @@ if nargin < 5
     msiType = 'adjusted';
 end
 
+if isstruct(id)
+    id = id.Index;
+end
+
 % reference = getReference(getSetting('systemdir'), height, width);
 reference = getReferenceFromMacbeth(height, width);
 reference = raw2msi(reference, msiType);
@@ -32,68 +36,82 @@ savedir = getSetting('savedir');
 mapdir = getSetting('map');
 % setSetting('plotName', fullfile(savedir, mapdir, 'msi.png'));
 % plotFunWrapper(2, @plotMSI, msi);
+msi = reshape(msi, [channels * height * width, 1]);
+msi(msi == 0) =  0.0000000001;
+msi = reshape(msi, [channels, height, width]);
 mask3d = permute(repmat(mask, [1, 1, size(msi, 1)]), [3, 1, 2]);
 msi(~mask3d) = nan;
-
-normalizedReflectance = msi ./ reference;
+nmsi = msi ./ reference;
 % setSetting('plotName', fullfile(savedir, mapdir, 'normalizedMsi.png'));
 % plotFunWrapper(3, @plotMSI, normalizedReflectance);
 
-logIm = log10(normalizedReflectance);
+logIm = log10(nmsi);
 opticalDensity = logIm;
 absorption = -logIm;
 % setSetting('plotName', fullfile(savedir, mapdir, 'absoprtion.png'));
 % plotFunWrapper(4, @plotMSI, absorption);
-switch mapType
+switch lower(mapType)
     case 'ding'
         melMap = squeeze(opticalDensity(7, :, :));
-        melBarTitle = 'Optical Density of Melanin';
+        melBarTitle = 'Optical Density of Melanin (a.u.)';
         melSaveName = 'DingMel';
         melMapLimits = [-1.5, 0.5];
         hbMap = squeeze(opticalDensity(5, :, :)) - 1.15 .* squeeze(opticalDensity(7, :, :));
-        hbBarTitle = 'Optical Density of Hemoglobin';
+        hbBarTitle = 'Optical Density of Hemoglobin (a.u.)';
         hbMapSaveName = 'DingHb';
         hbMapLimits = [-5, 1];
 
     case 'vasefi'
         fc = [450, 465, 505, 525, 575, 605, 630]';
-        range = [605, 630];
-        melMap = estimateSlope(absorption, range, fc);
+        melMap = getSlope(absorption, find(fc == 605), find(fc == 630));
         setSetting('plotName', fullfile(savedir, mapdir, 'scaledMap.png'));
-        melBarTitle = 'Melanin Absorbance Slope (a.u.)';
+        melBarTitle = 'Relative Melanin Concentration (a.u.)';
         melSaveName = 'VasefiMel';
-        melMapLimits = [-0.06, 0.01];
-        range = [505, 575];
-        hbMap = estimateSlope(absorption, range, fc);
+        melMapLimits = [];
+        
+        [cHbO, cHbR] = estimageLR(absorption, find(fc == 505), find(fc == 575));
+        hbMap = cHbO + cHbR;
         setSetting('plotName', fullfile(savedir, mapdir, 'scaledMap.png'));
-        hbBarTitle = 'Hemoglobin Absorbance Slope (a.u.)';
+        hbBarTitle = 'Relative Total Hemoglobin Concentration (a.u.)';
         hbMapSaveName = 'VasefiHb';
-        hbMapLimits = [-0.06, 0.06];
+        hbMapLimits = [];
+        
+        cHbO = mat2gray(removeInf(cHbO));
+        setSetting('plotName', fullfile(savedir, mapdir, strcat('VasefiHbO', '_', num2str(id), '_', 'ScaledMap.png')));
+        plotFunWrapper(3, @plotMap, cHbO, mask, [], false, 'Relative HbO Concentration (a.u.)', []);
+        cHbR = mat2gray(removeInf(cHbR));
+        setSetting('plotName', fullfile(savedir, mapdir, strcat('VasefiHbR', '_', num2str(id), '_', 'ScaledMap.png')));
+        plotFunWrapper(4, @plotMap, cHbR, mask, [], false, 'Relative HbR Concentration (a.u.)', []);
+        
 
     case 'diebele'
-        melMap = squeeze(opticalDensity(7, :, :));
-        melBarTitle = 'Melanin Index';
+        melMap = 100 * (squeeze(absorption(6, :, :)) - squeeze(absorption(7, :, :)));
+        melBarTitle = 'Melanin Index (a.u.)';
         melSaveName = 'DiebeleMel';
-        melMapLimits = [-1.5, 0.5];
-        hbMap = squeeze(opticalDensity(7, :, :)) - squeeze(opticalDensity(5, :, :));
+        melMapLimits = [];
+        hbMap = 100 * (squeeze(absorption(4, :, :)) - squeeze(absorption(7, :, :)));
         hbBarTitle = 'Erythema Index';
-        hbMapSaveName = 'DiebeleHb';
-        hbMapLimits = [-1, 5];
+        hbMapSaveName = 'DiebeleHb (a.u.)';
+        hbMapLimits = [];
 
     case 'kapsokalyvas'
         %totalRed = squeeze(sum(squeeze(raw(:,:,:,3)), 1));
         %totalGreen = squeeze(sum(squeeze(raw(:,:,:,2)), 1));
-        totalRed = squeeze(msi(7, :, :));
-        totalGreen = squeeze(msi(5, :, :));
-        totalBlue = squeeze(msi(1, :, :));
-        melMap = (totalRed - min(totalRed(:))) ./ (max(totalRed(:)) - min(totalRed(:)));
-        melBarTitle = 'Melanin Contrast';
-        melMap = (totalBlue - totalGreen) ./ (totalBlue + totalGreen);
-        melBarTitle = 'Superficial Melanin';
+        totalRed = squeeze(nmsi(7, :, :));
+        totalGreen = squeeze(nmsi(5, :, :));
+        totalBlue = squeeze(nmsi(1, :, :));
+        melMap = (-1) * (totalRed - min(totalRed(:))) ./ (max(totalRed(:)) - min(totalRed(:)));
+        melBarTitle = 'Melanin Homogeneity (a.u.)';
         melSaveName = 'KapsokalyvasMel';
-        melMapLimits = [-0.6, 1];
-        hbMap = (totalGreen - totalRed) ./ (totalGreen + totalRed);
-        hbBarTitle = 'Hemoglobin Contrast';
+        melMapLimits = [];
+        
+        supMelMap = (-1) * (totalBlue - totalGreen) ./ (totalBlue + totalGreen);
+        supMelMap = mat2gray(removeInf(supMelMap));
+        setSetting('plotName', fullfile(savedir, mapdir, strcat('KapsokalyvasSupMel', '_', num2str(id), '_', 'ScaledMap.png')));
+        plotFunWrapper(3, @plotMap, supMelMap, mask, [], false, 'Superficial Melanin Homogeneity (a.u.)', []);
+            
+        hbMap = (-1) * (totalGreen - totalRed) ./ (totalGreen + totalRed);
+        hbBarTitle = 'Hemoglobin Homogeneity (a.u.)';
         hbMapSaveName = 'KapsokalyvasHb';
         hbMapLimits = [-1, 0.8];
 
@@ -105,12 +123,12 @@ switch mapType
         totalBlue = squeeze(msi(1, :, :));
         calibCoeff = blueCoeff / redCoeff;
         melMap = calibCoeff * totalBlue ./ totalRed;
-        melBarTitle = 'Melanin Index';
+        melBarTitle = 'Melanin Index (a.u.)';
         melSaveName = 'KuzminaMel';
         melMapLimits = [0, 25];
         calibCoeff = redCoeff / greenCoeff;
         hbMap = calibCoeff * totalRed ./ totalGreen;
-        hbBarTitle = 'Hemoglobin Index';
+        hbBarTitle = 'Hemoglobin Index (a.u.)';
         hbMapSaveName = 'KuzminaHb';
         hbMapLimits = [];
 
@@ -131,11 +149,9 @@ switch mapType
     otherwise
         disp('Unsupported type')
 end
-melMap = removeInf(melMap);
-hbMap = removeInf(hbMap);
-if isstruct(id)
-    id = id.Index;
-end
+
+melMap = mat2gray(removeInf(melMap));
+hbMap = mat2gray(removeInf(hbMap));
 setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
 plotFunWrapper(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
 setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
@@ -143,19 +159,44 @@ plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle, hbMapLimits);
 
 end
 
-function slopes = estimateSlope(image, range, fc)
+function slope = getSlope(image, l1, l2)
 
-rangeStart = range(1);
-rangeEnd = range(2);
+slope = (squeeze(image(l2,:,:)) - squeeze(image(l1,:,:))) / (l2 - l1);
+
+end 
+
+function [cHbO, cHbR] = estimageLR(image, l1, l2, fc)
+
 [b, m, n] = size(image);
-condition = fc >= rangeStart & fc <= rangeEnd;
-x = fc(condition);
+if nargin < 4
+    condition = zeros(b,1);
+    condition(l1:l2) = 1; 
+    condition = logical(condition);
+    x1 = [19946;32496.4000000000;55540];
+    x2 = [23774.4000000000;35944;40092]; 
+else
+    rangeStart = l1;
+    rangeEnd = l2;
+    condition = fc >= rangeStart & fc <= rangeEnd;
+    load('parameters\extinctionCoefficients.mat','extCoeffHbO', 'extCoeffHbR', 'hbLambda');
+    rng = fc(condition);
+    rngIdxs = arrayfun(@(z) find((hbLambda - z) >= 0 , 1), rng);
+    x1 = extCoeffHbO(rngIdxs);
+    x2 = extCoeffHbR(rngIdxs);
+   
+end
+
+%X = [ones(length(x), 1), x];
+X = [x1, x2]; 
 columnImage = reshape(image, b, m*n);
 y = columnImage(condition, :);
-X = [ones(length(x), 1), x];
+
 b = X \ y;
-slopes = b(2, :);
-slopes = reshape(slopes, m, n);
+cHbO = b(1,:);
+cHbR = b(2, :);
+cHbO = reshape(cHbO, m, n);
+cHbR = reshape(cHbR, m, n);
+
 
 end
 
@@ -178,12 +219,20 @@ function newMap = removeInf(inMap)
 origDim = size(inMap);
 inMap = reshape(inMap, [origDim(1) * origDim(2), 1]);
 maxMap = max(inMap(~isinf(inMap)));
-maxLim = round(maxMap, -floor(log10(abs(maxMap))));
+rounding = -floor(log10(abs(maxMap)));
+if isinf(rounding)
+    rounding = 0; 
+end 
+maxLim = round(maxMap, rounding);
 
 inMap(isinf(inMap)) = maxLim;
 
 minMap = min(inMap(~(isinf(abs(inMap)) & (inMap < 0))));
-minLim = round(minMap, -ceil(log10(abs(minMap))));
+rounding = --ceil(log10(abs(minMap)));
+if isinf(rounding)
+    rounding = 0; 
+end 
+minLim = round(minMap, rounding);
 
 inMap((isinf(abs(inMap)) & (inMap < 0))) = minLim;
 

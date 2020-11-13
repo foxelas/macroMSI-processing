@@ -1,5 +1,5 @@
 	dataset, saitama_v9_bright_3class, string
-	systemdir, , string
+	systemdir, ..\..\..\..\input\3_spectra_from_web, string
 	datadir, , string
 	savedir, , string
 	rawdatadir, , string
@@ -33,7 +33,7 @@
 	saveEps, 0, logical
 	cropBorders, 0, logical
 	showImages, 1, logical
-	SVDTol, 0, logical
+	SVDTol, 0, logical	SVDTol, 0, logical
 	luminanceCorrection, 1.0, double
 	rho, 0.98, double
 	noiseParam, , int

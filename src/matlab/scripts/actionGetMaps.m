@@ -1,7 +1,9 @@
 
 %% Preprocessing for Maps
+setSetting('saveImages', true);
 
 msiType = 'adjusted';
+
 preprocessingForMaps;
 
 %% Chromophore Absorbance Maps
@@ -9,10 +11,9 @@ preprocessingForMaps;
 roiNames = {'Hb', 'Norm', 'Mel'};
 roiCorners = {[316, 382, 242, 295], [159, 252, 167, 214], [398, 440, 83, 137]};
 roiColors = {'m', 'g', 'c'};
-mapMethods = {'vasefi', 'ding', 'diebele', 'kapsokalyvas'};
+mapMethods = {'Vasefi', 'Diebele', 'Kapsokalyvas'};
 %{ 'vasefi', 'ding', 'ours', 'diebele', 'kapsokalyvas', 'kuzmina'};
 
-thetaq = 0.2;
 masks = {unfixedMask, fixedMask};
 msis = {preprocUnfixed, preprocFixed};
 whites = {unfixedWhiteReference, fixedWhiteReference};
@@ -51,26 +52,32 @@ for j = 1:2
         id = ID(indexes(j));
         close all;
         [melMaps{i}, hbMaps{i}] = getMap(msi, mapMethods{i}, mask, id);
-        quality = 0;
+        %quality = 0;
         for k = 1:numel(roiNames)
             roiMelMap = imcrop(melMaps{i}, mapData(j).RoiBboxes{k});
             roiHbMap = imcrop(hbMaps{i}, mapData(j).RoiBboxes{k});
             roiMelMaps{i, k} = roiMelMap;
             roiHbMaps{i, k} = roiHbMap;
-
-            if strcmp(roiNames{i}, 'Mel')
-                quality = quality + (sum(roiMelMap(:) > (1 + thetaq)*mean(roiMelMap(:))) / length(roiMelMap(:)));
-            elseif strcmp(roiNames{i}, 'Hb')
-                quality = quality + (sum(roiHbMap(:) > (1 + thetaq)*mean(roiHbMap(:))) / length(roiMelMap(:)));
-            else
-                quality = quality + (sum(roiHbMap(:) < (1 - thetaq)*mean(roiHbMap(:))) / length(roiMelMap(:))) ...
-                    +(sum(roiHbMap(:) < (1 - thetaq)*mean(roiMelMap(:))) / length(roiMelMap(:)));
-            end
+            
+%             if strcmp(roiNames{i}, 'Mel')
+%                 meanMel = mean(roiMelMap(:)); 
+%                 %quality = quality + sum(roiMelMap(:) > (1 + 0.2)*mean(roiMelMap(:))) / length(roiMelMap(:));
+%             elseif strcmp(roiNames{i}, 'Hb')
+%                 meanHb = [ mean(roiHbMap(:))];
+%                 %quality = quality + sum(roiHbMap(:) > (1 + 0.1)*mean(roiHbMap(:))) / length(roiMelMap(:));
+%             else
+%                 meanNorm = mean(roiMelMap(:)); 
+%                 %quality = quality + 1 - sum(roiMelMap(:) > (1 + 0.2)*mean(roiMelMap(:))) / length(roiMelMap(:)) ...
+%                 %    + 1 - sum(roiHbMap(:) > (1 + 0.1)*mean(roiHbMap(:))) / length(roiMelMap(:));
+%             end
         end
 
         %% GetMap quality
-        mapQualities(i) = quality / numel(roiNames);
-
+        %mapQualities(i) = quality / numel(roiNames);
+         avgHb = cellfun(@(x) mean(x, 'all'), roiHbMaps(i,:));
+         avgMel = cellfun(@(x) mean(x, 'all'), roiMelMaps(i,:));
+        
+         mapQualities(i) = (avgHb(1) - avgHb(2)) + (avgHb(1) - avgHb(3)) + (avgMel(3) - avgMel(1)) + (avgMel(3) - avgMel(2)); 
     end
     mapData(j).MapQualities = mapQualities;
     mapData(j).MelMaps = melMaps;
@@ -81,7 +88,7 @@ for j = 1:2
 end
 
 % setSetting('saveImages', false);
-metricsNames = {'SSIM', 'SSD', 'NCC', 'CC', 'CR', 'SimilarityHistIntersection', 'KLDivergece', 'EarthMoversDistance'};
+metricsNames = {'SSIM', 'NCC', 'HI', 'KLD', 'EMD', 'SSD', 'CC'};
 metricsMel = zeros(length(mapMethods), length(metricsNames));
 metricsHb = zeros(length(mapMethods), length(metricsNames));
 roiMetricsMel = zeros(length(mapMethods), length(roiNames), length(metricsNames));
@@ -89,7 +96,6 @@ roiMetricsHb = zeros(length(mapMethods), length(roiNames), length(metricsNames))
 imageNames = makeNameList(mapMethods, {mapData.Name});
 vsName = strcat(num2str(indexes(1)), 'vs', num2str(indexes(2)));
 
-setSetting('saveImages', true);
 
 %% Plot ROIs
 
@@ -131,24 +137,32 @@ end
 metricsMelTable = makeTable(metricsMel, metricsNames, mapMethods');
 metricsHbTable = makeTable(metricsHb, metricsNames, mapMethods');
 
-roiMetricsHbTable = makeTable(roiMetricsHb, metricsNames, mapMethods', roiNames');
 roiMetricsMelTable = makeTable(roiMetricsMel, metricsNames, mapMethods', roiNames');
+roiMetricsHbTable = makeTable(roiMetricsHb, metricsNames, mapMethods', roiNames');
+
+%% Export latex tables 
+metricsMelTableText = table2latex(metricsMelTable, [1, 3:6], 'mel', 'Similarity of Melanin Maps for Spitz Nevus');
+metricsHbTableText = table2latex(metricsHbTable, [1, 3:6], 'hb', 'Similarity of Hemoglobin Maps for Spitz Nevus');
+roiMetricsMelTableText = table2latex(roiMetricsMelTable, [1:2, 4:7], 'melroi', 'Similarity of Melanin Maps for Spitz Nevus ROIs');
+roiMetricsHbTableText = table2latex(roiMetricsHbTable, [1:2, 4:7], 'hbroi', 'Similarity of Hemoglobin Maps for Spitz Nevus ROIs');
+
 
 %% Functions
 function T = makeTable(metrics, names, methods, rois)
 if nargin < 4
     T = array2table(metrics);
     T.Properties.VariableNames(1:length(names)) = names;
-    T.MappingMethod = methods;
+    T.Method = methods;
     T = [T(:, end), T(:, 1:end-1)];
 else
     metrics = reshape(metrics, [size(metrics, 1) * size(metrics, 2), size(metrics, 3)]);
     T = array2table(metrics);
     T.Properties.VariableNames(1:length(names)) = names;
-    T.MappingMethod = repmat(methods, [size(metrics, 1) / numel(methods), 1]);
+    T.Method = repmat(methods, [size(metrics, 1) / numel(methods), 1]);
     T.RoiType = reshape(repmat(rois, [1, numel(methods)])', [numel(methods) * numel(rois), 1]);
     T = [T(:, (end -1):end), T(:, 1:end-2)];
 end
+
 end
 
 function imageList = makeImageList(images1, images2)
