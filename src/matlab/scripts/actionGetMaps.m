@@ -2,17 +2,10 @@
 %% Preprocessing for Maps
 setSetting('saveImages', true);
 
-msiType = 'adjusted';
-
 preprocessingForMaps;
 
 %% Chromophore Absorbance Maps
 
-roiNames = {'Hb', 'Norm', 'Mel'};
-roiCorners = {[316, 382, 242, 295], [159, 252, 167, 214], [398, 440, 83, 137]};
-roiColors = {'m', 'g', 'c'};
-mapMethods = {'Vasefi', 'Diebele', 'Kapsokalyvas'};
-%{ 'vasefi', 'ding', 'ours', 'diebele', 'kapsokalyvas', 'kuzmina'};
 
 masks = {unfixedMask, fixedMask};
 msis = {preprocUnfixed, preprocFixed};
@@ -88,7 +81,6 @@ for j = 1:2
 end
 
 % setSetting('saveImages', false);
-metricsNames = {'SSIM', 'NCC', 'HI', 'KLD', 'EMD', 'SSD', 'CC'};
 metricsMel = zeros(length(mapMethods), length(metricsNames));
 metricsHb = zeros(length(mapMethods), length(metricsNames));
 roiMetricsMel = zeros(length(mapMethods), length(roiNames), length(metricsNames));
