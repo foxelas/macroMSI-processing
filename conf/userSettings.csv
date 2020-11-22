@@ -45,6 +45,13 @@
 	matfileinv73, , string
 	matfileout, , string
 	roiCornerFileName, roiCorners.csv, string
+	tissueStates, unfixed fixed, stringArray
+	metricsNames, SSIM NCC HI KLD EMD SSD CC, stringArray
+    roiNames, Hb Norm Mel, stringArray
+    mapMethods, Vasefi Diebele Kapsokalyvas, stringArray
+	normType, divMacbeth, string
+	removeBg, 1, logical
+	msiType, adjusted, string
 	
  
 	

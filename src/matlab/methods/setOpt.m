@@ -48,6 +48,8 @@ for i = 1:length(tmp.raw)
         case 'logical'
             value = strcmp(rawValue, '1');
         case 'doubleArray'
+        case 'stringArray'
+            value = getStringArray(rawValue);
 
         otherwise
             fprintf('Unsupported type %s for parameter %s.\n', varType, parameterName);
@@ -66,4 +68,9 @@ clear tmp value parameterName rawValue varType i;
 settingsFile = 'configuration.mat';
 save(settingsFile);
 fprintf('Settings loaded from %s and saved in %s.\n', inputSettingsFile, settingsFile);
+end
+
+function [arr] = getStringArray(rawValue)
+    arr = strsplit(rawValue, ' ');
+    arr = cellfun(@(x) strrep(x, ' ', ''), arr, 'UniformOutput', 0);
 end

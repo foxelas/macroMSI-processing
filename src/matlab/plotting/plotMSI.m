@@ -28,6 +28,9 @@ else
     imageList = cellfun(@squeeze, imageList, 'un', 0);
     montage(imageList, 'Size', [2, ceil(channels/2)]);
     pause(0.1)
+    if ~exist('fig', 'var')
+        fig = gcf; 
+    end 
     savePlot(fig);
 end
 
