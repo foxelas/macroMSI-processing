@@ -34,6 +34,9 @@ for i = 1:length(tmp.raw)
                 rawValue = fullfile('..\..\..\output\', options.('dataset'));
         end
     end
+    if ~isempty(rawValue) && strcmp(parameterName, 'savedir')
+        rawValue = fullfile('..\..\..\output\', rawValue);
+    end 
 
     switch varType
         case 'string'

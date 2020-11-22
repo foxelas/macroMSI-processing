@@ -14,7 +14,7 @@ close all;
 for i = 1:3
     pc_fixed = squeeze(pcCompsFixed(i, :, :));
     pc_unfixed = squeeze(pcCompsUnfixed(i, :, :));
-    [ssimval, cc] = getImageSimilarity(pc_unfixed, pc_fixed, strcat('_pc', ...
-        num2str(i)), getSetting('pca'), unfixedId, fixedId, name1, name2);
+    [ssimval, cc] = getImageSimilarity(pc_unfixed, pc_fixed, strcat('pc', ...
+        num2str(i)), lesion, tissueStates);
     pause(0.5);
 end

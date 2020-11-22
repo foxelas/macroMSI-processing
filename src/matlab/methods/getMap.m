@@ -90,8 +90,8 @@ switch lower(mapType)
         melSaveName = 'DiebeleMel';
         melMapLimits = [];
         hbMap = 100 * (squeeze(absorption(4, :, :)) - squeeze(absorption(7, :, :)));
-        hbBarTitle = 'Erythema Index';
-        hbMapSaveName = 'DiebeleHb (a.u.)';
+        hbBarTitle = 'Erythema Index (a.u.)';
+        hbMapSaveName = 'DiebeleHb';
         hbMapLimits = [];
 
     case 'kapsokalyvas'

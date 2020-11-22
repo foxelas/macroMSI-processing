@@ -1,12 +1,20 @@
-function [metrics] = getImageSimilarity(base, ref, filename, id1, id2, name1, name2)
+function [metrics] = getImageSimilarity(base, ref, folder, filename, names)
 %   Usage
 %   [metrics] = getImageSimilarity(pc_unfixed, pc_fixed, strcat('_pc', ...
-%   num2str(i)), getSetting('pca'), unfixedId, fixedId, name1, name2);
+%   num2str(i)), getSetting('pca'), 'nevus', {name1, name2});
 
 savedir = getSetting('savedir');
-if ~isempty(filename)
-    filename = fullfile(savedir, '14-MapComparison', filename, strcat(num2str(id1), 'vs', num2str(id2), '_', filename));
+if ~isempty(folder) 
+    if contains(folder, 'pca')
+        parentFolder = '15-Pca';
+    else
+        parentFolder = '14-MapComparison';
+    end
+    filename = fullfile(savedir, parentFolder, folder, strcat(filename, '_', folder));
 end
+
+name1 = names{1};
+name2 = names{2};
 
 % setSetting('plotName', strcat(filename, '.png'));
 % plotFunWrapper(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));

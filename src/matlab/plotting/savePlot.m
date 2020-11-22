@@ -3,9 +3,9 @@ function [] = savePlot(fig)
 %   savePlot(2);
 
 saveImages = getSetting('saveImages');
-figure(fig);
 
 if (saveImages)
+    figure(fig);
     saveInHQ = getSetting('saveInHQ');
     saveInBW = getSetting('saveInBW');
     plotName = getSetting('plotName');
@@ -21,6 +21,7 @@ if (saveImages)
         mkNewDir(filepathBW);
 
         filename = fullfile(filepath, strcat(name, '.png'));
+        filename = strrep(filename, ' ', '_');
         if (cropBorders)
             export_fig(filename, '-png', '-native', '-transparent');
         else

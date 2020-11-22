@@ -1,7 +1,7 @@
 	dataset, saitama_v9_bright_3class, string
 	systemdir, , string
 	datadir, , string
-	savedir, , string
+	savedir, spieMaps, string
 	rawdatadir, , string
 	webdir, , string
 	common, 0-Common, string
