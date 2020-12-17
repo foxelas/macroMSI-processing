@@ -152,10 +152,16 @@ end
 
 melMap = mat2gray(removeInf(melMap));
 hbMap = mat2gray(removeInf(hbMap));
+
+hasLimitSettingOld = getSetting('hasLimit');
+setSetting('hasLimit', true);
+
 setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
 plotFunWrapper(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
 setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
 plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle, hbMapLimits);
+
+setSetting('hasLimit', hasLimitSettingOld);
 
 end
 

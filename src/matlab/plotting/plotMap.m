@@ -1,15 +1,22 @@
-function plotMap(I, mask, cmap, hideColorbar, barTitle, limits, ticks, tickLabels, figTitle, fig)
+function plotMap(I, mask, cmap, hideColorbar, barTitle, limits, figTitle, fig)
 % PLOTMAP plots a map with a colorbar (optional)
 %
 %     Usage:
-%     plotMap(msi, 'jet', false, 'Scale', [0,1], [0, 0.5, 1], {'low', 'medium', 'high'}, 'Map', 1);
+%     plotMap(msi, 'jet', false, 'Scale', [0,1], 'Map', 1);
 
 if (nargin < 7)
-    ticks = [];
-    tickLabels = [];
     figTitle = '';
     fig = [];
 end
+
+hasNumberedScale = getSetting('hasNumberedScale');
+if hasNumberedScale 
+    tickLabels =  {'low', 'medium', 'high'};
+    ticks = [0, 0.5, 1];
+else
+    tickLabels = [];
+    ticks = [];
+end 
 
 if isempty(cmap)
     cmap = 'jet';

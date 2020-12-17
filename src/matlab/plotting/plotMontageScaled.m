@@ -1,4 +1,4 @@
-function[] = plotMontageScaled(imageList, imageMasks, imageNames, filename, fig)
+function[] = plotMontageScaled(imageList, imageMasks, filename, fig)
 
 % Doesn't work well with many rows (e.g. above 4)
 
@@ -14,14 +14,21 @@ setSetting('saveImages', false);
 cropBorders = getSetting('cropBorders');
 setSetting('cropBorders', false);
 
+hasLimits = getSetting('hasLimits');
+hasNumberedScale = getSetting('hasNumberedScale');
+
 set(gcf, 'Position', [500, 50, 760, 700]);
 t = tiledlayout(rows, cols);
 for i = 1:rows
     curIdx = i * cols - 1;
     map1 = imageList{curIdx};
     map2 = imageList{curIdx+1};
-    mapLimits = []; % [min(min(map1(:)), min(map2(:))), max(max(map1(:)), max(map2(:)))];
-
+    if hasLimits
+        mapLimits = [min(min(map1(:)), min(map2(:))), max(max(map1(:)), max(map2(:)))];
+    else 
+        mapLimits = []; 
+    end
+    
     h(1) = nexttile; 
     plotMap(map1, mask1, [], true, [], mapLimits); %imageNames{curIdx}
     if i == 1

@@ -11,7 +11,7 @@ roiNames = getSetting('roiNames');
 mapMethods = getSetting('mapMethods'); %{ 'vasefi', 'ding', 'ours', 'diebele', 'kapsokalyvas', 'kuzmina'};
 metricsNames = getSetting('metricsNames');
 tissueStates = getSetting('tissueStates');
-normType = getSetting('normType');
+normType = getSetting('normType'); %'divMacbeth', 'none'
 removeBg = getSetting('removeBg');
 msiType = getSetting('msiType');
 
@@ -72,9 +72,9 @@ plotFunWrapper(3, @plotMontageScaled, makeImageList(resultUnfixed.HbMaps, result
 for k = 1:length(roiNames)
     masks = {ones(size(resultUnfixed.RoiMelMaps(1, k))), ones(size(resultUnfixed.RoiMelMaps(2, k)))};
     plotFunWrapper(4, @plotMontageScaled, makeImageList(resultUnfixed.RoiMelMaps(:, k), resultFixed.RoiMelMaps(:, k)), ...
-        masks, imageNames, strcat(lesion, '_', roiNames{k}, '_Mel'));
+        masks, strcat(lesion, '_', roiNames{k}, '_Mel'));
     plotFunWrapper(5, @plotMontageScaled, makeImageList(resultUnfixed.RoiHbMaps(:, k), resultFixed.RoiHbMaps(:, k)), ...
-        masks, imageNames, strcat(lesion, '_', roiNames{k}, '_Hb'));
+        masks, strcat(lesion, '_', roiNames{k}, '_Hb'));
 end
 
 %% Get Similarity Metrics

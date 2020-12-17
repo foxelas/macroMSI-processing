@@ -1,5 +1,6 @@
-function [] = plotColorChartSpectra(vals, spectraColorOrder, name, fig)
+function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
 
+    
     ylab = 'Reflectance Spectrum (%)';
     switch name 
         case 'expected'
@@ -16,14 +17,15 @@ function [] = plotColorChartSpectra(vals, spectraColorOrder, name, fig)
     plotColors = getColorChartColors(spectraColorOrder);
     for i = 1: size(vals,1)
         hold on
-        plot(vals(i,:), 'g', 'DisplayName', spectraColorOrder{i}, 'Color', plotColors(i,:), 'LineWidth', 3);
+        plot(x, vals(i,:), 'g', 'DisplayName', spectraColorOrder{i}, 'Color', plotColors(i,:), 'LineWidth', 3);
         pause(0.1);
         hold off;
     end
     
     if strcmp(ylab, 'Reflectance Spectrum (%)')
+        xlim([420, 730]);
         ylim([0, 1.2]);
-        yline(1,'--','100%','LineWidth',3);
+        yline(1,'--','100%','LineWidth',3, 'DisplayName', 'Max Value');
     end
     xlabel('Wavelength (nm)', 'FontSize', 15);
     ylabel(ylab, 'FontSize', 15);

@@ -15,7 +15,7 @@ for i = 1:length(tmp.raw)
     parameterName = tmp.raw{i, 1};
     rawValue = tmp.raw{i, 2};
     varType = tmp.raw{i, 3};
-
+    
     if isempty(rawValue)
         switch parameterName
             case 'matfilein'
@@ -34,10 +34,11 @@ for i = 1:length(tmp.raw)
                 rawValue = fullfile('..\..\..\output\', options.('dataset'));
         end
     end
+    
     if ~isempty(rawValue) && strcmp(parameterName, 'savedir')
         rawValue = fullfile('..\..\..\output\', rawValue);
-    end 
-
+    end
+    
     switch varType
         case 'string'
             value = strrep(rawValue, ' ', ''); %string(rawValue)

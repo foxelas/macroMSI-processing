@@ -3,36 +3,32 @@ if toRun
     prepareData;
 end
 
+iStart = getIndexValue('macbethFile', dataDate);
+patchesStart = 1;
+patchesEnd = 24;
+selectedPatches = [patchesStart:patchesEnd];
+
 whites = zeros(length(wavelengths), length(datafiles));
-for i = 4:length(datafiles)
+for i = iStart:length(datafiles)
     filename = datafiles(i).name;
-    [spectralData, imageXYZ, wavelengths] = loadH5Data(filename);
+    
+    if toRun 
+        [spectralData, imageXYZ, wavelengths] = loadH5Data(filename);
+        [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, true);
+        croppedSpectral = spectralData(any(chartMask, 2), any(chartMask, 1), :);
+        [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
+    end 
 
-    [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, true);
-
-    figure(1);
-    imagesc(imageXYZ(:, :, 2));
-    title('Select ROI for Normalization Spectrum');
-    maskWhite = roipoly;
-    fullReflectance = getPatchValues(spectralData, maskWhite);
-    whites(:, i) = fullReflectance;
-
-    %     croppedLab = xyz2lab(imageXYZ(any(chartMask,2), any(chartMask, 1), :));
-    %     [actualLabVals] = getPatchValues(croppedLab, colorMasks);
-
-    croppedSpectral = spectralData(any(chartMask, 2), any(chartMask, 1), :);
-    [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
-    reorderedSpectralVals = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
-    reorderedSpectralValsRaw = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths, true);
+    [reorderedSpectralVals, lineNames] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
+    [reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths, true);
 
     %% Standard (expected) color patch spectra
-    plotFunWrapper(4, @plotColorChartSpectra, expectedSpectra, spectraColorOrder, 'expected');
+    plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, 'expected');
+    plotFunWrapper(5, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralValsRaw(selectedPatches, :), lineNames, 'measured-raw');
+    plotFunWrapper(6, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralVals(selectedPatches, :), lineNames, 'measured');
 
-    plotFunWrapper(5, @plotColorChartSpectra, reorderedSpectralValsRaw, spectraColorOrder, 'measured-raw');
-    plotFunWrapper(6, @plotColorChartSpectra, reorderedSpectralVals, spectraColorOrder, 'measured');
-
-    gofs = applyFuncOnRows(reorderedSpectralVals, expectedSpectra, @goodnessOfFit)
-    nmses = applyFuncOnRows(reorderedSpectralVals, expectedSpectra, @nmse)
+    gofs = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @goodnessOfFit)
+    nmses = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @nmse)
 
 
     %     %% Get location of color chart
@@ -40,6 +36,7 @@ for i = 4:length(datafiles)
     %     croppedXYZnorm = croppedXYZ ./ sum(sum(croppedXYZ(:,:,2)));
     %     rgb = xyz2rgb(croppedXYZnorm,'ColorSpace','srgb');
     %
+    %     croppedLab = xyz2lab(imageXYZ(any(chartMask,2), any(chartMask, 1), :));
     %     %% Get average RGB of each color
     %
     %     %% Compare measured RGB with real RGB
@@ -62,22 +59,22 @@ for i = 4:length(datafiles)
 end
 
 
-function [reorderedSpectra] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths, isRaw)
+function [reorderedSpectra, labels] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths, isRaw)
 if nargin < 6
     isRaw = false;
 end
 if (isRaw)
     fullReflectance = ones(1, size(target, 2));
 else
-    load('fullreflectance.mat', 'fullReflectance');
+    load(fullfile(getSetting('matdir'), 'fullreflectance.mat'), 'fullReflectance');
 end
 [~, idx] = ismember(spectraColorOrder, chartColorOrder);
-[~, idx2] = ismember(spectralWavelengths, wavelengths);
-reorderedSpectra = zeros(length(idx), length(idx2));
-for i = 1:length(idx)
-    for j = 1:length(idx2)
-        reorderedSpectra(i, j) = target(idx(i), idx2(j)) ./ fullReflectance(idx2(j));
-    end
-end
+idx = nonzeros(idx); 
+[~, idx2] = ismember(spectralWavelengths', wavelengths);
 
+targetDecim = target(:, idx2);
+normConstant = fullReflectance(idx2);
+
+reorderedSpectra = targetDecim(idx, :) ./ normConstant;
+labels = spectraColorOrder;
 end

@@ -21,7 +21,7 @@ key = keys(lineColorMap);
 
 hold on
 for i = 1:length(names)
-    h = plot(wavelengths, spectra(i,:), 'DisplayName', key{i}, 'Color', lineColorMap(key{i}));
+    h = plot(wavelengths, spectra(i,:), 'DisplayName', key{i}, 'Color', lineColorMap(key{i}), 'LineWidth', 3);
 end
 hold off
 

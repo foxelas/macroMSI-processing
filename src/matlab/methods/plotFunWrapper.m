@@ -14,5 +14,6 @@ for i = (length(newVarargin) + 1):(expectedArgs - 1)
     newVarargin{i} = [];
 end
 newVarargin{length(newVarargin)+1} = fig;
+
 functionName(newVarargin{:});
 end
