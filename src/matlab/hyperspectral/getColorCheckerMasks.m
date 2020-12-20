@@ -1,6 +1,6 @@
 function [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, allowRoiSelect)
 
-isRotated = false;
+isRotated = true;
 saveFilename = fullfile(getSetting('matdir'), strcat(strrep(filename, '.h5', ''), '_others.mat'));
 
 if nargin < 3
@@ -19,6 +19,7 @@ if  ~exist(saveFilename, 'file')  && allowRoiSelect
     title('Draw a polygon around the chart')
     chartMask = roipoly; %When you are finished positioning and sizing the polygon, create the mask by double-clicking, or by right-clicking inside the region and selecting Create mask from the context menu.
     chartMask = imdilate(chartMask, ones(7));
+    save(saveFilename, 'chartMask');
 %     load(strcat(saveFilename), 'chartMask');
 
     croppedXYZ = imageXYZ(any(chartMask, 2), any(chartMask, 1), :);
@@ -30,8 +31,10 @@ if  ~exist(saveFilename, 'file')  && allowRoiSelect
     title('Cropped ROI for color chart');
 
     % Use the provided estimate of ROI center coordinates.
-    xx = [ 33, 70, 103, 140, 175, 212];
-    yy = [ 39, 76, 109, 147, 182];
+    %xx = [ 33, 70, 103, 140, 175, 212];
+    %yy = [ 39, 76, 109, 147, 182];
+    xx = [47, 89, 139, 182, 233, 279];
+    yy = [38, 93, 140, 184, 229];
     [x, y] = meshgrid(xx, yy);
 
     if isRotated
@@ -50,7 +53,7 @@ if  ~exist(saveFilename, 'file')  && allowRoiSelect
     y = round(y);
     %r = mean(diff(x)) / 2 * 0.60;
     %r = floor(r);
-    r = 15;
+    r = 20;
 
     mask = false(size(A, 1), size(A, 2));
     colorMasks = false(size(A, 1), size(A, 2), length(x));

@@ -46,6 +46,8 @@
 	matfilein, , string
 	matfileinv73, , string
 	matfileout, , string
+	normByPixel, 0, logical
+	normFilename, , string
 	
  
 	

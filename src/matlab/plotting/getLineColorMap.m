@@ -26,6 +26,14 @@ switch style
         value = jet(10);
 end
 
+if ~isvector(value)
+    v = cell(size(value, 1), 1);
+    for i = 1:size(value,1)
+        v{i} = value(i,:);
+    end
+    value = v;
+end
+
 if size(value,1) == 1
     value = {value};
 end

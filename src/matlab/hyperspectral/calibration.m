@@ -1,34 +1,33 @@
-toRun = false;
-if toRun
+disablePrepare = true;
+if ~disablePrepare
     prepareData;
 end
 
-iStart = getIndexValue('macbethFile', dataDate);
+disable = false; 
+coloChartIndex = getIndexValue('macbethFile', dataDate);
 patchesStart = 1;
 patchesEnd = 24;
 selectedPatches = [patchesStart:patchesEnd];
+ 
+filename = datafiles(coloChartIndex).name;
 
-whites = zeros(length(wavelengths), length(datafiles));
-for i = iStart:length(datafiles)
-    filename = datafiles(i).name;
-    
-    if toRun 
-        [spectralData, imageXYZ, wavelengths] = loadH5Data(filename);
-        [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, true);
-        croppedSpectral = spectralData(any(chartMask, 2), any(chartMask, 1), :);
-        [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
-    end 
+if ~disable 
+    [spectralData, imageXYZ, wavelengths] = loadH5Data(filename);
+    [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, true);
+    croppedSpectral = getHSIdata(spectralData, chartMask);
+    [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
+end         
 
-    [reorderedSpectralVals, lineNames] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
-    [reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths, true);
+[reorderedSpectralVals, lineNames] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
+[reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths, true);
 
-    %% Standard (expected) color patch spectra
-    plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, 'expected');
-    plotFunWrapper(5, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralValsRaw(selectedPatches, :), lineNames, 'measured-raw');
-    plotFunWrapper(6, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralVals(selectedPatches, :), lineNames, 'measured');
+%% Standard (expected) color patch spectra
+plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, 'expected');
+plotFunWrapper(5, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralValsRaw(selectedPatches, :), lineNames, 'measured-raw');
+plotFunWrapper(6, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralVals(selectedPatches, :), lineNames, 'measured');
 
-    gofs = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @goodnessOfFit)
-    nmses = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @nmse)
+gofs = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @goodnessOfFit)
+nmses = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @nmse)
 
 
     %     %% Get location of color chart
@@ -56,25 +55,25 @@ for i = iStart:length(datafiles)
     %     %% Compare measured Spectrum with real Spectrum
 
 
-end
 
 
 function [reorderedSpectra, labels] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths, isRaw)
 if nargin < 6
     isRaw = false;
 end
-if (isRaw)
-    fullReflectance = ones(1, size(target, 2));
-else
-    load(fullfile(getSetting('matdir'), 'fullreflectance.mat'), 'fullReflectance');
-end
+
 [~, idx] = ismember(spectraColorOrder, chartColorOrder);
 idx = nonzeros(idx); 
 [~, idx2] = ismember(spectralWavelengths', wavelengths);
 
 targetDecim = target(:, idx2);
-normConstant = fullReflectance(idx2);
+reorderedSpectra = targetDecim(idx, :);
 
-reorderedSpectra = targetDecim(idx, :) ./ normConstant;
+if ~isRaw && ~getSetting('normByPixel')
+    load(getSetting('normFilename'), 'fullReflectance');
+    normConstant = fullReflectance(idx2);
+    reorderedSpectra = reorderedSpectra ./ normConstant;
+end
+
 labels = spectraColorOrder;
 end
