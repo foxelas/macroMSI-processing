@@ -11,8 +11,6 @@ for k = 1:n
     mask = colorMasks(:, :, k);
     maskedLab = target(any(mask, 2), any(mask, 1), :);
     actualVals(k, :) = mean(reshape(maskedLab, [size(maskedLab, 1) * size(maskedLab, 2), v]));
-    figure(3);
-    imshow(mask);
 end
 
 end

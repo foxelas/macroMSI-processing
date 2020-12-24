@@ -1,9 +1,32 @@
-function [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, allowRoiSelect)
+function [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, allowRoiSelect, configuration)
 
-isRotated = true;
-saveFilename = fullfile(getSetting('matdir'), strcat(strrep(filename, '.h5', ''), '_others.mat'));
+% Use the provided estimate of ROI center coordinates.
+switch configuration 
+    case 'singleLightFar'
+        xx = [ 33, 70, 103, 140, 175, 212];
+        yy = [ 39, 76, 109, 147, 182];
+        r = 15;
+        isRotated = false; 
+    case 'singleLightClose'
+        xx = [47, 89, 139, 182, 233, 279];
+        yy = [38, 93, 140, 184, 229];
+        r = 20;
+        isRotated = true; 
+    case 'doubleLightClose'
+        xx = [47, 89, 139, 182, 233, 279];
+        yy = [38, 93, 140, 184, 229];
+        r = 20;
+        isRotated = true; 
+    otherwise
+        xx = [47, 89, 139, 182, 233, 279];
+        yy = [38, 93, 140, 184, 229];
+        isRotated = true;
+        wargning('Roi center coordinates need re-evaluation');
+end 
 
-if nargin < 3
+saveFilename = mkNewDir(getSetting('matdir'), configuration, strcat(strrep(configuration, '.h5', ''), '_others.mat'));
+
+if nargin < 2
     allowRoiSelect = false;
 end
 
@@ -14,7 +37,7 @@ figure(1);
 imagesc(imageY);
 title('Tristimulus Y image');
 
-if  ~exist(saveFilename, 'file')  && allowRoiSelect
+if allowRoiSelect
     % Click to add vertices, then right-click and select "Create Mask" to return.
     title('Draw a polygon around the chart')
     chartMask = roipoly; %When you are finished positioning and sizing the polygon, create the mask by double-clicking, or by right-clicking inside the region and selecting Create mask from the context menu.
@@ -30,11 +53,6 @@ if  ~exist(saveFilename, 'file')  && allowRoiSelect
     imagesc(croppedY);
     title('Cropped ROI for color chart');
 
-    % Use the provided estimate of ROI center coordinates.
-    %xx = [ 33, 70, 103, 140, 175, 212];
-    %yy = [ 39, 76, 109, 147, 182];
-    xx = [47, 89, 139, 182, 233, 279];
-    yy = [38, 93, 140, 184, 229];
     [x, y] = meshgrid(xx, yy);
 
     if isRotated
@@ -51,9 +69,6 @@ if  ~exist(saveFilename, 'file')  && allowRoiSelect
 
     x = round(x);
     y = round(y);
-    %r = mean(diff(x)) / 2 * 0.60;
-    %r = floor(r);
-    r = 20;
 
     mask = false(size(A, 1), size(A, 2));
     colorMasks = false(size(A, 1), size(A, 2), length(x));

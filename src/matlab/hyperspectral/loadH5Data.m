@@ -1,6 +1,6 @@
-function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename)
+function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configuration)
 
-saveFilename = fullfile(getSetting('matdir'),  strcat(filename, '.mat'));
+saveFilename = mkNewDir(getSetting('matdir'), configuration, strcat(filename, '.mat'));
 if ~exist(saveFilename, 'file') 
     indir = getSetting('datadir');
     currentFile = fullfile(indir, filename); 

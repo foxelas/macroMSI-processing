@@ -3,32 +3,32 @@ if ~disablePrepare
     prepareData;
 end
 
-disable = false; 
-coloChartIndex = getIndexValue('macbethFile', dataDate);
+disable = true; 
+allowRoiSelection = false;
+
+filename = getFilename(configuration, 'colorchart');
 patchesStart = 1;
-patchesEnd = 24;
+patchesEnd = length(spectraColorOrder);
 selectedPatches = [patchesStart:patchesEnd];
- 
-filename = datafiles(coloChartIndex).name;
 
 if ~disable 
-    [spectralData, imageXYZ, wavelengths] = loadH5Data(filename);
-    [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, filename, true);
+    [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configuration);
+    [colorMasks, chartMask] = getColorCheckerMasks(imageXYZ, allowRoiSelection, configuration);
     croppedSpectral = getHSIdata(spectralData, chartMask);
     [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
 end         
 
 [reorderedSpectralVals, lineNames] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
-[reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths, true);
+[reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
 
 %% Standard (expected) color patch spectra
-plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, 'expected');
-plotFunWrapper(5, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralValsRaw(selectedPatches, :), lineNames, 'measured-raw');
-plotFunWrapper(6, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralVals(selectedPatches, :), lineNames, 'measured');
+plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, {saveFolder, 'expected'});
+plotFunWrapper(6, @plotColorChartSpectra, expectedWavelengths, reorderedSpectralVals(selectedPatches, :), lineNames, {saveFolder, 'measured'});
 
 gofs = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @goodnessOfFit)
 nmses = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @nmse)
 
+save(fullfile(getSetting('savedir'), getSetting('saveFolder'), 'last_run.mat'), '-v7.3');
 
     %     %% Get location of color chart
     %     croppedXYZ = imageXYZ(any(chartMask,2), any(chartMask, 1), :);
@@ -55,12 +55,7 @@ nmses = applyFuncOnRows(reorderedSpectralVals(selectedPatches, :), expectedSpect
     %     %% Compare measured Spectrum with real Spectrum
 
 
-
-
-function [reorderedSpectra, labels] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths, isRaw)
-if nargin < 6
-    isRaw = false;
-end
+function [reorderedSpectra, labels] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths)
 
 [~, idx] = ismember(spectraColorOrder, chartColorOrder);
 idx = nonzeros(idx); 
@@ -68,12 +63,6 @@ idx = nonzeros(idx);
 
 targetDecim = target(:, idx2);
 reorderedSpectra = targetDecim(idx, :);
-
-if ~isRaw && ~getSetting('normByPixel')
-    load(getSetting('normFilename'), 'fullReflectance');
-    normConstant = fullReflectance(idx2);
-    reorderedSpectra = reorderedSpectra ./ normConstant;
-end
 
 labels = spectraColorOrder;
 end

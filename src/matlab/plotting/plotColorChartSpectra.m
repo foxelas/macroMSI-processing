@@ -2,7 +2,7 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
 
     
     ylab = 'Reflectance Spectrum (%)';
-    switch name 
+    switch name{2} 
         case 'expected'
             figTitle = 'Standard Spectra for Color Patches from Babel Color';
         case 'measured'
@@ -24,7 +24,7 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
     
     if strcmp(ylab, 'Reflectance Spectrum (%)')
         xlim([420, 730]);
-        ylim([0, 1.2]);
+        ylim([0, 2]); %ylim([0, 1.2]);
         yline(1,'--','100%','LineWidth',3, 'DisplayName', 'Max Value');
     end
     xlabel('Wavelength (nm)', 'FontSize', 15);
@@ -32,6 +32,6 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
     title(figTitle, 'FontSize', 15);
     legend('Location', 'EastOutside');
 
-    setSetting('plotName', fullfile(getSetting('savedir'), strcat(name, '.png')));
+    setSetting('plotName', fullfile(getSetting('savedir'), name{1}, strcat(name{2}, 'calibrationSpectra.png')));
     savePlot(fig);
 end 
