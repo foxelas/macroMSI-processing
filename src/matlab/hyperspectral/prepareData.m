@@ -29,7 +29,7 @@ matfileDir = getSetting('matdir');
 %% Settings for normalization 1. Single Value, 2. PixelByPixel
 setSetting('normByPixel', true);
 normByPixel = getSetting('normByPixel');
-hasSmoothing = true;
+hasSmoothing = false;
 
 if ~normByPixel 
     setSetting('normFilename', mkNewDir(matfileDir, configuration, 'fullreflectance.mat')); 
@@ -52,7 +52,8 @@ if readWhite
     [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configuration);
     whiteSize = size(spectralData);
     figure(1);
-    imagesc(imageXYZ(:, :, 2));
+    dispImage = imageXYZ(:, :, 2);
+    imagesc(dispImage);
     if ~normByPixel 
         title('Select ROI for Normalization Spectrum');
         maskWhite = roipoly;
@@ -61,17 +62,47 @@ if readWhite
         setSetting('plotName', mkNewDir(getSetting('savedir'), saveFolder, 'whitePlot_'));
         plotFunWrapper(2, @plotSpectra, fullReflectance, wavelengths, '99%-white', 'Reflectance Spectrum of White Balance Sheet');
     else 
+        xPoints = [100, 500, 800]; 
+        if strcmp(configuration, 'singleLightFar')
+            xPoints = xPoints + 500;
+        end 
+        if strcmp(configuration, 'singleLightClose')
+            xPoints = xPoints + 200;
+        end 
+        yPoints = [100, 500, 800] ;
         fullReflectanceByPixel = spectralData; 
+        pointSpectra = reshape(fullReflectanceByPixel(xPoints,yPoints,:), [3*3, length(wavelengths)]);
         setSetting('plotName', mkNewDir(getSetting('savedir'), saveFolder, 'whitePlot_by_pixel_unsmoothened'));
-        plotFunWrapper(2, @plotSpectra, reshape(fullReflectanceByPixel([100, 500, 800],[100, 500, 800],:), [3*3, length(wavelengths)]),...
+        plotFunWrapper(2, @plotSpectra, pointSpectra,...
             wavelengths, cellfun(@num2str, num2cell(1:9), 'UniformOutput', false), 'Reflectance Spectrum of various pixels in White Balance Sheet');
         
         fullReflectanceByPixel = smoothImage(hasSmoothing, fullReflectanceByPixel, wavelengths);
+        pointSpectra = reshape(fullReflectanceByPixel(xPoints,yPoints,:), [3*3, length(wavelengths)]);
         setSetting('plotName',mkNewDir(getSetting('savedir'), getSetting('saveFolder'), 'whitePlot_by_pixel'));
-        plotFunWrapper(2, @plotSpectra, reshape(fullReflectanceByPixel([100, 500, 800],[100, 500, 800],:), [3*3, length(wavelengths)]),...
+        plotFunWrapper(2, @plotSpectra, pointSpectra,...
             wavelengths, cellfun(@num2str, num2cell(1:9), 'UniformOutput', false), 'Reflectance Spectrum of various pixels in White Balance Sheet');
         
-        save(normFilename, 'fullReflectanceByPixel', '-v7.3');
+        if sum(pointSpectra(2,:)' == squeeze(fullReflectanceByPixel(xPoints(2), yPoints(1), :))) ~= 401
+            error('Not coinciding order of points');
+        end 
+        
+        [ yy , xx] = meshgrid(xPoints,yPoints); 
+        xx = xx(:);
+        yy = yy(:);
+        
+        fig1 = figure(1);
+        imagesc(dispImage);
+        hold on;
+        for i = 1:length(xx)
+            plot(xx(i),yy(i),'rx', 'MarkerSize', 20, 'LineWidth', 5);
+            textStr = sprintf('P%d at (%d,%d)', i,xx(i), yy(i));
+            text(xx(i),yy(i), textStr);
+        end 
+        hold off;
+        setSetting('plotName',mkNewDir(getSetting('savedir'), getSetting('saveFolder'), 'whitePlot_by_pixel-points'));
+        savePlot(fig1);
+        
+        %save(normFilename, 'fullReflectanceByPixel', '-v7.3');
     end 
 end
 

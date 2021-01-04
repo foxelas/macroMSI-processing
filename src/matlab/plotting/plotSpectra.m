@@ -30,6 +30,9 @@ xlabel('Wavelength (nm)', 'FontSize', 15);
 ylabel('Reflectance (a.u.)', 'FontSize', 15);
 title (figTitle)
 
+%%For hsi case only 
+ylim([0, 5 * 10^(-3)]);
+
 savePlot(fig);
 
 end

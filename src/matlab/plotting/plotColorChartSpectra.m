@@ -2,14 +2,26 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
 
     
     ylab = 'Reflectance Spectrum (%)';
-    switch name{2} 
+    ylimits = [0, 2];
+    currentCase = name{2};
+    switch currentCase
         case 'expected'
             figTitle = 'Standard Spectra for Color Patches from Babel Color';
+            ylimits  = [0,1];
         case 'measured'
             figTitle = 'Measured Spectra for Color Patches from our system';
         case 'measured-raw'
             figTitle = 'Raw Measured Spectra for Color Patches from our system';
             ylab = 'Reflectance Spectrum (a.u.)';
+        case 'measured-adjusted'
+            figTitle = 'Measured Spectra for Color Patches from our system after Adjustment';
+            ylimits  = [0,1];
+        case 'difference'
+            figTitle = 'Expected-Measured spectra for Color Patches from our system';
+            ylab = 'Reflectance Difference (a.u,)';
+        case 'difference-adjusted'
+            figTitle = 'Expected-Measured spectra for Color Patches from our system after Adjustment';
+            ylab = 'Reflectance Difference (a.u,)';
         otherwise 
             error('Unsupported data name.');
     end 
@@ -24,14 +36,19 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
     
     if strcmp(ylab, 'Reflectance Spectrum (%)')
         xlim([420, 730]);
-        ylim([0, 2]); %ylim([0, 1.2]);
+        ylim(ylimits); %ylim([0, 1.2]);
         yline(1,'--','100%','LineWidth',3, 'DisplayName', 'Max Value');
     end
+    
+    if strcmp(ylab, 'Reflectance Difference (a.u,)')
+        ylim([-1, 1]); 
+    end
+    
     xlabel('Wavelength (nm)', 'FontSize', 15);
     ylabel(ylab, 'FontSize', 15);
     title(figTitle, 'FontSize', 15);
     legend('Location', 'EastOutside');
 
-    setSetting('plotName', fullfile(getSetting('savedir'), name{1}, strcat(name{2}, 'calibrationSpectra.png')));
+    setSetting('plotName', fullfile(getSetting('savedir'), name{1}, strcat(currentCase, 'calibrationSpectra.png')));
     savePlot(fig);
 end 

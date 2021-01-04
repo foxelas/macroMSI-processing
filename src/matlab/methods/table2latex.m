@@ -18,7 +18,15 @@ function Ttex = table2latex(T, selectedCols, label, caption)
 %     can be copied and pasted to LaTeX as is. 
 %     Created by https://github.com/foxelas/ (2020)
 
-v = table2cell(T);
+hasHeader = istable(T);
+if hasHeader
+    v = table2cell(T);
+elseif iscell(T)
+    v = T;
+else 
+    error('Unsupported file format.');
+end 
+
 rows = size(v, 1);
 
 if nargin < 2
@@ -46,13 +54,20 @@ for ii = 1:columns
 end
 textRows{2} = strcat(textRows{2},  '}', slant, 'hline');
 
-textRows{3} = strcat(strjoin(cellfun(@(x) convertCell(x), T.Properties.VariableNames(selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline'); 
-
-for ii = 1:rows
-    textRows{ii + 3} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii,selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline');
+if hasHeader
+    textRows{3} = strcat(strjoin(cellfun(@(x) convertCell(x), T.Properties.VariableNames(selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline'); 
+    curRows = 3;
+else 
+    curRows = 2;
 end
 
-textRows{rows+4} = strcat(slant, 'end{tabular}\n}\n', slant, 'end{center}\n', slant, 'end{table}', '\n\n');
+for ii = 1:rows
+    curRows = curRows + 1; 
+    textRows{curRows} = strcat(strjoin(cellfun(@(x) convertCell(x), v(ii,selectedCols),  'UniformOutput', false), symb), slant, slant, slant, 'hline');
+end
+
+curRows = curRows + 1;
+textRows{curRows} = strcat(slant, 'end{tabular}\n}\n', slant, 'end{center}\n', slant, 'end{table}', '\n\n');
 
 Ttex = strjoin(textRows, '\n');
 fprintf(Ttex);
