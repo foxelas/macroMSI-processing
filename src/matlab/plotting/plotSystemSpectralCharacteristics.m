@@ -37,7 +37,7 @@ if contains(lower(plotType), 'sensitivity')
     yticks([0, 0.5, 1]);
 end
 
-if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination'));
+if (contains(lower(plotType), 'sensitivity') && contains(lower(plotType), 'illumination'))
     yyaxis right;
 end
 

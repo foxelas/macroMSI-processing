@@ -18,8 +18,8 @@ if ~disable
     [actualSpectralVals] = getPatchValues(croppedSpectral, colorMasks);
 end         
 
-[reorderedSpectralVals, lineNames] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
-[reorderedSpectralValsRaw, ~] = ReorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
+[reorderedSpectralVals, lineNames] = reorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
+[reorderedSpectralValsRaw, ~] = reorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
 
 %% Standard (expected) color patch spectra
 plotFunWrapper(4, @plotColorChartSpectra, expectedWavelengths, expectedSpectra(selectedPatches, :), lineNames, {saveFolder, 'expected'});
@@ -47,8 +47,11 @@ plotFunWrapper(8, @plotColorChartSpectra, expectedWavelengths, differenceSpectra
 gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @goodnessOfFit)
 nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals(selectedPatches, :), expectedSpectra(selectedPatches, :), @nmse)
 
-
-save(fullfile(getSetting('savedir'), getSetting('saveFolder'), 'last_run.mat'), '-v7.3');
+lastUpdateDate = date();
+matfileSavedir = fullfile(getSetting('savedir'), getSetting('saveFolder'), 'last_run.mat');
+fprintf('Saving matfile in %s', matfileSavedir);
+save(matfileSavedir, '-v7.3');
+disp('Saving matfile finished.');
 
     %     %% Get location of color chart
     %     croppedXYZ = imageXYZ(any(chartMask,2), any(chartMask, 1), :);
@@ -75,15 +78,4 @@ save(fullfile(getSetting('savedir'), getSetting('saveFolder'), 'last_run.mat'), 
     %     %% Compare measured Spectrum with real Spectrum
 
 
-function [reorderedSpectra, labels] = ReorderSpectra(target, chartColorOrder, spectraColorOrder, wavelengths, spectralWavelengths)
-% match chartColorOrder according to spectralColorOrder 
-% i.e. match babel order to colorchart order 
-[~, idx] = ismember(spectraColorOrder, chartColorOrder);
-idx = nonzeros(idx); 
-[~, idx2] = ismember(spectralWavelengths', wavelengths);
 
-targetDecim = target(:, idx2);
-reorderedSpectra = targetDecim(idx, :);
-
-labels = spectraColorOrder;
-end

@@ -23,7 +23,13 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
             figTitle = 'Expected-Measured spectra for Color Patches from our system after Adjustment';
             ylab = 'Reflectance Difference (a.u,)';
         otherwise 
-            error('Unsupported data name.');
+            if numel(name) > 2
+                figTitle = name{3};
+                ylab = name{4};
+                ylimits = name{5};
+            else 
+                error('Unsupported data name.');
+            end 
     end 
     set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
     plotColors = getColorChartColors(spectraColorOrder);
@@ -34,7 +40,7 @@ function [] = plotColorChartSpectra(x, vals, spectraColorOrder, name, fig)
         hold off;
     end
     
-    if strcmp(ylab, 'Reflectance Spectrum (%)')
+    if strcmp(ylab, 'Reflectance Spectrum (%)') 
         xlim([420, 730]);
         ylim(ylimits); %ylim([0, 1.2]);
         yline(1,'--','100%','LineWidth',3, 'DisplayName', 'Max Value');
