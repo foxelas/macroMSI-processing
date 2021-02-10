@@ -1,9 +1,21 @@
 function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configuration)
 
 saveFilename = mkNewDir(getSetting('matdir'), configuration, strcat(filename, '.mat'));
+
 if ~exist(saveFilename, 'file') 
     indir = getSetting('datadir');
+%     indir = 'C:\Users\elena\Desktop\';
+    filenameParts = strsplit(filename, '_');
+    dataDate = filenameParts{1};
+    if ~contains(indir, dataDate)
+        filenameParts = strsplit(indir, '\\saitama');
+        ending = filenameParts{2};
+        filenameParts = strsplit(ending, '_');
+        oldDate = filenameParts{1};
+        indir = strrep(indir, oldDate, dataDate);
+    end
     currentFile = fullfile(indir, filename); 
+     
     %h5disp(currentFile);
     %h5info(currentFile);
 

@@ -60,16 +60,16 @@ plotFunWrapper(3, @plotScaledImage, ccmap, figTitle, []);
 cr = nan;
 
 %% Similarity of histogram intersection
-n = 20;
+n = 20; %n = 50;
 figure(3);
-hBase = histogram(base(baseMask), n);
+hBase = histogram(base(baseMask), 'BinEdges', linspace(0,1,n+1));
 setSetting('plotName', strcat(filename, '_hist_', name1, '.png'));
 savePlot(gcf);
 counts1 = hBase.Values;
 edges = hBase.BinEdges;
 centers1 = edges(1:end-1)' + diff(edges)' / 2;
 figure(4);
-hRef = histogram(ref(refMask), n);
+hRef = histogram(ref(refMask), 'BinEdges', linspace(0,1,n+1));
 setSetting('plotName', strcat(filename, '_hist_', name2, '.png'));
 savePlot(gcf);
 counts2 = hRef.Values;

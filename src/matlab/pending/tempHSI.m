@@ -4,11 +4,7 @@ if strcmp(exp, 'exp1')
     xlsxfilename = 'hsiEvaluation.xlsx';
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\singleLightFar_byAverage\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );
@@ -30,11 +26,7 @@ if strcmp(exp, 'exp1')
     writematrix(gofs3,xlsxfilename,'Sheet',3,'Range','B12:Y12');
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\singleLightFar_byPixel_noSmoothing\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );
@@ -57,11 +49,7 @@ if strcmp(exp, 'exp1')
 
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\singleLightClose_byAverage\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );
@@ -84,11 +72,7 @@ if strcmp(exp, 'exp1')
 
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\singleLightClose_byPixel_noSmoothing\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );
@@ -110,11 +94,7 @@ if strcmp(exp, 'exp1')
     writematrix(gofs3,xlsxfilename,'Sheet',3,'Range','B15:Y15');
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\doubleLightClose_byAverage\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );
@@ -137,11 +117,7 @@ if strcmp(exp, 'exp1')
 
 
     load('D:\temp\Google Drive\titech\research\experiments\output\hsi\doubleLightClose_byPixel_noSmoothing\last_run.mat')
-    white95Idx = find(strcmp(spectraColorOrder,  'white 9.5 (.05 D)')); 
-    white95Val = 0.8;
-    a = mean(reorderedSpectralVals(white95Idx,(end-20):end)) / white95Val;
-    fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', a);
-    adjustedReorderedSpectralVals = reorderedSpectralVals / a;
+    [adjustedReorderedSpectralVals, a] = adjustSpectraToWhitePatch(reorderedSpectralVals, spectraColorOrder );
     gofs2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @goodnessOfFit);
     nmses2 = applyFuncOnRows(adjustedReorderedSpectralVals, expectedSpectra, @nmse);
     lessVals = adjustedReorderedSpectralVals(:, 4:end );

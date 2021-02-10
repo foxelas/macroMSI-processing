@@ -1,5 +1,4 @@
-
-%% main
+%%  PrepareData 
 close all;
 clear all;
 %clc;
@@ -7,20 +6,24 @@ clear all;
 %% PARAMETERS SET
 %Modify userSettings.csv for options
 userSettingsFile = '..\..\conf\hsiUserSettings.csv';
-readWhite = true;
-readBlack = true;
-wavelengths = [380:780]';
 
 % Available dates,  '20201209', '20201111', '20201218', '20201220'
+originDir = 'F:\temp\mspi';
 dataDate = '20201220';
 % Available configurations 'singleLightFar', 'singleLightClose',
 % 'doubleLightClose', 'noLight'
 configuration = 'doubleLightClose'; 
 
+readWhite = true;
+readBlack = true;
+
 %% NEXT
 setOpt(userSettingsFile);
 
-indir = strcat('F:\temp\mspi\saitama', dataDate, '_test/h5/');
+indir = strcat(fullfile(originDir, '2_saitamaHSI\'), dataDate, '_test\h5\');
+setSetting('datadir', indir);
+matdir = fullfile(originDir, 'matfiles\hsi');
+setSetting('matdir', matdir);
 setSetting('datadir', indir);
 % datafiles = dir(fullfile(indir, '*.h5'));
 
@@ -133,33 +136,11 @@ if readBlack
     end 
 end 
 
-chartColorOrder = GetOrder(configuration);
-expectedLabVals = GetExpectedLabValues();
-expectedRGBVals = GetExpectedRGBValues();
-[expectedSpectra, expectedWavelengths, spectraColorOrder] = GetExpectedSpectra();
+chartColorOrder = getOrder(configuration);
+expectedLabVals = getExpectedLabValues();
+expectedRGBVals = getExpectedRGBValues();
+[expectedSpectra, expectedWavelengths, spectraColorOrder] = getExpectedSpectra();
 
-function out = GetOrder(configuration)
-outstruct = delimread(fullfile(getSetting('datasetSettingsDir'), strcat(configuration, 'PatchOrder.txt')), '\t', 'text');
-out = outstruct.text;
-end
-
-function out = GetExpectedLabValues()
-outstruct = delimread(fullfile(getSetting('systemdir'), 'ColorCheckerMicro_Matte_Lab_values.txt'), '\t', 'num');
-out = outstruct.num;
-end
-
-function out = GetExpectedRGBValues()
-outstruct = delimread(fullfile(getSetting('systemdir'), 'ColorCheckerMicro_Matte_RGB_values.txt'), '\t', 'num');
-out = outstruct.num;
-end
-
-function [spectra, wavelengths, colorNames] = GetExpectedSpectra()
-outstruct = delimread(fullfile(getSetting('systemdir'), 'ColorChecker_spectra.txt'), '\t', {'text', 'num'});
-colorNames = outstruct.text;
-colorNames = colorNames(2:length(colorNames));
-wavelengths = outstruct.num(1, :);
-spectra = outstruct.num(2:end, :);
-end
 
 function searchName = getFilename(configuration, content)
     warning('off', 'MATLAB:table:ModifiedAndSavedVarnames');

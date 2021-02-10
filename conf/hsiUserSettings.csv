@@ -49,7 +49,9 @@
 	normByPixel, 0, logical
 	normFilename, , string
 	saveFolder, , string
-	
+	integrationTime, , double
+	experiment, , string
+	configuration, , string
  
 	
  

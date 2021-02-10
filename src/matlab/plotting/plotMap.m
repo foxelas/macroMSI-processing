@@ -65,16 +65,16 @@ if ~hideColorbar
         c.Label.FontWeight = 'bold';
     end
 
-%     if ~isempty(limits)
-%         c.Limits = limits; % [0, 1]
-%         c.LimitsMode = 'manual';
-%     end
-%     if ~isempty(ticks)
-%         c.Ticks = ticks; % [0, 0.5, 1]
-%     end
-%     if ~isempty(tickLabels)
-%         c.TickLabels = tickLabels; %  {'low', 'medium', 'high'}
-%     end
+    if ~isempty(limits)
+        c.Limits = limits; % [0, 1]
+        c.LimitsMode = 'manual';
+    end
+    if ~isempty(ticks)
+        c.Ticks = ticks; % [0, 0.5, 1]
+    end
+    if ~isempty(tickLabels)
+        c.TickLabels = tickLabels; %  {'low', 'medium', 'high'}
+    end
     c.Ticks = []; 
     
     set(gcf, 'Visible', 'on');

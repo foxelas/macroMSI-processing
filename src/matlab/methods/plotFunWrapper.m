@@ -1,4 +1,4 @@
-function plotFunWrapper(fig, functionName, varargin)
+function [] = plotFunWrapper(fig, functionName, varargin)
 
 if isnumeric(fig) && ~isempty(fig)
     %disp('Check if no overlaps appear and correct fig is saved.')

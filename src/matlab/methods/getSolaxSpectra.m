@@ -41,6 +41,19 @@ function [solaxSpec] = reconstructSolaxIoIlluminationSpectrum(savedir)
     wavelengths = [380:780]';
     solaxSpec = f2(wavelengths);
     solaxSpec = max(solaxSpec, 0);
-    save('parameters/solax_reconstructed_spectrum.mat', 'solaxSpec');
+    
+    fig3 = figure(3);
+    x = wavelengths; 
+    TF = islocalmax(solaxSpec);
+    solaxLocalMaxWavelengths = double(x(TF));
+    plot(x,solaxSpec,x(TF),solaxSpec(TF),'r*', 'LineWidth', 5);
+    ylim([0,100]);
+    xlabel('Wavelength (nm)', 'FontSize', 15);
+    ylabel('Relative Illumination Spectrum (%)', 'FontSize', 15);
+    title('For Solax-iO light source', 'FontSize', 15);
+    setSetting('plotName', fullfile(savedir,'solaxSpectrum_reconstructed.png'));
+    savePlot(fig3);
+    
+    save('parameters/solax_reconstructed_spectrum.mat', 'solaxSpec', 'solaxLocalMaxWavelengths');
 
 end 

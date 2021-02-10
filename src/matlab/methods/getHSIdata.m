@@ -1,11 +1,23 @@
-function spectralData = getHSIdata(raw, mask, settings)
+function spectralData = getHSIdata(raw, mask, settings, hasFilter)
 
-if nargin < 3
+if nargin < 3 || isempty(settings)
     settings = 'useBlack';
 end 
 
+if nargin < 4
+    hasFilter = true;
+end 
+
+suffix = ''; 
+if ~hasFilter 
+    suffix = 'NoFilter';
+end 
+
+integrationTime = getSetting('integrationTime');
+configuration = getSetting('configuration');
+
 if ~strcmp(settings, 'raw')
-    blackFilename = fullfile(getSetting('matdir'), getSetting('saveFolder'), 'blackReflectance.mat');
+    blackFilename = fullfile(getSetting('matdir'), configuration, strcat(num2str(integrationTime),  suffix,'_blackReflectance.mat')); %'basics.mat');
     load(blackFilename, 'blackReflectance');
 
     if (sum(size(blackReflectance) ~= size(raw)) >0 && (size(blackReflectance, 1) < size(raw,1)))
@@ -34,7 +46,15 @@ switch settings
 
         blackReflectance = blackReflectance(any(mask, 2), any(mask, 1), :);
         normDenominator = normDenominator(any(mask, 2), any(mask, 1), :);
-        spectralData = (spectralData - blackReflectance) ./ normDenominator;
+        
+        wavelengths = size(spectralData,3);
+        if ( wavelengths == 401)
+            spectralData = (spectralData - blackReflectance) ./ normDenominator;
+        elseif (wavelengths == 161)
+            spectralData = (spectralData - blackReflectance(:,:,1:161)) ./ normDenominator(:,:,1:161);
+        else
+            spectralData = (spectralData - blackReflectance(:,:,162:end)) ./ normDenominator(:,:,162:end);
+        end
         
     case 'raw'
         spectralData = spectralData;
@@ -53,6 +73,6 @@ spectralData(isnan(spectralData)) = 0;
 spectralData(isinf(spectralData)) = 0;
 spectralData = reshape(spectralData, [m,n,z]);
 
-figure(6);imshow(squeeze(spectralData(:,:,200)));
+figure(4);imshow(squeeze(spectralData(:,:,100)));
 
 end
