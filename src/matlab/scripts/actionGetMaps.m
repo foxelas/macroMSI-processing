@@ -73,21 +73,21 @@ end
 %% Plot ROIs
 figTitle = strjoin({tissueStates{1}, 'vs', tissueStates{2}, strcat('(', lesion, ')')}, ' ' );
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('common'), strcat(lesion, '_', 'rois.png')));
-plotFunWrapper(1, @plotMontage, resultUnfixed.Iaug, resultFixed.Iaug, figTitle);
+plots(1, @plotMontage, resultUnfixed.Iaug, resultFixed.Iaug, figTitle);
 
 %% Plot Maps Collectively
-plotFunWrapper(2, @plotMontageScaled, makeImageList(resultUnfixed.MelMaps, resultFixed.MelMaps), ...
+plots(2, @plotMontageScaled, makeImageList(resultUnfixed.MelMaps, resultFixed.MelMaps), ...
     {unfixedMask, fixedMask}, ...imageNames,
     strcat(lesion, '_Full_Mel'));
-plotFunWrapper(3, @plotMontageScaled, makeImageList(resultUnfixed.HbMaps, resultFixed.HbMaps), ...
+plots(3, @plotMontageScaled, makeImageList(resultUnfixed.HbMaps, resultFixed.HbMaps), ...
     {unfixedMask, fixedMask}, ...imageNames, 
     strcat(lesion, '_Full_Hb'));
 
 for k = 1:length(roiNames)
     masks = {ones(size(resultUnfixed.RoiMelMaps(1, k))), ones(size(resultUnfixed.RoiMelMaps(2, k)))};
-    plotFunWrapper(4, @plotMontageScaled, makeImageList(resultUnfixed.RoiMelMaps(:, k), resultFixed.RoiMelMaps(:, k)), ...
+    plots(4, @plotMontageScaled, makeImageList(resultUnfixed.RoiMelMaps(:, k), resultFixed.RoiMelMaps(:, k)), ...
         masks, strcat(lesion, '_', roiNames{k}, '_Mel'));
-    plotFunWrapper(5, @plotMontageScaled, makeImageList(resultUnfixed.RoiHbMaps(:, k), resultFixed.RoiHbMaps(:, k)), ...
+    plots(5, @plotMontageScaled, makeImageList(resultUnfixed.RoiHbMaps(:, k), resultFixed.RoiHbMaps(:, k)), ...
         masks, strcat(lesion, '_', roiNames{k}, '_Hb'));
 end
 

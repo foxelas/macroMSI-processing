@@ -12,14 +12,14 @@ close all;
 [msi, whiteReference, specimenMask, ~, ~, ~] = getImage(groupId, msiType, removeBg, false, 'none');
 setSetting('saveImages', true);
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('common'), strcat(num2str(groupId), '_', 'msi.png')));
-plotFunWrapper(1, @plotMSI, msi);
+plots(1, @plotMSI, msi);
 
 %% Normalize MSI
 [msiNorm] = getImage(groupId, msiType, removeBg, false, normType);
 
 setSetting('saveImages', true);
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('common'), strcat(num2str(groupId), '_', 'msiNorm.png')));
-plotFunWrapper(2, @plotMSI, msiNorm);
+plots(2, @plotMSI, msiNorm);
 
 preprocMsi = msiNorm;
 

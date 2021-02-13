@@ -12,7 +12,7 @@ for g = 1:max([ID.Group])
     [m, n, ~] = size(baseImage);
     labels = {gMembers.Label};
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('labels'), strcat('labelled_bright_', num2str(g))));
-    plotFunWrapper(2, @plotVisualResult, baseImage, zeros(m, n), '', labels, coordinates, 'jet', true);
+    plots(2, @plotVisualResult, baseImage, zeros(m, n), '', labels, coordinates, 'jet', true);
     %     for i = 1:length(coordinates)
     %         plotVisualResult(whiteReference, zeros(size(whiteReference,1),...
     %             size(whiteReference,2)), num2str(idd.Index + i), labels(i), coordinates(i,:), 'jet', true, 3);

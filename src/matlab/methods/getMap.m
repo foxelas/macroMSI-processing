@@ -35,7 +35,7 @@ reference = raw2msi(reference, msiType);
 savedir = getSetting('savedir');
 mapdir = getSetting('map');
 % setSetting('plotName', fullfile(savedir, mapdir, 'msi.png'));
-% plotFunWrapper(2, @plotMSI, msi);
+% plots(2, @plotMSI, msi);
 msi = reshape(msi, [channels * height * width, 1]);
 msi(msi == 0) =  0.0000000001;
 msi = reshape(msi, [channels, height, width]);
@@ -43,13 +43,13 @@ mask3d = permute(repmat(mask, [1, 1, size(msi, 1)]), [3, 1, 2]);
 msi(~mask3d) = nan;
 nmsi = msi ./ reference;
 % setSetting('plotName', fullfile(savedir, mapdir, 'normalizedMsi.png'));
-% plotFunWrapper(3, @plotMSI, normalizedReflectance);
+% plots(3, @plotMSI, normalizedReflectance);
 
 logIm = log10(nmsi);
 opticalDensity = logIm;
 absorption = -logIm;
 % setSetting('plotName', fullfile(savedir, mapdir, 'absoprtion.png'));
-% plotFunWrapper(4, @plotMSI, absorption);
+% plots(4, @plotMSI, absorption);
 switch lower(mapType)
     case 'ding'
         melMap = squeeze(opticalDensity(7, :, :));
@@ -78,10 +78,10 @@ switch lower(mapType)
         
         cHbO = mat2gray(removeInf(cHbO));
         setSetting('plotName', fullfile(savedir, mapdir, strcat('VasefiHbO', '_', num2str(id), '_', 'ScaledMap.png')));
-        plotFunWrapper(3, @plotMap, cHbO, mask, [], false, 'Relative HbO Concentration (a.u.)', []);
+        plots(3, @plotMap, cHbO, mask, [], false, 'Relative HbO Concentration (a.u.)', []);
         cHbR = mat2gray(removeInf(cHbR));
         setSetting('plotName', fullfile(savedir, mapdir, strcat('VasefiHbR', '_', num2str(id), '_', 'ScaledMap.png')));
-        plotFunWrapper(4, @plotMap, cHbR, mask, [], false, 'Relative HbR Concentration (a.u.)', []);
+        plots(4, @plotMap, cHbR, mask, [], false, 'Relative HbR Concentration (a.u.)', []);
         
 
     case 'diebele'
@@ -108,7 +108,7 @@ switch lower(mapType)
         supMelMap = (-1) * (totalBlue - totalGreen) ./ (totalBlue + totalGreen);
         supMelMap = mat2gray(removeInf(supMelMap));
         setSetting('plotName', fullfile(savedir, mapdir, strcat('KapsokalyvasSupMel', '_', num2str(id), '_', 'ScaledMap.png')));
-        plotFunWrapper(3, @plotMap, supMelMap, mask, [], false, 'Superficial Melanin Homogeneity (a.u.)', []);
+        plots(3, @plotMap, supMelMap, mask, [], false, 'Superficial Melanin Homogeneity (a.u.)', []);
             
         hbMap = (-1) * (totalGreen - totalRed) ./ (totalGreen + totalRed);
         hbBarTitle = 'Hemoglobin Homogeneity (a.u.)';
@@ -159,9 +159,9 @@ hbMap = removeInf(hbMap);
 % setSetting('hasLimit', true);
 % 
 % setSetting('plotName', fullfile(savedir, mapdir, strcat(melSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
-% plotFunWrapper(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
+% plots(1, @plotMap, melMap, mask, [], false, melBarTitle, melMapLimits);
 % setSetting('plotName', fullfile(savedir, mapdir, strcat(hbMapSaveName, '_', num2str(id), '_', 'ScaledMap.png')));
-% plotFunWrapper(2, @plotMap, hbMap, mask, [], false, hbBarTitle, hbMapLimits);
+% plots(2, @plotMap, hbMap, mask, [], false, hbBarTitle, hbMapLimits);
 % 
 % setSetting('hasLimit', hasLimitSettingOld);
 

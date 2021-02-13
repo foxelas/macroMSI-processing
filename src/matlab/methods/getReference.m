@@ -22,6 +22,6 @@ wStart = floor(yCenter-w/2);
 
 reference = raw(:, hStart:h+hStart-1, wStart:w+wStart-1, :);
 setSetting('saveImages', false);
-plotFunWrapper(1, @plotMSI, reference, false);
+plots(1, @plotMSI, reference, false);
 setSetting('saveImages');
 end

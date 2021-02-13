@@ -67,7 +67,7 @@ specimenMask = bwareaopen(specimenMask, ceil(m*n/500), 8);
 cluster1 = whiteReference .* double(specimenMask);
 name = strjoin({'bgRemoved', num2str(idd.Group), idd.Sample, idd.Type}, '_');
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('backgroundRemoval'), name));
-plotFunWrapper(1, @plotMontage, whiteReference, cluster1);
+plots(1, @plotMontage, whiteReference, cluster1);
 
 end
 

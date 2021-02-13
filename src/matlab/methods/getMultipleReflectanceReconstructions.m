@@ -51,7 +51,7 @@ if (getSetting('showImages'))
     lineNames = ['Measured', methods];
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimation'), getSetting('action'), ...
         strcat(getSetting('action'), '_', num2str(idd.Index))));
-    plotFunWrapper(1, @plotReconstructedCurves, (spectra, lineNames, wavelength, 'Reflectance Estimation Comparison');
+    plots(1, @plotReconstructedCurves, (spectra, lineNames, wavelength, 'Reflectance Estimation Comparison');
     pause(0.1)
 end
 

@@ -33,19 +33,19 @@ for scale = 1:3
 
     type = 'SumLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
-    plotFunWrapper(1, @plotLBP, sumLBPImage, type);
+    plots(1, @plotLBP, sumLBPImage, type);
 
     type = 'CatLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
-    plotFunWrapper(2, @plotLBP, catLBPImage.*100, type);
+    plots(2, @plotLBP, catLBPImage.*100, type);
 
     type = 'MMLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
-    plotFunWrapper(3, @plotLBP, mmLBPImage.*100, type);
+    plots(3, @plotLBP, mmLBPImage.*100, type);
 
     type = 'LBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
-    plotFunWrapper(4, @plotLBP, LBPImage, type);
+    plots(4, @plotLBP, LBPImage, type);
 
 
 end

@@ -9,4 +9,4 @@ labels = {ID.Label};
 
 dimred = 'LDA';
 [WMeasured, score, latent, explained] = reduceDimension(dimred, input, labels);
-plotFunWrapper(fig, @plotDimensionReduction, strcat(dimred, 'color'), strcat('2 Class ', dimred), score, labels, latent(1:10), explained(1:10), 1);
+plots(fig, @plotDimensionReduction, strcat(dimred, 'color'), strcat('2 Class ', dimred), score, labels, latent(1:10), explained(1:10), 1);

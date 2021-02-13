@@ -134,10 +134,10 @@ idx = find(cellfun(@(x) strcmp(x, 'sameForChannel'), {settings.noiseType}));
 sigmas = cell2mat([settings(idx).noiseParam]);
 
 setSettin('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleWiener'));
-plotFunWrapper(1, @plotNMSE, sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
+plots(1, @plotNMSE, sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
     'Average NMSE', 'NMSE for simple Wiener Reconstruction');
 setSettin('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleWiener_gfc'));
-plotFunWrapper(2, @plotGFC, sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
+plots(2, @plotGFC, sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
     'Average GFC', 'GFC for simple Wiener Reconstruction');
 
 idx = find(cellfun(@(x) contains(x, 'spatiospectralolympus'), {settings.noiseType}));
@@ -153,10 +153,10 @@ rhos = unique(rhos);
 windowDim = unique(windowDim);
 
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral'));
-plotFunWrapper(1, @plotNMSE2, rhos, windowDim, evaluationMeans(idx(bestIdxs), 2), 'Spatial Correlation', ...
+plots(1, @plotNMSE2, rhos, windowDim, evaluationMeans(idx(bestIdxs), 2), 'Spatial Correlation', ...
     'Window Dimension', 'Average NMSE', 'NMSE for Spatiospectral Wiener Reconstruction');
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'Spatiospectral_gfc'));
-plotFunWrapper(2, @plotGFC, rhos, windowDim, evaluationMeans(bestIdxs, 3), 'Spatial Correlation', ...
+plots(2, @plotGFC, rhos, windowDim, evaluationMeans(bestIdxs, 3), 'Spatial Correlation', ...
     'Window Dimension', 'Average GFC', 'GFC for Spatiospectral Wiener Reconstruction');
 
 idx = find(cellfun(@(x) strcmp(x, 'spatial'), {settings.noiseType}));
@@ -164,20 +164,20 @@ sigmas = cellfun(@(x) (sqrt(0.5) * x{1} + x{2}), {settings(idx).noiseParam});
 [sigmas, sorted] = sort(sigmas, 'ascend');
 idx = idx(sorted);
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatial'));
-plotFunWrapper(3, @plotNMSE, sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
+plots(3, @plotNMSE, sigmas, evaluationMeans(idx, 2), '$$log_{10}( \sigma_1 )$$', ...
     'Average NMSE', 'NMSE for simple Wiener Reconstruction');
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatial_gfc'));
-plotFunWrapper(4, @plotGFC, sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
+plots(4, @plotGFC, sigmas, evaluationMeans(idx, 3), '$$log_{10}( \sigma_1 )$$', ...
     'Average GFC', 'GFC for simple Wiener Reconstruction');
 
 [~, idx] = sort([settings.nmse]);
 best = settings(idx(1:10));
 
-plotFunWrapper(1, @plotReconstructionGIF, Spectra, reconstructions);
+plots(1, @plotReconstructionGIF, Spectra, reconstructions);
 
 bestSpatioSpect = 1;
 bestSimple = 96;
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'simpleHist'));
-plotFunWrapper(1, @plotGFCHistogram, evaluation(:, bestSimple, 3));
+plots(1, @plotGFCHistogram, evaluation(:, bestSimple, 3));
 setSetting('plotName', fullfile(getSetting('savedir'), 'Reconstruction Parameter Optimization', 'spatiospectHist'));
-plotFunWrapper(2, @plotGFCHistogram, evaluation(:, bestSpatioSpect, 3));
+plots(2, @plotGFCHistogram, evaluation(:, bestSpatioSpect, 3));

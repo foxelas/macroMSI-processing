@@ -52,6 +52,7 @@
 	integrationTime, , double
 	experiment, , string
 	configuration, , string
+	splitWavelength, 540, double
  
 	
  

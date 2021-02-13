@@ -18,7 +18,7 @@ setSetting('saveImage', false);
 nbins = 10;
 for i = 1:length(patchNames)
     patch = patches{i};
-    plotFunWrapper(i, @plotMSI, patch);
+    plots(i, @plotMSI, patch);
     title(patchNames{i});
     spectralHist = zeros(c, nbins);
     for j = 1:c

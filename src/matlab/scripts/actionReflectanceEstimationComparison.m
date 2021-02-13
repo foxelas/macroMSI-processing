@@ -42,7 +42,7 @@ for i = 1:methodsN
     nmseBars = getNmseForBarPlot(nmses(:, i), ID, methods{i});
     setSetting('plotName', fullfile(getSetting('savedir'), ...
         getSetting('reflectanceEstimationPerformance'), strcat('hist_', methods{i})));
-    plotFunWrapper(1, @plotGFCHistogram, gfcs(:, i));
+    plots(1, @plotGFCHistogram, gfcs(:, i));
 end
 
 msiId = find(strcmp(methods, 'MSI-Simple'));
@@ -86,7 +86,7 @@ end
 nmseBars = reshape(nmseBars, [2, 3]);
 
 setSetting('plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimationPerformance'), method));
-plotFunWrapper(1, @plotReconstructionPerformanceBars, nmseBars, {'malignant', 'benign'}, '');
+plots(1, @plotReconstructionPerformanceBars, nmseBars, {'malignant', 'benign'}, '');
 
 fprintf('NRMSE overall = %.4f\n', sum(nmseBars(:)));
 

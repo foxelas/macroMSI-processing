@@ -10,7 +10,7 @@ result = reshape(repmat(referenceWhite, [1, h * w, 1]), [channels, h, w, rgbDim]
 
 % oldSetting = getSetting('saveImages');
 % setSetting('saveImages', false);
-% plotFunWrapper(1, @plotMSI, result);
+% plots(1, @plotMSI, result);
 % setSetting('saveImages', oldSetting);
 
 end

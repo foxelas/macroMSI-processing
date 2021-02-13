@@ -9,7 +9,7 @@ setSetting('saveImages', false);
 % [coeff, scores, latent,explained]  = doPixelPCA(msi);
 
 [msiFull] = getImage(k, msiType, true);
-% plotFunWrapper(fig, @plotMSI, msiFull, 1);
+% plots(fig, @plotMSI, msiFull, 1);
 %
 % for only the pixels of the specimen
 [msi, ~, specimenMask, height, width, channels] = getImage(k, msiType, false, true);
@@ -44,7 +44,7 @@ for i = 1:9
     healthySkinComponent = sum(sc(:, 1:2), 2) + mean(colMsi);
     enhancedImage(specimenIdxs, :) = (colMsi - healthySkinComponent) * w + colMsi;
     enhancedImage = reshape(enhancedImage', channels, height, width);
-    plotFunWrapper(2, @plotMSI, enhancedImage);
+    plots(2, @plotMSI, enhancedImage);
 end
 
 % pc1 healthy skin, pc2 hemoglobin, pc3

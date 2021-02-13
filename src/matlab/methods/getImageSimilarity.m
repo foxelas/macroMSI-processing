@@ -17,7 +17,7 @@ name1 = names{1};
 name2 = names{2};
 
 % setSetting('plotName', strcat(filename, '.png'));
-% plotFunWrapper(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));
+% plots(1, @plotMontage, base, ref, strcat(name1, ' vs ', name2));
 
 baseMask = ~isnan(base);
 refMask = ~isnan(ref);
@@ -33,7 +33,7 @@ fprintf('Global SSIM Value is %.5f \n', ssimval);
 %{
 figTitle = strcat('Local SSIM Map with Global SSIM Value: ',num2str(ssimval));
 setSetting('plotName', strcat(filename, '_ssim.png'));
-plotFunWrapper(2, @plotScaledImage, ssimmap, figTitle, []);
+plots(2, @plotScaledImage, ssimmap, figTitle, []);
 %}
 
 %% Sum of squared differences (SSD)
@@ -53,7 +53,7 @@ fprintf('Pearsons Correlation Coefficients is %.5f \n', cc);
 ccmap = xcorr2(base,ref);
 figTitle = strcat('Pearsons Correlation Coefficients: ',num2str(ccmap));
 setSetting('plotName', strcat(filename, '_cc.png'));
-plotFunWrapper(3, @plotScaledImage, ccmap, figTitle, []);
+plots(3, @plotScaledImage, ccmap, figTitle, []);
 %}
 
 %% Correlation Coefficient Ration

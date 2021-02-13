@@ -128,7 +128,7 @@ else
                     currentPlotName = plotNames{roi};
                 end
                 setSetting('plotName', currentPlotName);
-                plotFunWrapper(1, @plotMSIWithPOI, whiteReference+maskI, [x, y]);
+                plots(1, @plotMSIWithPOI, whiteReference+maskI, [x, y]);
             end
         end
 

@@ -1,34 +1,47 @@
-function [] = plotColorChartSpectra(x, vals, curveNames, options, fig)
+function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, showsAverageLine, fig)
+%% PlotColorChartSpectra plots single or multiple spectra at the same time 
+%     Input arguments 
+%     vals: spectra values with dimensions [number of points x number of wavelengths x number of methods]
+%     [optional] curveNames: name of points to be plotted 
+%     [optional] currentCase: name of case to be plotted 
+%     [optional] ylimits: limits of the y axis 
+%     [optional] showsAverageLine: meaningful only for plotting spectra from multiple methods
+%     [optional] fig: number of figure 
+% 
+%     Output 
+%     None 
 
-     ylimits = [0, 2];
-     hasMultiple = false;
-     suffix2 = '';
+     [n, m, l] = size(vals);
      
-    if ~isempty(options)
-        hasMultiple = options{1};
-    end 
-    if length(options) > 1
-        currentCase = options{2};
+     hideLegend = false;
+     if nargin < 2 
+         curveNames = cell(n,1);
+         hideLegend = true; 
+     end 
+     
+     suffix = '';
+     if nargin < 3 
+         currentCase = 'raw';
+     else 
         parts = strsplit(currentCase, '_');
         currentCase = parts{1};
         if length(parts) > 1
-            suffix2 = strcat(parts{2}, '_');
+            suffix = strcat(parts{2}, '_');
         end 
-    end 
+     end 
+     
+     if nargin < 4
+         ylimits = [0, 2];
+     end 
 
-    if size(vals,2) == 36
-        x = x; 
-    elseif size(vals,2) == 17
-        x = x(1,1:17);
-    else
-        x = x(1,18:end);
-    end 
+     hasMultiple = l ~= 1;
     
-    suffix = '';
-    if hasMultiple
-        suffix = 'multipleAverage';
-    end 
-    figName = strcat(currentCase, 'calibrationSpectra');
+     if nargin < 5 
+         showsAverageLine = hasMultiple; 
+     end 
+    
+    %% Set titles etc 
+    figName = strcat(suffix, currentCase);
     
     hasReflectanceRatio = true; 
     switch currentCase
@@ -36,27 +49,21 @@ function [] = plotColorChartSpectra(x, vals, curveNames, options, fig)
             figTitle = 'Standard Spectra for Color Patches from Babel Color';
             ylimits  = [0,1];
         case 'measured'
-            figTitle = 'Measured Spectra for Color Patches from our system';
+            figTitle = 'Measured Spectra';
         case 'measured-raw'
-            figTitle = 'Raw Measured Spectra for Color Patches from our system';
+            figTitle = 'Raw Measured Spectra';
             hasReflectanceRatio = false;
         case 'measured-adjusted'
-            figTitle = 'Measured Spectra for Color Patches from our system after Adjustment';
+            figTitle = 'Measured Spectra after Adjustment';
             ylimits  = [0,1];
         case 'difference'
-            figTitle = 'Percentage difference for Expected vs Measured spectra for Color Patches from our system';
+            figTitle = 'Percentage difference for [Expected vs Measured] spectra';
             hasReflectanceRatio = false;
             ylimits = [-1,1];
         case 'difference-adjusted'
-            figTitle = 'Percentage difference for Expected vs Measured spectra for Color Patches from our system after Adjustment';
+            figTitle = 'Percentage difference for [Expected vs Measured] after Adjustment';
             hasReflectanceRatio = false;
             ylimits = [-1,1];
-        case 'points'
-            figTitle = 'Spectra from random points of the image';
-            hasReflectanceRatio = false;
-            figName = strcat(getSetting('experiment') , '-pointSpectra');
-        case 'measured-points'
-            figTitle = 'Measured Spectra from our system';
         case '1x1window'
         case '2x2window'
         case '3x3window'
@@ -64,9 +71,8 @@ function [] = plotColorChartSpectra(x, vals, curveNames, options, fig)
             windowDim = str2num(parts(1));
             sprintf('Spectra from random points of the white image %dx%d spatial smoothing', windowDim, windowDim)
             hasReflectanceRatio = false;
-            figName = strcat(getSetting('experiment') ,strcat('-pointSpectra', num2str(windowDim)));
         otherwise 
-                error('Unsupported data name.');
+            error('Unsupported data name.');
     end 
     
     if contains(currentCase, 'difference')
@@ -77,51 +83,55 @@ function [] = plotColorChartSpectra(x, vals, curveNames, options, fig)
         ylab = 'Reflectance Spectrum (a.u.)';
     end 
     
-    if length(options) > 2
-        ylimits = options{3};
-    end 
-    
-    n = size(vals,1);
-    if ~contains(currentCase, 'points')
-        plotColors = getColorChartColors(curveNames);
-    else 
+    plotColors = getColorChartColors(curveNames);
+    if ~all(plotColors(:))
         colors = hsv(n + 1);
         plotColors = colors(2:end, :);
     end
     
-    
     if hasMultiple 
+       %% For multiple spectra from different methods 
+        x = getWavelengths(m);
        %% Prepare Legend 
         h = zeros(n + 1,1);
-
+        
         for i = 1:n 
             hold on;
             h(i) = plot(nan, nan, 'DisplayName', curveNames{i},'Color',  plotColors(i,:), 'LineWidth', 0.5);
             hold off;
         end 
-        hold on;
-        h(n+1) = plot(nan, nan, '--', 'DisplayName', 'Multiple Capture Average', 'Color', 'k', 'LineWidth', 1.5);
-        hold off;
+        if showsAverageLine
+            hold on;
+            h(n+1) = plot(nan, nan, '--', 'DisplayName', 'Multiple Capture Average', 'Color', 'k', 'LineWidth', 1.5);
+            hold off;
+        end
         
-        %% Plot Spectra 
+        %% Plot Spectra
         for i = 1:n
             if hasMultiple 
                 for k = 1:size(vals, 3)
+                    spectrum = squeeze(vals(i,:,k));
                     hold on;
-                    plot(x, squeeze(vals(i,:,k)), 'Color', plotColors(i,:), 'LineWidth', 0.5);
+                    plot(x, spectrum, 'Color', plotColors(i,:), 'LineWidth', 0.5);
                     hold off;
                 end 
-                hold on;
-                plot(x, squeeze(mean(vals(i,:,:), 3)), '--', 'Color', plotColors(i,:), 'LineWidth', 1.5);
-                hold off;
+                if showsAverageLine
+                    spectrum = squeeze(mean(vals(i,:,:), 3));
+                    hold on;
+                    plot(x, spectrum, '--', 'Color', plotColors(i,:), 'LineWidth', 1.5);
+                    hold off;
+                end
             end 
         end
-    else 
+    
+    else
+       %% For spectra from same origin 
         h = zeros(n,1);
         for i = 1:n
+            spectrum = pads(vals(i,:), 'del');
+            x = getWavelengths(length(spectrum));
             hold on
-            h(i) = plot(x, vals(i,:), 'DisplayName', curveNames{i}, 'Color', plotColors(i,:), 'LineWidth', 3);
-%             pause(0.1);
+            h(i) = plot(x, spectrum, 'DisplayName', curveNames{i}, 'Color', plotColors(i,:), 'LineWidth', 1.5);
             hold off;
         end
     end
@@ -136,10 +146,13 @@ function [] = plotColorChartSpectra(x, vals, curveNames, options, fig)
     xlabel('Wavelength (nm)', 'FontSize', 15);
     ylabel(ylab, 'FontSize', 15);
     title(figTitle, 'FontSize', 15);
-    legend(h, 'Location', 'EastOutside');
+    if ~hideLegend 
+        legend(h, 'Location', 'EastOutside');
+    end 
     set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
-    plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(suffix2, figName, suffix, '.png'));
+    plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(figName, '.png'));
+    
     setSetting('plotName', plotName);
     savePlot(fig);
 end 
