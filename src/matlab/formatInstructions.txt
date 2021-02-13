@@ -1,0 +1,15 @@
+Format of help comments describing matlab functions 
+
+% ADDME  Add two values together.
+%   C = ADDME(A) adds A to itself.
+%
+%   C = ADDME(A,B) adds A and B together.
+%
+%   See also SUM, PLUS.
+
+
+https://www.mathworks.com/help/matlab/matlab_prog/add-help-for-your-program.html
+
+For contents summary 
+https://www.mathworks.com/help/matlab/matlab_prog/create-a-help-summary-contents-m.html 
+
