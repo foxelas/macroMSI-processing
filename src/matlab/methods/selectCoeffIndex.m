@@ -27,11 +27,11 @@ for i = 1:max(G)
     groupID = ID(idxs);
     [~, coeffIdxs] = unique({groupID.ROI}); %1...N
     coeffIdxs = [groupID(coeffIdxs).Index];
-
+    
     for coeffIndex = coeffIdxs
         avgRmse = 0;
         for k = idxs
-
+            
             idk = ID(k);
             idk.CoeffIndex = coeffIndex;
             [est, rmse] = estimateReflectance(poiRAWs{k, 1}, poiRAWs{k, 2}, Spectra(k, :), idk);

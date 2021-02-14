@@ -48,13 +48,13 @@ fprintf('Among cut data:\nNormal: %d, Cancerous: %d\n', normalCutCount, cutCount
 
 if ~isempty(getSetting('savedir'))
     fileID = fopen(fullfile(getSetting('savedir'), 'data_count.txt'), 'w');
-
+    
     fprintf(fileID, 'Breakdown of the dataset:\nTotal: %d, Unfixed: %d, Fixed: %d, Cut: %d\nNormal: %d, Cancerous: %d\n', ...
         length(idx), unfixedCount, fixedCount, cutCount, normalCount, cancerCount);
     fprintf(fileID, 'Among unfixed data:\nNormal: %d, Cancerous: %d\n ', normalUnfixedCount, cancerUnfixedCount);
     fprintf(fileID, 'Among fixed data:\nNormal: %d, Cancerous: %d\n', normalFixedCount, cutCount-normalFixedCount);
     fprintf(fileID, 'Among cut data:\nNormal: %d, Cancerous: %d\n', normalCutCount, cutCount-normalCutCount);
-
+    
     fclose(fileID);
 end
 end

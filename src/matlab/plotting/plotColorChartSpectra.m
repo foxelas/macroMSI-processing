@@ -30,13 +30,13 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
         end 
      end 
      
-     if nargin < 4
+     if nargin < 4 || isempty(ylimits)
          ylimits = [0, 2];
      end 
 
      hasMultiple = l ~= 1;
     
-     if nargin < 5 
+     if nargin < 5 || isempty(showsAverageLine)
          showsAverageLine = hasMultiple; 
      end 
     
@@ -84,7 +84,7 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     end 
     
     plotColors = getColorChartColors(curveNames);
-    if ~all(plotColors(:))
+    if isempty(plotColors)
         colors = hsv(n + 1);
         plotColors = colors(2:end, :);
     end
@@ -93,7 +93,7 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
        %% For multiple spectra from different methods 
         x = getWavelengths(m);
        %% Prepare Legend 
-        h = zeros(n + 1,1);
+        h = zeros(n,1);
         
         for i = 1:n 
             hold on;

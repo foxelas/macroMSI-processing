@@ -100,11 +100,11 @@ if isempty(haxes) || ~ishandle(haxes)
     haxes = axes;
     set(haxes, 'Position', [0, 0, 1, 1]);
     movegui(f, 'center');
-
+    
     % Create colormap
     cmapSize = 100; % default size of 60 shows visible discretization
     if ischar(cmap)
-
+        
         try
             cmap = eval([cmap, '(', num2str(cmapSize), ');']);
         catch
@@ -188,7 +188,8 @@ saveas(haxes, 'filename.png')
 
 % HSV4 a slight modification of hsv (Hue-saturation-value color map)
     function map = hsv4(m)
-        if nargin < 1, m = size(get(gcf, 'colormap'), 1); end
+        if nargin < 1, m = size(get(gcf, 'colormap'), 1);
+        end
         h = (0:m - 1)' / max(m, 1);
         if isempty(h)
             map = [];

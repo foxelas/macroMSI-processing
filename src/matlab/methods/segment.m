@@ -31,7 +31,7 @@ for i = 1:bands
     [~, maskTmp] = regionGrowing(I2, [y, x], thresVal, regionRadius);
     maskTmp = imdilate(maskTmp, se);
     maskTmp = imclose(maskTmp, se);
-
+    
     %         figure(i); %
     %         montage({I2, double(maskTmp)}); %
     maskAgreement = maskAgreement + bandWeight * maskTmp;

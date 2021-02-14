@@ -1,4 +1,5 @@
-%% Initialization 
+
+%% Initialization
 close all;
 
 userSettingsFile = '..\..\conf\hsiUserSettings.csv';
@@ -6,14 +7,14 @@ userSettingsFile = '..\..\conf\hsiUserSettings.csv';
 originDir = 'F:\temp\mspi';
 configuration = 'singleLightClose';
 
-%% Main 
+%% Main
 setOpt(userSettingsFile);
 
-%% Other settings 
+%% Other settings
 indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), 'h5');
-if ~exist('indirFolder', 'var') || ~isempty(indirFolder)
+if exist('indirFolder', 'var') && ~isempty(indirFolder)
     indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), indirFolder, 'h5');
-end 
+end
 
 setSetting('datadir', indir);
 matdir = fullfile(originDir, 'matfiles\hsi');
@@ -21,11 +22,12 @@ setSetting('matdir', matdir);
 
 if exist('experiment', 'var')
     setSetting('experiment', experiment);
+    setSetting('saveFolder', experiment);
 end
 
 if exist('integrationTime', 'var')
     setSetting('integrationTime', integrationTime);
-end 
+end
 
 if ~exist('configuration', 'var')
     configuration = 'singleLightClose';
@@ -34,5 +36,9 @@ setSetting('configuration', configuration);
 
 if ~exist('normByPixel', 'var')
     normByPixel = true;
-end 
+end
 setSetting('normByPixel', normByPixel);
+
+if exist('targetPosition', 'var')
+    setSetting('targetPosition', targetPosition);
+end

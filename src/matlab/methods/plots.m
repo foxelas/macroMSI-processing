@@ -1,8 +1,8 @@
 function [] = plots(fig, funcName, varargin)
-%PLOTS wraps plotting functions 
-% 
+%PLOTS wraps plotting functions
+%
 %   plots(fig, funcName, varargin) plots function with funcName and
-%   arguments varargin in figure fig 
+%   arguments varargin in figure fig
 %
 
 if isnumeric(fig) && ~isempty(fig)

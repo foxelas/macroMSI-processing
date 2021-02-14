@@ -43,7 +43,7 @@ for i = 1:length(samples)
     name = samples{i};
     sampleSpectra = measuredSpectraNames(contains(measuredSpectraNames, name));
     sampleSpectraIdx = find(contains(measuredSpectraNames, name));
-
+    
     sampleNum = numel(sampleSpectraIdx);
     rSample = zeros(81, sampleNum);
     rSampleBenign = zeros(81, sampleNum);
@@ -54,22 +54,22 @@ for i = 1:length(samples)
     rSampleMalignantCut = zeros(81, sampleNum);
     rSampleMalignantFixed = zeros(81, sampleNum);
     rSampleMalignantUnfixed = zeros(81, sampleNum);
-
+    
     for j = 1:length(sampleSpectra)
         total = total + 1;
         jj = sampleSpectraIdx(j);
         id = ID(j);
         ref = measuredSpectra(jj, :)';
-
+        
         rAll(:, total) = ref;
         rSample(:, j) = ref;
-
+        
         if (id.IsBenign)
-
+            
             %% Benign case
             rBenign(:, total) = ref;
             rSampleBenign(:, j) = ref;
-
+            
             if (id.IsCut)
                 rCut(:, total) = ref;
                 rBenignCut(:, total) = ref;
@@ -84,11 +84,11 @@ for i = 1:length(samples)
                 rSampleBenignUnfixed(:, j) = ref;
             end
         else
-
+            
             %% Malignant case
             rMalignant(:, total) = ref;
             rSampleMalignant(:, j) = ref;
-
+            
             if (id.IsCut)
                 rCut(:, total) = ref;
                 rMalignantCut(:, total) = ref;
@@ -104,24 +104,24 @@ for i = 1:length(samples)
             end
         end
     end
-
+    
     Cor_SampleBenignCut(i, :, :) = smoothingMatrix(rSampleBenignCut);
     Cor_SampleBenignFixed(i, :, :) = smoothingMatrix(rSampleBenignFixed);
     Cor_SampleBenignUnfixed(i, :, :) = smoothingMatrix(rSampleBenignUnfixed);
-
+    
     Cor_SampleMalignantCut(i, :, :) = smoothingMatrix(rSampleMalignantCut);
     Cor_SampleMalignantFixed(i, :, :) = smoothingMatrix(rSampleMalignantFixed);
     Cor_SampleMalignantUnfixed(i, :, :) = smoothingMatrix(rSampleMalignantUnfixed);
-
+    
     % correlation of all the measured spectra for this sample
     Cor_Sample(i, :, :) = smoothingMatrix(rSample);
-
+    
     % correlation of all cancerous spectra for this sample
     Cor_SampleMalignant(i, :, :) = smoothingMatrix(rSampleMalignant);
-
+    
     % correlation of all normal spectra for this sample
     Cor_SampleBenign(i, :, :) = smoothingMatrix(rSampleBenign);
-
+    
 end
 
 Cor_All = smoothingMatrix(rAll);
@@ -142,7 +142,6 @@ save(precomputedFile, 'Cor_All', 'Cor_Benign', 'Cor_Malignant', 'Cor_Unfixed', '
     'Cor_MalignantUnfixed', 'Cor_MalignantFixed', 'Cor_SampleBenignCut', 'Cor_SampleBenignFixed', ...
     'Cor_SampleBenignUnfixed', 'Cor_SampleMalignantCut', 'Cor_SampleMalignantFixed', ...
     'Cor_SampleMalignantUnfixed', 'Cor_Sample', 'Cor_SampleMalignant', 'Cor_SampleBenign', '-append');
-
 %% Count dataset
 breakdownDataset(ID);
 

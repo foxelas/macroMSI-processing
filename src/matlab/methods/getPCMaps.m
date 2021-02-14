@@ -26,7 +26,7 @@ for i = 1:nComps
     %     title(sprintf('Principal Component %d', i))
     %     axis off;
     %     %caxis([-2,2])
-
+    
     pcComps(i, :, :) = pcCompImage;
     setSetting('plotName', fullfile(savedir, mapdir, strcat('norm_', normType), strcat(num2str(id), '_PC_', num2str(i), '.png')));
     plots(i, @plotMap, pcCompImage, specimenMask, [], false, strcat('PC', num2str(i)));

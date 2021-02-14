@@ -26,27 +26,27 @@ for scale = 1:3
         lbps = im2double(lbps./10);
         catLBPImage = [catLBPImage; lbps];
     end
-
-
+    
+    
     mmLBPImage = im2double(lbp(msi, scale, neighbors, mapping, 'e')./40);
     LBPImage = im2double(lbp(rgb2gray(whiteReference).*specimenMask, scale, neighbors, mapping, 'e'));
-
+    
     type = 'SumLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plots(1, @plotLBP, sumLBPImage, type);
-
+    
     type = 'CatLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plots(2, @plotLBP, catLBPImage.*100, type);
-
+    
     type = 'MMLBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plots(3, @plotLBP, mmLBPImage.*100, type);
-
+    
     type = 'LBP';
     setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
     plots(4, @plotLBP, LBPImage, type);
-
-
+    
+    
 end
 end

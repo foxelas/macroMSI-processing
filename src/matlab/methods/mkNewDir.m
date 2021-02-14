@@ -8,7 +8,7 @@ if nargin == 1
     filepath = varargin{1};
 else
     filepath = fullfile(varargin{:});
-end 
+end
 filedir = fileparts(filepath);
 if ~exist(filedir, 'dir')
     mkdir(filedir);

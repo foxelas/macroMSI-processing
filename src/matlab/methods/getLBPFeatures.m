@@ -32,12 +32,12 @@ for scale = 1:maxScale
     sumlbpFeatures = zeros(1, riubins);
     mmlbpFeatures = zeros(1, 4*riubins);
     rgblbpFeatures = zeros(1, riubins);
-
+    
     infile = fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
     load(infile, 'poiRAW', 'poiWhite');
     msi = raw2msi(poiRAW, 'extended');
     rgb = poiWhite;
-
+    
     if strcmp(type, 'CatLBP') || strcmp(type, 'SumLBP')
         for i = 1:msibands
             lbps = lbp(squeeze(msi(i, :, :)), scale, neighbors, mapping);
@@ -54,7 +54,7 @@ for scale = 1:maxScale
         gr = rgb2gray(rgb);
         rgblbpFeatures = lbp(gr, scale, neighbors, mapping);
     end
-
+    
     ConcatLbpFeatures{scale} = concatlbpFeatures;
     SumLbpFeatures{scale} = sumlbpFeatures;
     MMLbpFeatures{scale} = mmlbpFeatures;

@@ -33,10 +33,10 @@ function [segmentMSI, segmentWhite, segmentDark, segmentMask, segmentMaskI] = re
 
 if ~exist('coordinates', 'var')
     modeAll = true;
-
+    
 elseif isempty(coordinates)
     modeAll = true;
-
+    
 else
     modeAll = false;
     if (size(coordinates, 1) == 2)
@@ -105,20 +105,20 @@ if (modeAll)
     segmentMSI = MSI;
     segmentMaskI = ones(imHeight, imWidth);
     segmentMask = ones(imHeight, imWidth);
-
+    
 else
     segmentWhite = cell(ROIs, 1);
     segmentDark = cell(ROIs, 1);
     segmentMSI = cell(ROIs, 1);
     segmentMask = cell(ROIs, 1);
     segmentMaskI = cell(ROIs, 1);
-
+    
     for roi = 1:ROIs
-
+        
         x = coordinates(roi, 1);
         y = coordinates(roi, 2);
         [patchMask, maskI] = makeMasks(imHeight, imWidth, x, y, width, height);
-
+        
         if hasWhiteReference
             segmentWhite{roi} = whiteReference(y:(y + height - 1), x:(x + width - 1), :);
             if getSetting('showImages')
@@ -131,17 +131,17 @@ else
                 plots(1, @plotMSIWithPOI, whiteReference+maskI, [x, y]);
             end
         end
-
+        
         if hasDarkReference
             segmentDark{roi} = darkReference(y:(y + height - 1), x:(x + width - 1), :);
         end
-
+        
         segmentMSI{roi} = MSI(:, y:(y + height - 1), x:(x + width - 1), :);
         segmentMask{roi} = patchMask;
         segmentMaskI{roi} = maskI;
-
+        
     end
-
+    
     if (ROIs == 1) %if it it reads only one ROI, there is no need for cell array
         segmentMSI = cell2mat(segmentMSI);
         segmentMask = cell2mat(segmentMask);
@@ -149,7 +149,7 @@ else
         segmentDark = cell2mat(segmentDark);
         segmentWhite = cell2mat(segmentWhite);
     end
-
+    
 end
 
 end

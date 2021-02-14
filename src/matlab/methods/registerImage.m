@@ -13,7 +13,7 @@ elseif ndims(moving) == 3
     for i = 1:channels
         recovered(i, :, :) = imwarp(squeeze(moving(i, :, :)), tform, 'OutputView', outputView);
     end
-
+    
 elseif ndims(moving) == 4
     channels = size(moving, 1);
     rgbChannels = size(moving, 4);

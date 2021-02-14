@@ -11,7 +11,7 @@ end
 tmp = delimread(inputSettingsFile, ', ', 'raw');
 options = struct();
 for i = 1:length(tmp.raw)
-
+    
     parameterName = tmp.raw{i, 1};
     rawValue = tmp.raw{i, 2};
     varType = tmp.raw{i, 3};
@@ -51,13 +51,13 @@ for i = 1:length(tmp.raw)
         case 'doubleArray'
         case 'stringArray'
             value = getStringArray(rawValue);
-
+            
         otherwise
             fprintf('Unsupported type %s for parameter %s.\n', varType, parameterName);
     end
     options.(parameterName) = value;
     eval([parameterName, '=options.', parameterName, ';']);
-
+    
 end
 
 options = orderfields(options);
@@ -72,6 +72,6 @@ fprintf('Settings loaded from %s and saved in %s.\n', inputSettingsFile, setting
 end
 
 function [arr] = getStringArray(rawValue)
-    arr = strsplit(rawValue, ' ');
-    arr = cellfun(@(x) strrep(x, ' ', ''), arr, 'UniformOutput', 0);
+arr = strsplit(rawValue, ' ');
+arr = cellfun(@(x) strrep(x, ' ', ''), arr, 'UniformOutput', 0);
 end

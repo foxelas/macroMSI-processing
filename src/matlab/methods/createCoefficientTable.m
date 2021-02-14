@@ -19,7 +19,7 @@ for k = 1:msiN
     raw = poiRAW;
     % Retrieve spectrum data
     refmeasured = CompleteSpectra(k, :);
-
+    
     for m = 1:length(pixelValueSelectionMethods)
         msi = raw2msi(raw, pixelValueSelectionMethods{m});
         x = roiSeeds(1);

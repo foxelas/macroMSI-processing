@@ -72,7 +72,7 @@ if isColumnImage
     columns = reshape(msi, channels, width*height)'; %30k pixels x 7 variable
     columnsWhite = reshape(permute(whiteReference, [3, 1, 2]), 3, width*height)'; %30k pixels x 3 variable
     fgColumn = reshape(specimenMask, 1, width*height);
-
+    
     if removebg
         columns = columns(fgColumn, :);
         columnsWhite = columnsWhite(fgColumn, :);

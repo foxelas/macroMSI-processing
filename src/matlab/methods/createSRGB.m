@@ -40,18 +40,18 @@ k = 1 / sum(XYZideal(:, 2));
 XYZobj_col = k * XYZobj;
 
 if strcmp(method, 'original')
-
+    
     sRGB_col = xyz2srgbCustom(XYZobj_col);
     sRGB = reshape(sRGB_col, r, c, 3);
-
+    
 elseif strcmp(method, 'medium')
     sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756];
     targetXYZ = [1.09846607; 1.00000000; 0.35582280]; %d65 white
     Madapt = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
-
+    
     sRGBadapt = (Madapt * XYZobj_col')';
     sRGB = reshape(sRGBadapt, r, c, 3);
-
+    
 else
     warning('Not implemented')
 end

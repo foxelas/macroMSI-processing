@@ -18,11 +18,11 @@ function [inputSubset, subsetSamples, subsetIndexes, malignancy] = subset(input,
 if strcmp(input, 'measured')
     load(fullfile(generateName('input'), name, 'in.mat'), 'Spectra');
     G = Spectra; % G rows are observations and columns are variables
-
+    
 elseif strcmp(input, 'estimated')
     load(fullfile(generateName('output'), name, 'ReflectanceEstimationPreset', 'out.mat'), 'EstimatedSpectra');
     G = EstimatedSpectra;
-
+    
 else
     error('Not acceptable input. Choose "measured" or "estimated".')
 end
@@ -37,38 +37,38 @@ sampleNames = strcat([ID.Sample], '_', [ID.Type], '_', B)';
 
 if strcmp(criterion, 'unique')
     [~, subsetIndexes, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
-
+    
 elseif strcmp(criterion, 'unfixed')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
     subsetIndexes = intersect(unIdx, find([ID.IsFixed] == false));
-
+    
 elseif strcmp(criterion, 'goodright')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
     goodIdx = intersect(unIdx, find([ID.IsGood]));
     %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
     subsetIndexes = intersect(unIdx, goodIdx);
-
+    
 elseif strcmp(criterion, 'goodleft')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
     goodIdx = intersect(unIdx, find([ID.IsGood]));
     %goodIdx = union(find(strcmp([ID.Sample], '9913')), union(find(strcmp([ID.Sample], '9933')), union(find(strcmp([ID.Sample], '9940')), find(strcmp([ID.Sample], '9956')))));
     subsetIndexes = intersect(unIdx, goodIdx);
-
+    
 elseif strcmp(criterion, 'all')
     subsetIndexes = benignity == benignity;
-
+    
 elseif strcmp(criterion, 'fixed')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
     subsetIndexes = intersect(unIdx, find([ID.IsFixed] == true));
-
+    
 elseif strcmp(criterion, 'unfixedleft')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'first');
     subsetIndexes = intersect(unIdx, find([ID.IsFixed] == false));
-
+    
 elseif strcmp(criterion, 'unfixedright')
     [~, unIdx, ~] = unique(strcat({ID.SpectrumFile}, {ID.T}), 'last');
     subsetIndexes = intersect(unIdx, find([ID.IsFixed] == false));
-
+    
 else
     error('Not implemented yet.')
 end

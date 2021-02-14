@@ -21,7 +21,7 @@ for i = 1:specN
     rawSpectrum = readSpectrum(idd(i).SpectrumFile, idd(i).T);
     % read raw white measured spectrum of the reference surface
     referenceSpectrum = readSpectrum(char(strcat(data(idd(i).RgbID).Sample, '\', 'white.csv')));
-
+    
     if abs(rawSpectrum-referenceSpectrum) < 0.000001
         error('Measurement is same as white.')
     end

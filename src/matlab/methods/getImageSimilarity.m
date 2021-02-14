@@ -4,7 +4,7 @@ function [metrics] = getImageSimilarity(base, ref, folder, filename, names)
 %   num2str(i)), getSetting('pca'), 'nevus', {name1, name2});
 
 savedir = getSetting('savedir');
-if ~isempty(folder) 
+if ~isempty(folder)
     if contains(folder, 'pca')
         parentFolder = '15-Pca';
     else
@@ -62,14 +62,14 @@ cr = nan;
 %% Similarity of histogram intersection
 n = 20; %n = 50;
 figure(3);
-hBase = histogram(base(baseMask), 'BinEdges', linspace(0,1,n+1));
+hBase = histogram(base(baseMask), 'BinEdges', linspace(0, 1, n+1));
 setSetting('plotName', strcat(filename, '_hist_', name1, '.png'));
 savePlot(gcf);
 counts1 = hBase.Values;
 edges = hBase.BinEdges;
 centers1 = edges(1:end-1)' + diff(edges)' / 2;
 figure(4);
-hRef = histogram(ref(refMask), 'BinEdges', linspace(0,1,n+1));
+hRef = histogram(ref(refMask), 'BinEdges', linspace(0, 1, n+1));
 setSetting('plotName', strcat(filename, '_hist_', name2, '.png'));
 savePlot(gcf);
 counts2 = hRef.Values;
@@ -78,7 +78,7 @@ centers2 = edges(1:end-1)' + diff(edges)' / 2;
 similarityHistIntersection = sum(min(counts1, counts2)) / sum(counts2);
 fprintf('Similarity of histogram intersection is %.5f \n', similarityHistIntersection);
 
-%% Histogram to Probability 
+%% Histogram to Probability
 p1 = counts1' / sum(counts1, 'all');
 p2 = counts2' / sum(counts2, 'all');
 
@@ -92,7 +92,7 @@ fprintf('Kullback-Leibler divergence from Unfixed to Fixed of histograms is %.5f
 fprintf('Earth Movers Distance of histograms is %.5f \n', fval);
 
 %% Results
-metrics = [ssimval, ncc, similarityHistIntersection, klDist, fval,  ssd, cc];
+metrics = [ssimval, ncc, similarityHistIntersection, klDist, fval, ssd, cc];
 % metricsMaps = {ssimmap, ccmap};
 
 end

@@ -44,11 +44,11 @@ if contains(method, 'LDA')
     if (n ~= length(labels))
         error('Inconsistent number of observation values and labels');
     end
-
+    
     % Available classes
     classes = unique(labels);
     C = numel(classes);
-
+    
     if iscell(labels)
         textLabels = labels;
         textClasses = classes;
@@ -63,11 +63,11 @@ if contains(method, 'LDA')
     for i = 1:C
         nGroup(i) = sum(double(labels == classes(i)));
     end
-
+    
     if isempty(priors)
         priors = nGroup / n;
     end
-
+    
     if (numel(priors) ~= C)
         error('Inconsistent number of classes and prior probabilities.')
     end
@@ -77,7 +77,7 @@ end
 switch method
     case 'PCA b'
         [W, score, latent, ~, explained] = pca(input, 'Centered', true);
-
+        
     case 'PCA'
         mu = mean(input);
         Xcent = bsxfun(@minus, input, mu);
@@ -85,10 +85,10 @@ switch method
         latent = diag(latent);
         explained = 100 * latent / sum(latent);
         score = Xcent * W;
-
+        
     case 'LDA'
         classIdx = cell(C, 1);
-
+        
         % class means columns
         mu = zeros(m, C);
         elements = zeros(C, 1);
@@ -98,40 +98,40 @@ switch method
             elements(i) = numel(classIdx{i});
         end
         globalMu = mean(input)';
-
+        
         % class variances / class scatter matrices
         S = zeros(C, m, m);
         for i = 1:C
             %S(i, :, :) = cov(Input(classIdx{i},:));
             S(i, :, :) = (input(classIdx{i}, :)' - mu(:, i)) * (input(classIdx{i}, :)' - mu(:, i))';
         end
-
+        
         % within-class scatter matrix
         Sw = squeeze(sum(S)); % sw = squeeze(s(1, :, :)) + squeeze(s(2, :,:));
-
+        
         % between-class scatter matrix
         Sb = (mu - globalMu) * diag(elements) * (mu - globalMu)';
-
+        
         % eigenvalues
         invSwSb = Sw \ Sb;
         [W, latent] = svd(invSwSb); %eigenvector of the maximum eigenvalue
         score = input * W;
-
+        
     case 'LDA b'
         mu = zeros(C, m); % Group sample means
         poolCov = zeros(m, m); % Pooled covariance
         W = zeros(C, m+1);
-
+        
         for i = 1:C
             group = (labels == classes(i));
-
+            
             % Calculate group mean vectors
             mu(i, :) = mean(input(group, :));
-
+            
             % Accumulate pooled covariance information
             poolCov = poolCov + ((nGroup(i) - 1) / (n - C)) .* cov(input(group, :));
         end
-
+        
         for i = 1:C
             tmp = mu(i, :) / poolCov;
             % Constant
@@ -140,11 +140,11 @@ switch method
             W(i, 2:end) = tmp;
         end
         score = [ones(n, 1), input] * W';
-
+        
     case 'PCALDA'
         [~, score, ~, ~] = reduceDimension('PCA', input, labels);
         [W, score] = reduceDimension('LDA', score(:, 1:10), labels);
-
+        
     otherwise
         error('Not implemented dimension reduction method')
 end

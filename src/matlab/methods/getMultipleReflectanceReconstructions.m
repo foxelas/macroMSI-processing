@@ -20,20 +20,20 @@ for i = 1:lines
         currentOptions.pixelValueSelectionMethod = 'rgb';
         currentOptions.noiseType = 'fromOlympus';
         img = readRGBImage(rgb);
-
-
+        
+        
     elseif strcmp(method, 'MSI-SpatioSpectral')
         currentOptions.rho = 0.6;
         currentOptions.windowDim = 3;
         currentOptions.noiseType = 'spatiospectralolympus';
         currentOptions.noiseParam = 0.0001;
         img = msi;
-
+        
     elseif strcmp(method, 'MSI-Simple')
         currentOptions.noiseType = 'fromOlympus';
         currentOptions.noiseParam = 1;
         img = msi;
-
+        
     elseif strcmp(method, 'MSI-Spatial')
         currentOptions.noiseType = 'spatial';
         currentOptions.noiseParam = [0.6310, 0.6310];
@@ -41,9 +41,9 @@ for i = 1:lines
     else
         error('Unavailable reconstructionMethod')
     end
-
+    
     [reconstructedArray(:, i), gfcArray(i), nmseArray(i)] = estimateReflectance(img, mask, measured, idd, currentOptions);
-
+    
 end
 
 if (getSetting('showImages'))
