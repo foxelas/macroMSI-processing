@@ -8,7 +8,7 @@ function [] = setOpt(inputSettingsFile)
 if nargin < 1
     inputSettingsFile = '..\..\conf\defaultSettings.csv';
 end
-tmp = delimread(inputSettingsFile, ', ', 'raw');
+tmp = delimread(inputSettingsFile, {', '}, 'raw');
 options = struct();
 for i = 1:length(tmp.raw)
     

@@ -70,7 +70,7 @@ for i = 1:length(colorNames)
             c(i, :) = [153, 153, 153];
         case 'neutral 5 (.70 D)'
             c(i, :) = [76, 76, 76];
-        case'neutral 3.5(1.05 D)'
+        case'neutral 3.5 (1.05 D)'
             c(i, :) = [51, 51, 51];
         case 'black 2 (1.5 D)'
             c(i, :) = [0, 0, 0];

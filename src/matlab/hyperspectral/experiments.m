@@ -1,9 +1,9 @@
 
 %% Experiments
-experiment = 'effectOfFusion';
+experiment = 'fusion_comparison';
 %'effectOfFilter', 'effectOfAveraging', 'effectOfFusion',
 %'integration_time_comparison', 'polarizing_effect_on_tissue'
-% 'spatial_average_comparison'
+% 'spatial_average_comparison', 'normalizationWithLR'
 
 %% Read white
 readBlackWhite = false;
@@ -21,11 +21,216 @@ if readBlackWhite
 end
 
 switch experiment
-    case 'effectOfFilter'
+    case 'normalizationWithLR'
+                
+        experiment = 'normalizationWithLR';
+
+        %% Normalize image to avoid spatial discrepancies using linera regression 
+        dataDate = '20210127';
+        configuration = 'singleLightClose';
+        integrationTime = 1460;
+        indirFolder = 'image fusion';
+        % toFuseNames = {'20210127_122055_top_left_1', '20210127_122055_top_left_2', '20210127_122055_top_left_2b'};
+        targetPosition = 'colorchartTopLeft';
+
+        isNormalized = false; 
+        hasWindow = true;
+        plotSaveDir = fullfile(getSetting('savedir'), getSetting('saveFolder'));
+        initialization;
+
+
+        if isNormalized 
+            setSetting('saveFolder', strcat(experiment, 'normalizedByPixel')); 
+        else 
+             setSetting('saveFolder', strcat(experiment, 'raw')); 
+        end 
+
+        if hasWindow 
+            windowHalfSize = 300; 
+            height = (windowHalfSize * 2 + 1);
+            width = (windowHalfSize * 2 + 1);
+            centerx = windowHalfSize+1;
+            centery = centerx; 
+
+        else 
+            %Needs 12GB memory
+            height = 1376;    
+            width = 1024;
+            centerx = floor(height/2) + 1;
+            centery = floor(width/2) + 1;
+        end
+        k = 3;
+        z = 401;
+        xVals = zeros(k, height * width, z);
+        yVals = zeros(k, z);
+
+        for i = 1:k  
+            imgName = strcat(targetPosition, num2str(i));
+
+            filename = getFilename(getSetting('configuration'), imgName, getSetting('integrationTime'));
+            [spectralData, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+            [m, n, ~] = size(spectralData);
+
+            if hasWindow
+                chartMask = zeros(m, n);
+                chartMask( (floor(m/2) - windowHalfSize):(floor(m/2) + windowHalfSize), (floor(n/2) - windowHalfSize):(floor(n/2) + windowHalfSize) ) = 1;
+                if isNormalized
+                    croppedSpectra = readHSI(spectralData, chartMask);
+                else
+                    croppedSpectra = readHSI(spectralData, chartMask, 'raw');
+                end
+            else 
+                croppedSpectra = spectralData; 
+                clear 'spectralData';
+            end 
+            xVals(i, :, :) = reshape(croppedSpectra, [ height*width , 401]);
+            yVals(i, :) = croppedSpectra(centerx, centery);
+        end 
+
+        %% Settings for plots 
+        xVals4D = reshape(xVals, [k, height, width, z]);
+        x1 = 10; 
+        y1 = 10;
+        x2 = 590;
+        y2 = 590;
+        pos = [x1 y1;x1 y2; x2 y1; x2 y2; centerx centery];
+        startx = floor(m/2) - centerx + 1;
+        starty = floor(n/2) - centery + 1;
+        posXY(:,1) = pos(:,1) + startx;
+        posXY(:,2) = pos(:,2) + starty;
+        posXY = [posXY(:,2), posXY(:,1)]; % because data is reversed on the image
+        colors = {'y', 'g', 'c', 'b', 'm'};
+        curveNames = {'topleft', 'topright', 'bottomleft', 'bottomright', 'center'};
+
+        %% Indexes for bandmax 
+        [rref, inds] = max(reshape(croppedSpectra, [height * width, z]), [], 1);
+        xy = zeros(z, 2);
+        for i = 1:z
+            [row, col] = ind2sub( [height, width], inds(i));
+            xy(i, :) = [row; col];
+        end 
+        a = unique(inds');
+        hc = [a, histc(inds(:),a)];
+        freqInd = find(hc(:, 2) == max(hc(:,2)));
+        [row, col] = ind2sub([height, width], a(freqInd));
+        maxfreq = hc(freqInd, 2);
+        fprintf('Pixel (%d, %d) has bandmax value %d times (most common) \n', col, row, maxfreq);
+
+        fig = figure(3); clf;
+        imshow(baseImage);
+        hold on
+        h = imshow(chartMask * 0.6) ;
+        hold off
+        set(h, 'AlphaData', chartMask);
+        hold on 
+        for i = 1:z
+        scatter(xy(i,2) + starty, xy(i,1) + startx, 20, 'x', 'LineWidth',5,'MarkerEdgeColor','blue');
+        end
+        scatter(col + starty, row + startx, 20, 'x', 'LineWidth',5,'MarkerEdgeColor','red');
+        hold off
+        setSetting('plotName', fullfile( plotSaveDir, 'bandMaxPoints.png'));
+        savePlot(fig);
+
+
+        %% Linear Regression
+        %lrReferencePos = [centerx, centery];
+        lrReferencePos = [row, col];
+        lrReferenceInd = sub2ind([height, width], row, col);
+        yVals = xVals(:,lrReferenceInd, :);
+        coeffs = zeros(height * width, z);
+        for i = 1:height*width
+            for j = 1:z
+                coeffs(i, j) = xVals(:, i, j) \ yVals(:,j);
+            end
+        end
+
+        v1 = coeffs;
+        v2 = reshape(v1, [height, width, z]);
+
+
+        fig = figure(1);clf;
+        b = permute(v2(:,:,100), [2, 1]);
+        imagesc(b);
+        colorbar;
+        title('At 480nm');
+        setSetting('plotName', fullfile( plotSaveDir, 'lr_coeffs_480.png'));
+        savePlot(fig);
+
+        fig = figure(2);clf;
+        b =  permute(v2(:,:,350), [2, 1]);
+        imagesc(b);
+        colorbar;
+        title('At 730nm');
+        setSetting('plotName', fullfile( plotSaveDir, 'lr_coeffs_730.png'));
+        savePlot(fig);
+
+        fig = figure(3);clf;
+        v3 = permute(mean(v2, 3), [2,1]);
+        imagesc(v3)
+        colorbar;
+        title('Average multiplier to adjust to center of screen level');
+        setSetting('plotName', fullfile( plotSaveDir, 'lr_coeffs_average.png'));
+        savePlot(fig);
+
+
+        %% Show the mask that is being processed
+        fig = figure(1); clf; 
+        baseImage = rescale(spectralData(:,:,100));
+        imagesc(baseImage);
+        hold on
+        h = imshow(chartMask * 0.6) ;
+        hold off
+        set(h, 'AlphaData', chartMask);
+        hold on 
+        for i = 1:numel(colors)
+        scatter(posXY(i,1),posXY(i,2), 50, 'x', 'LineWidth',20,'MarkerEdgeColor',colors{i});
+        end
+        hold off 
+        setSetting('plotName', fullfile( plotSaveDir, 'lr_mask.png'));
+        savePlot(fig);
+
+
+        %% Measured Spectra average for 5 masks 
+        captureAvgWhite = zeros(numel(colors), z);
+        for i = 1:numel(colors)
+            captureAvgWhite(i,:) = mean(squeeze(xVals4D(:, pos(i,1), pos(i,2), :)), 1);
+        end 
+        plots(2, @plotColorChartSpectra, captureAvgWhite, curveNames, strcat('measured-raw', '_', '5masks'), ...
+                    [0, 0.003], false);
+
+        %% Measured Spectra 3 captures for 5 masks 
+        captureAvgWhite = zeros(k, numel(colors), z);
+        for i = 1:numel(colors)
+            captureAvgWhite(:,i,:) = squeeze(xVals4D(:, pos(i,1), pos(i,2), :));
+        end 
+        captureAvgWhite = permute(captureAvgWhite, [2,3,1]);
+        captureAvgWhitePlus = [captureAvgWhite; repmat(rref, [1, 1, 3])];
+        curveNamesPlus = [curveNames, 'reference'];
+        plots(4, @plotColorChartSpectra, captureAvgWhitePlus, curveNamesPlus, strcat('measured-raw', '_', '5masks3captures'), ...
+                    [0, 0.003], false);
+
+        %% After Normalization with max spectra 
+        captureAvgWhite = zeros(numel(colors), z);
+        for i = 1:numel(colors)
+            captureAvgWhite(i,:) = squeeze(xVals4D(1, pos(i,1), pos(i,2), :))' ./ rref;
+        end 
+        plots(5, @plotColorChartSpectra, captureAvgWhite, curveNames, strcat('measured', '_', '5masksNormalized'), ...
+                    [0, 1.4], false);
+
+        %% After Multiplication with lr coeff and normalization with bandmax 
+        captureAvgWhite = zeros(numel(colors), z);
+        for i = 1:numel(colors)
+            captureAvgWhite(i,:) = squeeze(xVals4D(1, pos(i,1), pos(i,2), :))' .* squeeze(v2(pos(i,1), pos(i,2), :))' ./ rref;
+        end 
+        plots(6, @plotColorChartSpectra, captureAvgWhite, curveNames, strcat('measured', '_', '5masksLRNormalized'), ...
+                    [0, 1.4], false);
+
+
+
+    case 'effectOfFilter' %'polarizing_filter_use_comparison'
         
         %% Compare effect of filter usage
         dataDate = '20210111';
-        experiment = 'polarizing_filter_use_comparison';
         integrationTime = 1460;
         initialization;
         
@@ -59,23 +264,20 @@ switch experiment
             end
         end
         
-    case 'effectOfAveraging'
+    case 'effectOfAveraging' %'capture_average_comparison'
         
         %% Compare image averaging
         dataDate = '20210127';
-        experiment = 'capture_average_comparison';
         configuration = 'singleLightClose';
         integrationTime = 1460;
         indirFolder = 'image fusion';
-        toFuseNames = {'20210127_122055_top_left_1.h5', '20210127_122055_top_left_2.h5', '20210127_122055_top_left_2b.h5'};
+%         toFuseNames = {'20210127_122055_top_left_1', '20210127_122055_top_left_2', '20210127_122055_top_left_2b'};
         targetPosition = 'colorchartTopLeft';
         initialization;
         
-        n = length(toFuseNames);
-        
         setSetting('saveFolder', strcat(experiment, '\singlePixelMask')); %'\squarePatchMask'
-        %         curSaveDir = mkNewDir(getSetting('savedir'), getSetting('saveFolder'));
         
+        n = 3;
         xLen = 6;
         yLen = 5;
         z = 401;
@@ -92,7 +294,7 @@ switch experiment
         plots(1, @plotColorChartSpectra, spectValsAverage, curveNames, strcat('measured', '_', imgName, '3captureAverage'), ...
             limits, false);
         
-        plots(2, @plotColorChartSpectra, spectVals, curveNames, strcat(curCase, '_', 'allResults'), ...
+        plots(2, @plotColorChartSpectra, spectVals, curveNames, strcat('measured', '_', 'allResults'), ...
             limits, true);
         
         % Compare curves
@@ -154,14 +356,13 @@ switch experiment
         end
         plots(1, @plotColorChartSpectra, multipleSpectra, patchNames, 'measured-adjusted_imageAverage', [], true);
         
-    case 'effectOfFusion'
+    case 'fusion_comparison' 
         % Compare image fusion
         dataDate = '20210127';
-        experiment = 'fusion_comparison';
         configuration = 'singleLightClose';
         integrationTime = 1460;
         indirFolder = 'image fusion';
-        targetPosition = 'colorchartTopRight'; %'colorchartTopLeft' 'colorchartBottomRight''colorchartBottomLeft'
+        targetPosition = 'colorchartTopLeft'; %'colorchartTopLeft' 'colorchartBottomRight''colorchartBottomLeft'
         initialization;
         n = 8;
         
@@ -273,11 +474,13 @@ switch experiment
         end
         plots(1, @plotColorChartSpectra, multipleSpectra, patchNames, 'measured_fused', [], false);
         
-    case 'integration_time_comparison'
+        %% For light skin only 
+        plots(1, @plotColorChartSpectra, squeeze(multipleSpectra(2,:,:))', {'Fused1', 'Fused2', 'Fused3', 'Fused4', 'Fused5', 'Fused6'}, 'measured_fusedLightSkin', [], false);
+        
+    case 'integration_time_comparison' %'integration_time_comparison'
         
         %% Compare different exposure times
         dataDate = '20201209';
-        experiment = 'integration_time_comparison';
         configuration = 'singleLightClose';
         integrationTime = 1460;
         initialization;
@@ -327,11 +530,10 @@ switch experiment
         setSetting('plotName', mkNewDir(getSetting('savedir'), getSetting('saveFolder'), strcat(altNames{k}, '-pointSpectraMean')));
         savePlot(5);
         
-    case 'polarizing_effect_on_tissue'
+    case 'polarizing_effect_on_tissue' %'polarizing_effect_on_tissue'
         
         %% Compare effect of polarizing on skin
         dataDate = '20210127';
-        experiment = 'polarizing_effect_on_tissue';
         configuration = 'singleLightClose';
         indirFolder = 'skin test';
         initialization;
@@ -424,11 +626,10 @@ switch experiment
         imgName = 'dryHandNoFilter';
         getRepresentativePoints(imgName, xPoints, yPoints, [0, 0.01]);
         
-    case 'spatial_average_comparison'
+    case 'spatial_average_comparison' %'spatial_average_comparison'
         
         %% Compare effect of spatial averaging
         dataDate = '20201220';
-        experiment = 'spatial_average_comparison';
         configuration = 'doubleLightClose';
         initialization;
         

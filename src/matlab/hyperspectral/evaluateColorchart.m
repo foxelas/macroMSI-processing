@@ -28,7 +28,7 @@ if nargin < 2
     allowRoiSelection = false;
 end
 
-if nargin < 3
+if nargin < 3 || isempty(selectedPatches)
     selectedPatches = 1:length(patchNames);
 end
 
@@ -48,6 +48,8 @@ standardSpectra = expectedSpectra(selectedPatches, :);
 
 if ~strcmp(option, 'raw')
     [T, adjustedSpectra] = compareSpectra(standardSpectra, measuredSpectra, lineNames);
+else
+    plots(1, @plotColorChartSpectra, measuredSpectra, lineNames, 'measured-raw', [0, 0.005], false);
 end
 
 end
