@@ -54,6 +54,3 @@
 	configuration, , string
 	splitWavelength, 540, double
 	targetPosition, , string
- 
-	
- 

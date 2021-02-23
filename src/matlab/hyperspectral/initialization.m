@@ -11,6 +11,11 @@ configuration = 'singleLightClose';
 setOpt(userSettingsFile);
 
 %% Other settings
+if ~exist('dataDate', 'var')
+    dataDate = '20210127';
+    warning('Setting default date: 20210127.');
+end
+
 indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), 'h5');
 if exist('indirFolder', 'var') && ~isempty(indirFolder)
     indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), indirFolder, 'h5');

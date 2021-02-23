@@ -1,3 +1,32 @@
+function [solaxSpec] = getSolaxSpectra(method)
+%%GETSOLAXSPECTRA reconstructs values for Solax-IO illumination
+%   Usage:
+%   illum = getSolaxSpectra()
+%   illum = getSolaxSpectra('reconstructed')
+
+if nargin < 1
+    method = 'real';
+end
+
+switch method
+    case 'real'
+        settingsDir = getSetting('datasetSettingsDir');
+        inTable = delimread(fullfile(settingsDir, 'LE-9ND55F.csv'), ',', 'num');
+        wavelengths = inTable.num(:,1);
+        solaxSpec = inTable.num(:,2);
+        sunSpec = inTable.num(:,3);
+        
+        plotSolaxSpectra(wavelengths, solaxSpec, sunSpec);
+        
+    case 'reconstructed'
+        savedir = getSetting('savedir');
+        solaxSpec = reconstructSolaxIoIlluminationSpectrum(savedir);
+    otherwise 
+        error('Unsupported case for solax-io spectra reconstruction');
+end
+
+end 
+
 function [solaxSpec] = reconstructSolaxIoIlluminationSpectrum(savedir)
 %savedir = "D:\temp\Google Drive\titech\research\experiments\output\5. Progress Reports\img";
 
@@ -55,5 +84,26 @@ setSetting('plotName', fullfile(savedir, 'solaxSpectrum_reconstructed.png'));
 savePlot(fig3);
 
 save('parameters/solax_reconstructed_spectrum.mat', 'solaxSpec', 'solaxLocalMaxWavelengths');
+
+end
+
+
+function [] = plotSolaxSpectra(wavelengths, solaxSpec, sunSpec)
+
+savedir = getSetting('savedir');
+
+fig4 = figure(4);
+x = wavelengths;
+h(1) = plot(x, solaxSpec, 'r', 'LineWidth', 3, 'DisplayName', 'Solax-iO');
+hold on 
+h(2) = plot(x, sunSpec, 'b', 'LineWidth', 3, 'DisplayName', 'Sun');
+hold off
+ylim([0, 100]);
+xlabel('Wavelength (nm)', 'FontSize', 15);
+ylabel('Relative Illumination Spectrum (%)', 'FontSize', 15);
+title('For Solax-iO light source', 'FontSize', 15);
+legend(h, 'Location', 'northeast', 'FontSize', 15);
+setSetting('plotName', fullfile(savedir, 'solaxSpectrum_reconstructed.png'));
+savePlot(fig4);
 
 end

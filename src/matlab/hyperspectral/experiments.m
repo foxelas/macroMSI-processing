@@ -230,6 +230,7 @@ switch experiment
     case 'effectOfFilter' %'polarizing_filter_use_comparison'
         
         %% Compare effect of filter usage
+        experiment = 'polarizing_filter_use_comparison';
         dataDate = '20210111';
         integrationTime = 1460;
         initialization;
