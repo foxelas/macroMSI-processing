@@ -1,8 +1,8 @@
 function [solaxSpec] = getSolaxSpectra(method)
 %%GETSOLAXSPECTRA reconstructs values for Solax-IO illumination
 %   Usage:
-%   illum = getSolaxSpectra()
-%   illum = getSolaxSpectra('reconstructed')
+%   illum = getSolaxSpectra();
+%   illum = getSolaxSpectra('reconstructed');
 
 if nargin < 1
     method = 'real';
