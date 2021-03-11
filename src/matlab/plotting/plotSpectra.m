@@ -1,4 +1,9 @@
 function[] = plotSpectra(spectra, wavelengths, names, figTitle, fig)
+%%PLOTSPECTRA plots one or more spectra together 
+%
+%   Usage: 
+%   plotSpectra(spectra, wavelengths, names, figTitle, fig);
+%   plotSpectra(spectra)
 
 if isempty(wavelengths)
     wavelengths = 380:5;780; 
@@ -31,7 +36,11 @@ ylabel('Reflectance (a.u.)', 'FontSize', 15);
 title (figTitle)
 
 %%For hsi case only 
-ylim([0, 5 * 10^(-3)]);
+ylim([0, 3 * 10^(-3)]); %5
+
+%%To disable showing exponent power on the corner
+ax = gca;
+ax.YAxis.Exponent = 0;
 
 savePlot(fig);
 

@@ -1,13 +1,13 @@
-function [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(filename, allowRoiSelection, selectedPatches, option)
+function [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(contentName, allowRoiSelection, selectedPatches, option)
 %EVALUATECOLORCHART returns measured curves end evaluations in comparison
 %to expected colorchart curves
 %
-%   [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(filename,
+%   [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(contentName,
 %   allowRoiSelection, selectedPatches) returns values for
 %   evaluation of the colorchart
 %
 %   Input parameters
-%   -filename: HSI file to read
+%   -contentName: contentname of HSI file to read
 %   -allowRoiSelection: whether manual selection of colorchart ROI is
 %   allowed
 %   -selectedPatches: indexes of available patches to be used
@@ -35,7 +35,7 @@ end
 if nargin < 4
     option = [];
 end
-
+filename = getFilename(getSetting('configuration'), contentName, getSetting('integrationTime'));
 [spectralData, ~, wavelengths] = loadH5Data(filename, experiment);
 [colorMasks, chartMask] = getColorchartMasks(squeeze(spectralData(:, :, 100)), allowRoiSelection, experiment);
 actualSpectralVals = readHSI(spectralData, {chartMask, colorMasks}, option);

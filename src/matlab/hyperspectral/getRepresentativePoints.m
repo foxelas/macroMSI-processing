@@ -17,10 +17,10 @@ if nargin < 5
 end
 
 %% plot Y image with various points
-baseImage = spectralData(:, :, 100);
+baseImage = getDisplayImage(spectralData, 'rgb');
 plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(imgName, '-points', '.png'));
 setSetting('plotName', plotName);
-plots(1, @plotYFromHSI, baseImage, 'Various points on the image (at 480nm)', xPoints, yPoints);
+plots(1, @plotPointsOnImage, baseImage, xPoints, yPoints, true);
 
 wavelengths = getWavelengths(401); %without padding use (size(spectralData,3));
 

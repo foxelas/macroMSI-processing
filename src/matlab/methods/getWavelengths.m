@@ -1,7 +1,7 @@
 function [x] = getWavelengths(m, option)
 %GETWAVELENGTHS returns the wavelengths
 %
-%   x = getWavelengths(m) returns wavelengths as a vecrtor of wavelengths
+%   x = getWavelengths(m) returns wavelengths as a vector of wavelengths
 %   x = getWavelengths(m, 'raw') returns wavelengths as a vecrtor of
 %   wavelengths
 %   x = getWavelengths(m, 'index') returns indexes respective to selected

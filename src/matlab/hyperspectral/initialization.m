@@ -3,9 +3,7 @@
 close all;
 
 userSettingsFile = '..\..\conf\hsiUserSettings.csv';
-
-originDir = 'F:\temp\mspi';
-configuration = 'singleLightClose';
+originDir = 'D:\elena\mspi';
 
 %% Main
 setOpt(userSettingsFile);

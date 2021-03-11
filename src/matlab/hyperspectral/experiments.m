@@ -10,7 +10,7 @@ readBlackWhite = false;
 if readBlackWhite
     for i = 1:2
         setSetting('saveFolder', fullfile(experiment, configurations{i}));
-        readWhite(dataDate, integrationTime, true, false, experiment, configuration, 'white', [], hasFilter{i});
+        readWhite(dataDate, integrationTime, true, false, experiment, configuration, 'white', []);
     end
     
     for i = [500, 800, 1460] %1800,

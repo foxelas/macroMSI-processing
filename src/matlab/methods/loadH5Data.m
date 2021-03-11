@@ -13,7 +13,7 @@ if ~exist(saveFilename, 'file')
     %h5disp(currentFile);
     %h5info(currentFile);
     
-    spectralData = h5read(currentFile, '/SpectralImage');
+    spectralData = gpuArray(h5read(currentFile, '/SpectralImage'));
     wavelengths = h5read(currentFile, '/Wavelengths');
     imageX = h5read(currentFile, '/MeasurementImages/Tristimulus_X');
     imageY = h5read(currentFile, '/MeasurementImages/Tristimulus_Y');

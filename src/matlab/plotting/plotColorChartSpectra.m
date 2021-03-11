@@ -151,6 +151,10 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     end 
     set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
+    %%To disable showing exponent power on the corner
+    ax = gca;
+    ax.YAxis.Exponent = 0;
+
     plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(figName, '.png'));
     
     setSetting('plotName', plotName);
