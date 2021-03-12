@@ -43,6 +43,7 @@ if ~strcmp(option, 'raw')
 end
 %has opposite indexes because of any()
 spectralData = raw(any(mask, 2), any(mask, 1), :);
+clear 'raw';
 
 switch option
     case 'useBlack'

@@ -54,3 +54,5 @@
 	configuration, , string
 	splitWavelength, 540, double
 	targetPosition, , string
+	isRotated, 1, logical
+	pcHasGPU, 0, logical

@@ -136,7 +136,7 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
         end
     end
     
-    xlim([420, 780]);
+    xlim([420, min(max(x), 780)]);
     ylim(ylimits);
     
     if hasReflectanceRatio 

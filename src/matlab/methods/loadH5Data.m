@@ -12,8 +12,9 @@ if ~exist(saveFilename, 'file')
     currentFile = adjustFilename(filename);
     %h5disp(currentFile);
     %h5info(currentFile);
-    
-    spectralData = gpuArray(h5read(currentFile, '/SpectralImage'));
+   
+    spectralData = double(h5read(currentFile, '/SpectralImage'));
+
     wavelengths = h5read(currentFile, '/Wavelengths');
     imageX = h5read(currentFile, '/MeasurementImages/Tristimulus_X');
     imageY = h5read(currentFile, '/MeasurementImages/Tristimulus_Y');
@@ -29,7 +30,6 @@ end
 
 function currentFile = adjustFilename(filename)
 indir = getSetting('datadir');
-%     indir = 'C:\Users\elena\Desktop\'; %temporary read dir
 
 filenameParts = strsplit(filename, '_');
 dataDate = filenameParts{1};

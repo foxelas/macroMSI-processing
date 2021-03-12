@@ -37,7 +37,8 @@ if nargin < 4
 end
 filename = getFilename(getSetting('configuration'), contentName, getSetting('integrationTime'));
 [spectralData, ~, wavelengths] = loadH5Data(filename, experiment);
-[colorMasks, chartMask] = getColorchartMasks(squeeze(spectralData(:, :, 100)), allowRoiSelection, experiment);
+dispImage = getDisplayImage(spectralData, 'rgb');
+[colorMasks, chartMask] = getColorchartMasks(dispImage, allowRoiSelection, filename);
 actualSpectralVals = readHSI(spectralData, {chartMask, colorMasks}, option);
 
 [reorderedSpectralVals, lineNames] = reorderSpectra(actualSpectralVals, patchOrder, patchNames, wavelengths, expectedWavelengths);

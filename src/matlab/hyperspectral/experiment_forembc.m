@@ -30,11 +30,13 @@ for i = 1:n
     configuration = configurations{i};
     setSetting('configuration', configuration)
     setSetting('saveFolder', fullfile(experiment, configuration));
-    %plotSaveDir = fullfile(getSetting('savedir'), getSetting('saveFolder'));
 
-    getRepresentativePoints('whiteReflectance');
+%     getRepresentativePoints('whiteReflectance');
 
-    [tables{i}, measuredSpectra{i}, adjustedSpectra{i}] = evaluateColorchart('colorchart', allowRoiSelection);
- 
+    [tables{i}, measuredSpectra{i}, adjustedSpectra{i}] = evaluateColorchart('colorchart', allowRoiSelection); 
 end
+
+[tables] = exportSimilarityTables(tables, measuredSpectra, adjustedSpectra);
+
+
 %% Compare filter setting 

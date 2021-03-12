@@ -1,4 +1,4 @@
-function [solaxSpec] = getSolaxSpectra(method)
+function [solaxSpec, wavelengths] = getSolaxSpectra(method, showImage)
 %%GETSOLAXSPECTRA reconstructs values for Solax-IO illumination
 %   Usage:
 %   illum = getSolaxSpectra();
@@ -7,6 +7,9 @@ function [solaxSpec] = getSolaxSpectra(method)
 if nargin < 1
     method = 'real';
 end
+if nargin < 2
+    showImage = false;
+end 
 
 switch method
     case 'real'
@@ -16,18 +19,20 @@ switch method
         solaxSpec = inTable.num(:,2);
         sunSpec = inTable.num(:,3);
         
-        plotSolaxSpectra(wavelengths, solaxSpec, sunSpec);
+        if showImage
+            plotSolaxSpectra(wavelengths, solaxSpec, sunSpec);
+        end 
         
     case 'reconstructed'
         savedir = getSetting('savedir');
-        solaxSpec = reconstructSolaxIoIlluminationSpectrum(savedir);
+        [solaxSpec, wavelengths] = reconstructSolaxIoIlluminationSpectrum(savedir);
     otherwise 
         error('Unsupported case for solax-io spectra reconstruction');
 end
 
 end 
 
-function [solaxSpec] = reconstructSolaxIoIlluminationSpectrum(savedir)
+function [solaxSpec, x] = reconstructSolaxIoIlluminationSpectrum(savedir)
 %savedir = "D:\temp\Google Drive\titech\research\experiments\output\5. Progress Reports\img";
 
 x = [350, 360, 370, 380, 400, 410, 425, 450, 460, 480, 520, 525, 530, 575, 620, 625, 630, 640, 660, 690, 695, 700, 725, 750, 800]';
