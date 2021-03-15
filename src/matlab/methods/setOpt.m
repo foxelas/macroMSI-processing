@@ -66,7 +66,7 @@ fprintf('Data directory is set to %s.\n', options.datadir);
 fprintf('Save directory is set to %s.\n', options.savedir);
 
 clear tmp value parameterName rawValue varType i;
-settingsFile = 'configuration.mat';
+settingsFile = mkNewDir('parameters', 'configuration.mat');
 save(settingsFile);
 fprintf('Settings loaded from %s and saved in %s.\n', inputSettingsFile, settingsFile);
 end

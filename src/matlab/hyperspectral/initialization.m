@@ -45,3 +45,7 @@ setSetting('normByPixel', normByPixel);
 if exist('targetPosition', 'var')
     setSetting('targetPosition', targetPosition);
 end
+
+if exist('normalization', 'var')
+    setSetting('normalization', 'byPixel');
+end
