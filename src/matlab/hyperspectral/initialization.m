@@ -1,6 +1,6 @@
 
 %% Initialization
-close all;
+disp('Initialization started');
 
 userSettingsFile = '..\..\conf\hsiUserSettings.csv';
 originDir = 'D:\elena\mspi';
@@ -13,6 +13,7 @@ if ~exist('dataDate', 'var')
     dataDate = '20210127';
     warning('Setting default date: 20210127.');
 end
+setSetting('dataDate', dataDate);
 
 indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), 'h5');
 if exist('indirFolder', 'var') && ~isempty(indirFolder)
@@ -49,3 +50,6 @@ end
 if exist('normalization', 'var')
     setSetting('normalization', 'byPixel');
 end
+
+disp('Initialization finished');
+

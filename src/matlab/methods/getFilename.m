@@ -10,6 +10,12 @@ if nargin < 3
 else
     setId = strcmp(dataTable.configuration, configuration) & strcmp(dataTable.content, content) & (dataTable.exposureTime == integrationTime);
 end
+
+if sum(setId)  > 1
+    dataDate = getSetting('dataDate');
+    setId = (dataTable.date == str2num(dataDate)) & setId; 
+end
+
 searchName = dataTable.filename{setId};
 
 if nargin > 2

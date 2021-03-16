@@ -42,10 +42,8 @@ function [values, valueNames, additionalValues] = getExpectedValues(name, option
             
         case 'colorchartOrder'
             configuration = option; 
-            if ~strcmp(configuration, 'doubleLightClose') && ~strcmp(configuration, 'no_filter') ...
-                    && ~strcmp(configuration, 'singleLightClose') && ~strcmp(configuration, 'singleLightFar')
-                %strcmp(configuration, 'capture_average_comparison') || strcmp(configuration, 'fusion_comparison') 
-                configuration = 'filter';
+            if ~strcmp(configuration, 'singleLightFar') && ~strcmp(configuration, 'testStomach')
+                configuration = 'colorchart';
             end 
             outstruct = delimread(fullfile(getSetting('datasetSettingsDir'), strcat(configuration, 'PatchOrder.txt')), '\t', 'text');
             values = outstruct.text;

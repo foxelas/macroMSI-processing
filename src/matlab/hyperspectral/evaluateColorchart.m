@@ -1,4 +1,4 @@
-function [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(contentName, allowRoiSelection, selectedPatches, option)
+function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(contentName, allowRoiSelection, selectedPatches, option)
 %EVALUATECOLORCHART returns measured curves end evaluations in comparison
 %to expected colorchart curves
 %
@@ -18,7 +18,7 @@ function [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(contentName,
 %   expected spectra
 %   -measuredSpectra: measured spectra from the HSI
 %   -adjustedSpectra: measured spectra from the HSI after adjustment
-%
+%   -alphaCoeff: coefficient used for level adjustment
 
 experiment = getSetting('experiment');
 patchOrder = getExpectedValues('colorchartOrder', experiment);
@@ -48,7 +48,7 @@ measuredSpectra = reorderedSpectralVals(selectedPatches, :);
 standardSpectra = expectedSpectra(selectedPatches, :);
 
 if ~strcmp(option, 'raw')
-    [T, adjustedSpectra] = compareSpectra(standardSpectra, measuredSpectra, lineNames);
+    [T, adjustedSpectra, alphaCoeff] = compareSpectra(standardSpectra, measuredSpectra, lineNames);
 else
     plots(1, @plotColorChartSpectra, measuredSpectra, lineNames, 'measured-raw', [0, 0.005], false);
 end

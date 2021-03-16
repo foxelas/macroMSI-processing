@@ -26,7 +26,7 @@ switch adjustmentMethod
             startIdx = 1;
         end
         alpha = mean(inSpectra(white95Idx, startIdx:end)) / white95Val;
-        fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.8 \nwith division by alpha = %.3f \n', alpha);
+        fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.9 \nwith division by alpha = %.3f \n', alpha);
         outSpectra = inSpectra / alpha;
     otherwise
         error('Unsupported method');

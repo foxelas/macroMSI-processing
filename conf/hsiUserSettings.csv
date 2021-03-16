@@ -1,4 +1,5 @@
 	dataset, saitama_v9_bright_3class, string
+	dataDate, , string
 	systemdir, ..\..\..\input\3_spectra_from_web, string
 	datadir, , string
 	savedir, hsi, string

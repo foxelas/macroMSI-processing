@@ -21,10 +21,14 @@ configuration = getSetting('experiment');
 isRotated = getSetting('isRotated');
 switch configuration
     case 'singleLightFar'
-        xx = [33, 70, 103, 140, 175, 212];
+        xx = [40, 70, 103, 140, 175, 212];
         yy = [39, 76, 109, 147, 182];
         r = 15;
         isRotated = false;
+    case 'testStomach'
+        xx = [28, 53, 77, 105, 129, 153]-2;
+        yy = [25, 52, 76, 101, 134]-2;
+        r = 0;
 %     case 'singleLightClose'
 %         xx = [47, 89, 139, 182, 233, 279];
 %         yy = [38, 93, 140, 184, 229];
@@ -51,7 +55,7 @@ switch configuration
 %         yy = [44, 94, 144, 195, 245];
         xx = [47, 89, 139, 182, 233, 279];
         yy = [44, 93, 140, 184, 229];
-        r = 1;
+        r = 0;
 end
 
 saveFilename = mkNewDir(getSetting('matdir'), 'cororchartMasks', ...
@@ -111,16 +115,17 @@ if allowRoiSelection
         imshow(colorMask);
     end
     
-    if r == 1
+    if r < 2
         mask_eroded = mask;
     else
         mask_eroded = imerode(mask, strel('disk', 5));
     end
     
-    %mask_clipped = (A == intmax(class(A))) | (A == intmin(class(A)));
-    mask_clipped = (A == intmax('uint8')) | (A == intmin('uint8'));
-    mask_clipped = mask_clipped(:, :, 1) | mask_clipped(:, :, 2) | mask_clipped(:, :, 3);
-    mask_patches = mask_eroded & ~mask_clipped;
+%     %mask_clipped = (A == intmax(class(A))) | (A == intmin(class(A)));
+%     mask_clipped = (A == intmax('uint8')) | (A == intmin('uint8'));
+%     mask_clipped = mask_clipped(:, :, 1) | mask_clipped(:, :, 2) | mask_clipped(:, :, 3);
+%     mask_patches = mask_eroded & ~mask_clipped;
+    mask_patches = mask_eroded;
     A_patches = imoverlay(A, mask_patches);
     
     clf(fig1);

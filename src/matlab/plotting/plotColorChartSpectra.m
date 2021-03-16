@@ -57,11 +57,11 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
             figTitle = 'Measured Spectra after Adjustment';
             ylimits  = [0,1];
         case 'difference'
-            figTitle = 'Percentage difference for [Expected vs Measured] spectra';
+            figTitle = 'Difference for [Expected vs Measured] spectra';
             hasReflectanceRatio = false;
             ylimits = [-1,1];
         case 'difference-adjusted'
-            figTitle = 'Percentage difference for [Expected vs Measured] after Adjustment';
+            figTitle = 'Difference for [Expected vs Measured] after Adjustment';
             hasReflectanceRatio = false;
             ylimits = [-1,1];
         case '1x1window'

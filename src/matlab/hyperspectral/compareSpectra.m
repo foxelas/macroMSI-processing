@@ -1,12 +1,12 @@
-function [T, adjusted] = compareSpectra(expected, measured, lineNames)
+function [T, adjusted, alphaCoeff] = compareSpectra(expected, measured, lineNames)
 %COMPARESPECTRA compares expected and measured spectra
 %
 %   T = compareSpectra(expected, measured, lineNames) returns a table with
 %   comparison differences for three metrics, Goodness-Of-Fit, Normalized
 %   Mean Square Error and Root Mean Square Error
 %
-%   [T, adjusted] = compareSpectra(expected, measured, lineNames) returns
-%   table T and also adjusted values after adjustment
+%   [T, adjusted, alpha] = compareSpectra(expected, measured, lineNames) 
+%   returns table T and also adjusted values after adjustment
 %
 
 %% Standard (expected) color patch spectra
@@ -25,7 +25,7 @@ nmses = applyRowFunc(@nmse, measured, expected);
 rmses = applyRowFunc(@rmse, measured, expected);
 
 %% Standard (expected) color patch spectra after adjustment
-[adjusted, ~] = adjustSpectra(measured, lineNames);
+[adjusted, alphaCoeff] = adjustSpectra(measured, lineNames);
 
 plots(7, @plotColorChartSpectra, adjusted, lineNames, 'measured-adjusted');
 

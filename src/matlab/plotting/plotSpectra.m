@@ -5,8 +5,9 @@ function[] = plotSpectra(spectra, wavelengths, names, figTitle, fig)
 %   plotSpectra(spectra, wavelengths, names, figTitle, fig);
 %   plotSpectra(spectra)
 
+[~,n] = size(spectra);
 if isempty(wavelengths)
-    wavelengths = 380:5;780; 
+    wavelengths = getWavelengths(n);
 end 
 
 if isempty(names)
