@@ -1,6 +1,19 @@
-function [measured, curveNames] = getRepresentativePoints(imgName, xPoints, yPoints, limits, windowDim)
+function [measured, curveNames] = getRepresentativePoints(fileConditions, xPoints, yPoints, limits, windowDim)
+%%GETREPRESENTATIVEPOINTS returns spectra of random points on the captured
+%%surface.
+% 
+%     Arguments: 
+%     fileConditions values for where to search for filename
+%     xPoints x coordinates for sample points 
+%     yPoints y coordinates for sample points 
+%     limits the limits for output spectrum plot 
+%     windowDim window dimension if smooting is used 
+% 
+%     Usage: 
+%     [measured, curveNames] = getRepresentativePoints(fileConditions,
+%     xPoints, yPoints, limits, windowDim)
 
-filename = getFilename(getSetting('configuration'), imgName, getSetting('integrationTime'));
+filename = getFilename(fileConditions{:});
 [spectralData, ~, ~] = loadH5Data(filename, getSetting('experiment'));
 
 if nargin < 2
@@ -18,7 +31,8 @@ end
 
 %% plot Y image with various points
 baseImage = getDisplayImage(spectralData, 'rgb');
-plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(imgName, '-points', '.png'));
+target = fileConditions{4};
+plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(target, '-points', '.png'));
 setSetting('plotName', plotName);
 plots(1, @plotPointsOnImage, baseImage, xPoints, yPoints, true);
 
@@ -88,7 +102,7 @@ else
     curCase = strcat(num2str(windowDim), 'x', num2str(windowDim), 'window');
 end
 
-plots(2, @plotColorChartSpectra, vals, curveNames, strcat(curCase, '_', imgName), ...
+plots(2, @plotColorChartSpectra, vals, curveNames, strcat(curCase, '_', target), ...
     limits, hasMultiple);
 
 measured = reshape(spectVals, [1, numel(xPoints), numel(yPoints), numel(wavelengths)]);

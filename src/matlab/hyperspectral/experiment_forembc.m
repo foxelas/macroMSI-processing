@@ -47,7 +47,8 @@ for i = 1:n
 
     %     getRepresentativePoints('whiteReflectance');
         confs(k, 1:2) = deal({configuration, normalization});
-        [tables{k}, measuredSpectra{k}, adjustedSpectra{k}, alphas{k}] = evaluateColorchart('colorchart', allowRoiSelection); 
+        fileConditions = getFileConditions('colorchart');
+        [tables{k}, measuredSpectra{k}, adjustedSpectra{k}, alphas{k}] = evaluateColorchart(fileCondition, allowRoiSelection); 
     end 
 end
 

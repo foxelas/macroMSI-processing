@@ -5,6 +5,7 @@ function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configurat
 %   configuration) returns spectralData, XYZ image and capture wavelengths
 %
 
+filename = strrep(filename, '.hsm', '.h5');
 saveFilename = mkNewDir(getSetting('matdir'), configuration, strcat(filename, '.mat'));
 
 if ~exist(saveFilename, 'file')

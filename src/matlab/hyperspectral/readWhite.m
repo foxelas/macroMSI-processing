@@ -9,10 +9,6 @@ function [] = readWhite(dataDate, integrationTime, experiment, configuration, in
 
 close all;
 
-if isempty(integrationTime)
-    integrationTime = 1460;
-end
-
 %% Initialization
 % normByPixel, hasSmoothing, experiment, configuration, indirFolder
 %
