@@ -58,3 +58,4 @@
 	isRotated, 1, logical
 	pcHasGPU, 0, logical
 	normalization, byPixel, string
+	colorPatchOrder, , string

@@ -14,7 +14,9 @@ function [measured, curveNames] = getRepresentativePoints(fileConditions, xPoint
 %     xPoints, yPoints, limits, windowDim)
 
 filename = getFilename(fileConditions{:});
-[spectralData, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+[raw, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+targetName = fileConditions{4};
+spectralData = normalizeHSI(raw, targetName);
 
 if nargin < 2
     xPoints = 50:200:1088;
@@ -22,7 +24,7 @@ if nargin < 2
 end
 
 if nargin < 4
-    limits = [0, 0.008];
+    limits = [0, 0.005];
 end
 
 if nargin < 5
@@ -31,13 +33,12 @@ end
 
 %% plot Y image with various points
 baseImage = getDisplayImage(spectralData, 'rgb');
-target = fileConditions{4};
-plotName = fullfile(getSetting('savedir'), getSetting('saveFolder'), strcat(target, '-points', '.png'));
+
+plotName = fullfile(getSetting('savedir'), getSetting('experiment'), strcat(targetName, '-points', '.png'));
 setSetting('plotName', plotName);
 plots(1, @plotPointsOnImage, baseImage, xPoints, yPoints, true);
 
 wavelengths = getWavelengths(401); %without padding use (size(spectralData,3));
-
 hasMultiple = ndims(spectralData) > 3;
 
 %% Plot spectra
@@ -53,7 +54,6 @@ for i = xPoints
         curveNames{z} = sprintf('at (%d,%d)', i, j);
     end
 end
-
 
 if hasMultiple
     vals = zeros(xLen*yLen, numel(wavelengths), size(spectralData, 1));
@@ -102,7 +102,11 @@ else
     curCase = strcat(num2str(windowDim), 'x', num2str(windowDim), 'window');
 end
 
-plots(2, @plotColorChartSpectra, vals, curveNames, strcat(curCase, '_', target), ...
+if max(vals(:)) > 0.15
+   limits = [0, 1];
+end 
+
+plots(2, @plotColorChartSpectra, vals, curveNames, strcat(curCase, '_', targetName), ...
     limits, hasMultiple);
 
 measured = reshape(spectVals, [1, numel(xPoints), numel(yPoints), numel(wavelengths)]);

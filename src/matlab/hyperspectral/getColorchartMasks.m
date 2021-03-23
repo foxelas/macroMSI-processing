@@ -19,15 +19,18 @@ end
 % Use the provided estimate of ROI center coordinates.
 configuration = getSetting('experiment');
 isRotated = getSetting('isRotated');
-switch configuration
-    case 'singleLightFar'
+if strcmp(configuration, 'singleLightFar')
         xx = [40, 70, 103, 140, 175, 212];
         yy = [39, 76, 109, 147, 182];
         r = 15;
         isRotated = false;
-    case 'testStomach'
+elseif strcmp(configuration,'testStomach')
         xx = [28, 53, 77, 105, 129, 153]-2;
         yy = [25, 52, 76, 101, 134]-2;
+        r = 0;
+elseif strcmp(configuration,'testCalibration') || strcmp(configuration,'testCalibrationPositions')
+        xx = [47, 95, 155, 209, 268, 315]-2;
+        yy = [44, 93, 150, 211, 260]-2;
         r = 0;
 %     case 'singleLightClose'
 %         xx = [47, 89, 139, 182, 233, 279];
@@ -50,7 +53,7 @@ switch configuration
 %         yy = [44, 94, 144, 195, 245];
 %         isRotated = true;
 %         r = 1;
-    otherwise
+else
 %         xx = [41, 93, 147, 195, 248, 295];
 %         yy = [44, 94, 144, 195, 245];
         xx = [47, 89, 139, 182, 233, 279];
@@ -113,6 +116,7 @@ if allowRoiSelection
         colorMask(y(k)-r:y(k)+r, x(k)-r:x(k)+r) = true;
         colorMasks(:, :, k) = colorMask;
         imshow(colorMask);
+%         pause(0.2);
     end
     
     if r < 2

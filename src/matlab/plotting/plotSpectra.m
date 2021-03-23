@@ -37,7 +37,7 @@ ylabel('Reflectance (a.u.)', 'FontSize', 15);
 title (figTitle)
 
 %%For hsi case only 
-ylim([0, 3 * 10^(-3)]); %5
+ylim([0, 5 * 10^(-3)]); 
 
 %%To disable showing exponent power on the corner
 ax = gca;

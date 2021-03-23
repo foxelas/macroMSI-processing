@@ -19,7 +19,7 @@ hold on;
 for i = 1:length(xx)
     plot(xx(i), yy(i), 'rx', 'MarkerSize', 20, 'LineWidth', 5);
     textStr = sprintf('P%d(%d,%d)', i, xx(i), yy(i));
-    text(xx(i)- 80, yy(i) + 50, textStr);
+    text(xx(i)- 50, yy(i) + 50, textStr);
 end
 hold off;
 

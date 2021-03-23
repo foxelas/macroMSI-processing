@@ -1,17 +1,16 @@
-function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(fileConditions, allowRoiSelection, selectedPatches, option)
+function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(targetName, allowRoiSelection, selectedPatches)
 %EVALUATECOLORCHART returns measured curves end evaluations in comparison
 %to expected colorchart curves
 %
 %   [T, measuredSpectra, adjustedSpectra] = evaluateColorchart(
-%   fileConditions, allowRoiSelection, selectedPatches) returns values for
+%   targetName, allowRoiSelection, selectedPatches) returns values for
 %   evaluation of the colorchart
 %
 %   Input parameters
-%   -fileConditions: conditions of HSI file to read
+%   -targetName: targetName of HSI file to read
 %   -allowRoiSelection: whether manual selection of colorchart ROI is
 %   allowed
 %   -selectedPatches: indexes of available patches to be used
-%   -option: options for normalization when reading the hsi
 %
 %   Output parameters
 %   -T: table including GOF, NMSE, RMSE of the evalueation of measured with
@@ -32,14 +31,16 @@ if nargin < 3 || isempty(selectedPatches)
     selectedPatches = 1:length(patchNames);
 end
 
-if nargin < 4
-    option = [];
-end
+option = getSetting('normalization');
+
+fileConditions = getFileConditions('colorchart', targetName);
 filename = getFilename(fileConditions{:});
-[spectralData, ~, wavelengths] = loadH5Data(filename, experiment);
+[raw, ~, wavelengths] = loadH5Data(filename, experiment);
+spectralData = normalizeHSI(raw, targetName);
 dispImage = getDisplayImage(spectralData, 'rgb');
+
 [colorMasks, chartMask] = getColorchartMasks(dispImage, allowRoiSelection, filename);
-actualSpectralVals = readHSI(spectralData, {chartMask, colorMasks}, option);
+actualSpectralVals = getSpectrumCurves(spectralData, colorMasks, chartMask);
 
 [reorderedSpectralVals, lineNames] = reorderSpectra(actualSpectralVals, patchOrder, patchNames, wavelengths, expectedWavelengths);
 % [reorderedSpectralValsRaw, ~] = reorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);

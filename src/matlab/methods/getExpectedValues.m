@@ -41,11 +41,11 @@ function [values, valueNames, additionalValues] = getExpectedValues(name, option
             values = outstruct.num;
             
         case 'colorchartOrder'
-            configuration = option; 
-            if ~strcmp(configuration, 'singleLightFar') && ~strcmp(configuration, 'testStomach')
-                configuration = 'colorchart';
+            colorPatchOrder = getSetting('colorPatchOrder');
+            if isempty(colorPatchOrder)
+                colorPatchOrder = 'darkSkin';
             end 
-            outstruct = delimread(fullfile(getSetting('datasetSettingsDir'), strcat(configuration, 'PatchOrder.txt')), '\t', 'text');
+            outstruct = delimread(fullfile(getSetting('datasetSettingsDir'), strcat(colorPatchOrder, 'PatchOrder.txt')), '\t', 'text');
             values = outstruct.text;
 
         otherwise 

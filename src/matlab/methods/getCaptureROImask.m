@@ -11,7 +11,7 @@ if isequal([m,n], maxSize)
     mask = ones(maxSize);
 elseif belongsInAvailableROIs(m,n)
     v = floor((maxSize - [m,n]) / 2);  
-    mask(v(1):m, v(2):n) = 1;    
+    mask(v(1):(v(1)+m-1), v(2):(v(2)+n-1)) = 1;    
 %     mask = mask(floor(m/2)-floor(x/2):floor(m/2)+floor(x/2)-1, floor(n/2)-floor(y/2):floor(n/2)+floor(y/2)-1);
 elseif isequal([m,n], [1088, 982])
     mask = ones([1088, 982]);
