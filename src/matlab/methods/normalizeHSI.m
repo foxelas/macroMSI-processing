@@ -54,7 +54,7 @@ switch option
 end
 
 if useBlack
-    if ~isequal((spectralData), size(blackReflectance))
+    if ~isequal(size(spectralData), size(blackReflectance))
         cropMask = getCaptureROImask(m,n);
         blackReflectance = blackReflectance(any(cropMask, 2), any(cropMask, 1), :);
         warning('Crop the image value: black');

@@ -1,4 +1,4 @@
-function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(targetName, allowRoiSelection, selectedPatches)
+function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(targetName, allowRoiSelection, selectedPatches, altExpectedSpectra)
 %EVALUATECOLORCHART returns measured curves end evaluations in comparison
 %to expected colorchart curves
 %
@@ -10,7 +10,8 @@ function [T, measuredSpectra, adjustedSpectra, alphaCoeff] = evaluateColorchart(
 %   -targetName: targetName of HSI file to read
 %   -allowRoiSelection: whether manual selection of colorchart ROI is
 %   allowed
-%   -selectedPatches: indexes of available patches to be used
+%   -selectedPatches: indexes of available patches to be used [Optional]
+%   -altExpectedSpectra: to set alternative expectedSpectra [Optional]
 %
 %   Output parameters
 %   -T: table including GOF, NMSE, RMSE of the evalueation of measured with
@@ -31,6 +32,13 @@ if nargin < 3 || isempty(selectedPatches)
     selectedPatches = 1:length(patchNames);
 end
 
+if nargin >= 4 
+    standardSpectra = altExpectedSpectra;
+else 
+    standardSpectra = expectedSpectra(selectedPatches, :);
+end 
+patchNames = patchNames(selectedPatches);    
+
 option = getSetting('normalization');
 
 fileConditions = getFileConditions('colorchart', targetName);
@@ -44,9 +52,7 @@ actualSpectralVals = getSpectrumCurves(spectralData, colorMasks, chartMask);
 
 [reorderedSpectralVals, lineNames] = reorderSpectra(actualSpectralVals, patchOrder, patchNames, wavelengths, expectedWavelengths);
 % [reorderedSpectralValsRaw, ~] = reorderSpectra(actualSpectralVals, chartColorOrder, spectraColorOrder, wavelengths, expectedWavelengths);
-
-measuredSpectra = reorderedSpectralVals(selectedPatches, :);
-standardSpectra = expectedSpectra(selectedPatches, :);
+measuredSpectra = reorderedSpectralVals;
 
 if ~strcmp(option, 'raw')
     [T, adjustedSpectra, alphaCoeff] = compareSpectra(standardSpectra, measuredSpectra, lineNames);

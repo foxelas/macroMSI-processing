@@ -13,6 +13,9 @@ if nargin < 3
     adjustmentMethod = 'fixWhiteLevel';
 end
 
+if (sum(contains(lineNames, 'white 9.5 (.05 D)')) == 0)
+    adjustmentMethod = 'noAdjustment';
+end 
 switch adjustmentMethod
     case 'fixWhiteLevel'
         white95Idx = strcmp(lineNames, 'white 9.5 (.05 D)');
@@ -28,6 +31,9 @@ switch adjustmentMethod
         alpha = mean(inSpectra(white95Idx, startIdx:end)) / white95Val;
         fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.9 \nwith division by alpha = %.3f \n', alpha);
         outSpectra = inSpectra / alpha;
+    case 'noAdjustment'
+        outSpectra = inSpectra;
+        alpha = 1;
     otherwise
         error('Unsupported method');
 end

@@ -1,6 +1,7 @@
 %% Setup 
 startRun;
 
+if (false)
 %% Read tissue 1  
 version = '1';
 experiment = strcat('testStomach', version);
@@ -9,20 +10,20 @@ integrationTime = 1460;
 configuration = 'singleLightClose';
 initialization;
 
-% normalizations = {'raw', 'bandmax', 'uniSpectrum', 'byPixel'};
-% m = numel(normalizations);
-% target = strcat('stomachTissue', version);
-% xPoints = [250, 320, 400];
-% yPoints = [250, 350, 400];
-% % readHSIData('tissue', target, experiment);
-% setSetting('isRotated', false);
-% for k = 1:m
-%     normalization = normalizations{k};
-%     setSetting('saveFolder', fullfile(experiment, normalization));
-%     setSetting('normalization', normalization);    
-%     fileConditions = getFileConditions('tissue', target);
-%     [measured, curveNames] = getRepresentativePoints(fileConditions, xPoints, yPoints);
-% end
+normalizations = {'raw', 'bandmax', 'uniSpectrum', 'byPixel'};
+m = numel(normalizations);
+target = strcat('stomachTissue', version);
+xPoints = [250, 320, 400];
+yPoints = [250, 350, 400];
+% readHSIData('tissue', target, experiment);
+setSetting('isRotated', false);
+for k = 1:m
+    normalization = normalizations{k};
+    setSetting('saveFolder', fullfile(experiment, normalization));
+    setSetting('normalization', normalization);    
+    fileConditions = getFileConditions('tissue', target);
+    [measured, curveNames] = getRepresentativePoints(fileConditions, xPoints, yPoints);
+end
 
 %% Colorchart middle with different normalizations
 setSetting('experiment', experiment);
@@ -36,7 +37,6 @@ setSetting('normalization', 'raw');
 evaluateColorchart(target, allowRoiSelection); 
     
 normalizations = { 'bandmax', 'uniSpectrum', 'byPixel'};
-m = numel(normalizations);
 m = numel(normalizations);
 tables = cell(m,1);
 measuredSpectra = cell(m,1);
@@ -54,7 +54,6 @@ end
 
 [tables] = exportSimilarityTables(tables, measuredSpectra, adjustedSpectra, alphas, confs);
 
-endRun;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Read tissue 2
 version = '2';
@@ -117,6 +116,11 @@ end
 %% Colorchart with different normalizations and positions
 experiment = 'testCalibrationPositions';
 setSetting('experiment', experiment);
+dataDate = '20210317';
+integrationTime = 1360;
+configuration = 'singleLightClose';
+normalization = 'byPixel';
+initialization;
 
 setSetting('colorPatchOrder', 'bluishGreenRight');
 setSetting('isRotated', false);
@@ -133,7 +137,6 @@ for i = 1:n
 end 
 
 normalizations = { 'bandmax', 'uniSpectrum', 'byPixel'};
-m = numel(normalizations);
 m = numel(normalizations);
 tables = cell(m,1);
 measuredSpectra = cell(m,1);
@@ -154,6 +157,55 @@ for i = 1:n
   
         [tables{k}, measuredSpectra{k}, adjustedSpectra{k}, alphas{k}] = evaluateColorchart(target, allowRoiSelection); 
     end 
+end 
+
+[tables] = exportSimilarityTables(tables, measuredSpectra, adjustedSpectra, alphas, confs);
+
+end
+
+%% Colorchart with different normalizations and positions
+experiment = 'testCalibrationPositionsRelative';
+setSetting('experiment', experiment);
+dataDate = '20210317';
+integrationTime = 1360;
+configuration = 'singleLightClose';
+normalization = 'byPixel';
+initialization;
+
+setSetting('colorPatchOrder', 'bluishGreenRight');
+setSetting('isRotated', false);
+allowRoiSelection = true;
+selectedPatchIndex = [2, 13, 14, 15]; %19
+positions = {'BottomLeft', 'TopLeft', 'TopRight','BottomRight', 'Middle'};
+n = numel(positions);
+normalizations = { 'bandmax', 'byPixel'};
+m = numel(normalizations);
+tables = cell(m,1);
+measuredSpectra = cell(m,1);
+adjustedSpectra = cell(m,1);
+alphas = cell(m,1);
+confs = cell(m,2);
+
+k = 0;
+for j = 1:m
+    for i = 1:n
+        position =  positions{i};
+        target = strcat('colorchart', position);
+        readHSIData('colorchart', target, experiment);
+        
+        normalization = normalizations{j};
+        setSetting('saveFolder', fullfile(experiment, normalization, position));
+        setSetting('normalization', normalization);
+        
+        if i ~= 1
+            k = k + 1;
+            confs(k, 1:2) = deal({configuration, strcat(normalization, '_', position)});
+            [tables{k}, measuredSpectra{k}, adjustedSpectra{k}, alphas{k}] = evaluateColorchart(target, allowRoiSelection, selectedPatchIndex, expectedSpectra); 
+        else
+            [~, expectedSpectra, ~, ~] = evaluateColorchart(target, allowRoiSelection, selectedPatchIndex); 
+        end
+    end 
+
 end 
 
 [tables] = exportSimilarityTables(tables, measuredSpectra, adjustedSpectra, alphas, confs);

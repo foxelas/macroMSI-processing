@@ -24,14 +24,14 @@ if strcmp(configuration, 'singleLightFar')
         yy = [39, 76, 109, 147, 182];
         r = 15;
         isRotated = false;
-elseif strcmp(configuration,'testStomach')
-        xx = [28, 53, 77, 105, 129, 153]-2;
-        yy = [25, 52, 76, 101, 134]-2;
+elseif strcmp(configuration,'testStomach1')
+        xx = [28, 53, 77, 105, 129, 153] + 3;
+        yy = [25, 52, 76, 101, 134] + 3;
         r = 0;
-elseif strcmp(configuration,'testCalibration') || strcmp(configuration,'testCalibrationPositions')
+elseif contains(configuration,'testCalibration') 
         xx = [47, 95, 155, 209, 268, 315]-2;
         yy = [44, 93, 150, 211, 260]-2;
-        r = 0;
+        r = 15;
 %     case 'singleLightClose'
 %         xx = [47, 89, 139, 182, 233, 279];
 %         yy = [38, 93, 140, 184, 229];
@@ -119,17 +119,17 @@ if allowRoiSelection
 %         pause(0.2);
     end
     
-    if r < 2
-        mask_eroded = mask;
-    else
-        mask_eroded = imerode(mask, strel('disk', 5));
-    end
+%     if r < 5
+%         mask_eroded = mask;
+%     else
+%         mask_eroded = imerode(mask, strel('disk', 5));
+%     end
     
 %     %mask_clipped = (A == intmax(class(A))) | (A == intmin(class(A)));
 %     mask_clipped = (A == intmax('uint8')) | (A == intmin('uint8'));
 %     mask_clipped = mask_clipped(:, :, 1) | mask_clipped(:, :, 2) | mask_clipped(:, :, 3);
 %     mask_patches = mask_eroded & ~mask_clipped;
-    mask_patches = mask_eroded;
+    mask_patches = mask;
     A_patches = imoverlay(A, mask_patches);
     
     clf(fig1);

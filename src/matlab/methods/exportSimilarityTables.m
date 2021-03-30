@@ -3,6 +3,7 @@ function [tables] = exportSimilarityTables(tables, measuredSpectra, adjustedSpec
 n = numel(tables);
 for i = 1:n
     table1 = tables{i, 1}; 
+    [m,z] = size(table1);
     tables{i, 1} = [ table1; [{'Average'}, num2cell(mean(tables{i, 1}{:, 2:end})); ...
                     {'StandardDeviation'}, num2cell(std(tables{i, 1}{:, 2:end}))]];
 end
@@ -14,7 +15,7 @@ if ~isempty(confs)
     end
 end 
 
-for j = 1:24
+for j = 1:m
     if tables{1, 1}.AdjGoF(j) < 0.8
         fprintf('**Low result for patch %s\n', tables{1, 1}.Patch{j});
     end
@@ -36,7 +37,7 @@ fprintf('Saved detailed results in %s \n', xlsfile);
 
 xlsfile = mkNewDir(savedir, 'resultTableSummary.xlsx');
 
-name = cell(1, size(table1,2)+1);
+name = cell(1, z+1);
 name{1} = 'Mean';
 vals = [name; 'Configuration', table1.Properties.VariableNames(2:end), 'Multiplier'];
 name{1} = 'Mean +/- StD';
@@ -44,9 +45,9 @@ vals2 = [name; 'Configuration', table1.Properties.VariableNames(2:end), 'Multipl
 
 for i = 1:n 
     name = {strjoin(confs(i,:), {'_'})};
-    meanVals = tables{i, 1}(25, 2:end);
+    meanVals = tables{i, 1}(m+1, 2:end);
     %avg +/ std sheet
-    stdVals =  tables{i, 1}(26, 2:end);
+    stdVals =  tables{i, 1}(m+2, 2:end);
     meanPlusStds = cellfun(@(x,y) sprintf('%.3f %s %.3f', x, char(177), y) , table2cell(meanVals), table2cell(stdVals), 'un', 0);
 
     vals = [vals; name, table2cell(meanVals), alphas(i)];
