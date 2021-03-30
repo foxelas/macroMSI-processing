@@ -31,7 +31,7 @@ elseif strcmp(configuration,'testStomach1')
 elseif contains(configuration,'testCalibration') 
         xx = [47, 95, 155, 209, 268, 315]-2;
         yy = [44, 93, 150, 211, 260]-2;
-        r = 15;
+        r = 0;
 %     case 'singleLightClose'
 %         xx = [47, 89, 139, 182, 233, 279];
 %         yy = [38, 93, 140, 184, 229];
