@@ -24,7 +24,9 @@ end
 hold off;
 
 %set(gcf,  'units','normalized','outerposition',[0 0 1 1]);
-setSetting('plotName', mkNewDir(getSetting('savedir'), getSetting('saveFolder'), 'pointsOnImage'));
+if ~contains(getSetting('plotName'), 'point')
+    setSetting('plotName', mkNewDir(getSetting('savedir'), getSetting('saveFolder'), 'pointsOnImage'));
+end
 savePlot(fig);
 
 end 

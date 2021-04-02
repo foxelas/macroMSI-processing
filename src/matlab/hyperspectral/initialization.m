@@ -48,7 +48,7 @@ if exist('targetPosition', 'var')
 end
 
 if exist('normalization', 'var')
-    setSetting('normalization', 'byPixel');
+    setSetting('normalization', normalization);
 end
 
 disp('Initialization finished');

@@ -1,22 +1,31 @@
-function [measured, curveNames] = getRepresentativePoints(fileConditions, xPoints, yPoints, limits, windowDim)
+function [measured, curveNames] = getRepresentativePoints(input, xPoints, yPoints, limits, windowDim, lvlAdjCoeff)
 %%GETREPRESENTATIVEPOINTS returns spectra of random points on the captured
 %%surface.
 % 
 %     Arguments: 
-%     fileConditions values for where to search for filename
+%     input values for where to search for filename / value array
 %     xPoints x coordinates for sample points 
 %     yPoints y coordinates for sample points 
 %     limits the limits for output spectrum plot 
 %     windowDim window dimension if smooting is used 
+%     lvlAdjCoeff multiplies for when level adjustment is used
 % 
 %     Usage: 
 %     [measured, curveNames] = getRepresentativePoints(fileConditions,
-%     xPoints, yPoints, limits, windowDim)
+%     xPoints, yPoints, limits, windowDim, lvlAdjCoeff)
 
-filename = getFilename(fileConditions{:});
-[raw, ~, ~] = loadH5Data(filename, getSetting('experiment'));
-targetName = fileConditions{4};
-spectralData = normalizeHSI(raw, targetName);
+if iscell(input)
+    fileConditions = input;
+    filename = getFilename(fileConditions{:});
+    [raw, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+    targetName = fileConditions{4};
+    spectralData = normalizeHSI(raw, targetName);
+else 
+    spectralData = input; 
+    plotName = getSetting('plotName');
+    splits = strsplit(plotName, '\');
+    targetName = splits{end};
+end 
 
 if nargin < 2
     xPoints = 50:200:1088;
@@ -27,15 +36,28 @@ if nargin < 4
     limits = [0, 0.005];
 end
 
-if nargin < 5
+if nargin < 5 || isempty(windowDim)
     windowDim = 0;
 end
+
+hasAdjustingCoeff = ~(nargin < 6);
+
+if hasAdjustingCoeff
+    if ~isequal(size(spectralData), size(lvlAdjCoeff))
+        [m, n, ~] = size(spectralData);
+        cropMask = getCaptureROImask(m,n);
+        lvlAdjCoeff = lvlAdjCoeff(any(cropMask, 2), any(cropMask, 1), :);
+        warning('Crop the image value: lvlAdjCoeff');
+    end
+    spectralData = spectralData .* lvlAdjCoeff;
+end 
+
 
 %% plot Y image with various points
 baseImage = getDisplayImage(spectralData, 'rgb');
 
-plotName = fullfile(getSetting('savedir'), getSetting('experiment'), strcat(targetName, '-points', '.png'));
-setSetting('plotName', plotName);
+savedir = fullfile(getSetting('savedir'),  getSetting('saveFolder'));
+setSetting('plotName', fullfile(savedir, strcat(targetName, '-points')));
 plots(1, @plotPointsOnImage, baseImage, xPoints, yPoints, true);
 
 wavelengths = getWavelengths(401); %without padding use (size(spectralData,3));
@@ -103,7 +125,7 @@ else
 end
 
 if max(vals(:)) > 0.15
-   limits = [0, 1];
+   limits = [0, 1.2];
 end 
 
 plots(2, @plotColorChartSpectra, vals, curveNames, strcat(curCase, '_', targetName), ...

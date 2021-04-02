@@ -1,4 +1,9 @@
 function dispImage = getDisplayImage(spectralImage, method, channel)
+
+if nargin < 2
+    method = 'rgb';
+end 
+
 if nargin < 3 
     channel  = 100; 
 end 

@@ -19,14 +19,14 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
          hideLegend = true; 
      end 
      
-     suffix = '';
+     prefix = '';
      if nargin < 3 
          currentCase = 'raw';
      else 
         parts = strsplit(currentCase, '_');
         currentCase = parts{1};
         if length(parts) > 1
-            suffix = strcat(parts{2}, '_');
+            prefix = strcat(char(join(parts(2:end), '_')), '_');
         end 
      end 
      
@@ -41,7 +41,7 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
      end 
     
     %% Set titles etc 
-    figName = strcat(suffix, currentCase);
+    figName = strcat(prefix, currentCase);
     
     hasReflectanceRatio = true; 
     switch currentCase
