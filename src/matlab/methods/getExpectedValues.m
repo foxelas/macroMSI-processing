@@ -43,7 +43,7 @@ function [values, valueNames, additionalValues] = getExpectedValues(name, option
         case 'colorchartOrder'
             colorPatchOrder = getSetting('colorPatchOrder');
             if isempty(colorPatchOrder)
-                colorPatchOrder = 'darkSkin';
+                colorPatchOrder = 'darkSkinBottom';
             end 
             outstruct = delimread(fullfile(getSetting('datasetSettingsDir'), strcat(colorPatchOrder, 'PatchOrder.txt')), '\t', 'text');
             values = outstruct.text;

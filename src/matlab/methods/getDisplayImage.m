@@ -4,6 +4,13 @@ if nargin < 3
 end 
 
 [m,n,z] = size(spectralImage);
+if (z < 401)
+    v = getWavelengths(z, 'index');
+    spectralImage2 = zeros(m,n,401); 
+    spectralImage2(:,:,v) = spectralImage;
+    spectralImage =  spectralImage2;
+    clear 'spectralImage2';
+end 
 if hasGPU()
     spectralImage_ = gpuArray(spectralImage);
 else 

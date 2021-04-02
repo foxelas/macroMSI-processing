@@ -57,6 +57,9 @@ measuredSpectra = reorderedSpectralVals;
 if ~strcmp(option, 'raw')
     [T, adjustedSpectra, alphaCoeff] = compareSpectra(standardSpectra, measuredSpectra, lineNames);
 else
+    T = [];
+    adjustedSpectra = [];
+    alphaCoeff = [];
     plots(1, @plotColorChartSpectra, measuredSpectra, lineNames, 'measured-raw', [0, 0.005], false);
 end
 
