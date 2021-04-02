@@ -65,7 +65,7 @@ savePlot(fig);
 %% Linear Regression
 yVals = squeeze(rawWhite(row, col, :));
 xVals = reshape(rawWhite, [m*n,w]);
-lvlAdjCoeff = xVals .\ repmat(yVals', [m*n,1]);
+lvlAdjCoeff =   repmat(yVals', [m*n,1]) ./ xVals;
 
 lvlAdjCoeff = reshape(lvlAdjCoeff, [m,n,w]);
 
