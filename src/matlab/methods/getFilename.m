@@ -10,7 +10,7 @@ function [filename, integrationTime, outRow] = getFilename(configuration, conten
 
 warning('off', 'MATLAB:table:ModifiedAndSavedVarnames');
 % dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'dataSetCharacteristics.csv'));
-dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'DataSetTest2.csv'));
+dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'testDB.xlsx'));
 
 setId = ismember(dataTable.Configuration, configuration);
 if nargin >= 2 && ~isempty(content)
