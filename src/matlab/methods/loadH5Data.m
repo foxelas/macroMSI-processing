@@ -1,12 +1,13 @@
-function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename, configuration)
+function [spectralData, imageXYZ, wavelengths] = loadH5Data(filename)
 %LOADH5DATA loads info from h5 file
 %
-%   [spectralData, imageXYZ, wavelengths] = loadH5Data(filename,
-%   configuration) returns spectralData, XYZ image and capture wavelengths
+%   [spectralData, imageXYZ, wavelengths] = loadH5Data(filename)
+%   returns spectralData, XYZ image and capture wavelengths
 %
 
+database = getSetting('database');
 filename = strrep(filename, '.hsm', '.h5');
-saveFilename = mkNewDir(getSetting('matdir'), configuration, strcat(filename, '.mat'));
+saveFilename = mkNewDir(getSetting('matdir'), database, strcat(filename, '.mat'));
 
 if ~exist(saveFilename, 'file')
     

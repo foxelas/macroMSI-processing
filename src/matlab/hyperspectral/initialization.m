@@ -20,6 +20,12 @@ if exist('indirFolder', 'var') && ~isempty(indirFolder)
     indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), indirFolder, 'h5');
 end
 
+if ~exist('database', 'var')
+    dataDate = 'calib';
+    warning('Setting default database for calibration: calib.');
+end
+setSetting('database', database);
+
 setSetting('datadir', indir);
 matdir = fullfile(originDir, 'matfiles\hsi');
 setSetting('matdir', matdir);

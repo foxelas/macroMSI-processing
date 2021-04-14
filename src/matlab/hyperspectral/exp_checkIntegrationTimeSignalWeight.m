@@ -44,7 +44,7 @@ for j = 1:z
     
     fileConditions = getFileConditions('whiteReflectance', target);
     filename = getFilename(fileConditions{:});
-    [raw, ~, wavelengths] = loadH5Data(filename, experiment);
+    [raw, ~, wavelengths] = loadH5Data(filename);
     raws{j} = raw;
     spects{j} = getSpectrumCurves(raw, pointMasks);
 end

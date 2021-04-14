@@ -12,6 +12,8 @@ end
 filedir = fileparts(filepath);
 if ~exist(filedir, 'dir')
     mkdir(filedir);
-    addpath(filedir);
+    if  ~contains(filedir, getSetting('savedir'))
+        addpath(filedir);
+    end
 end
 end

@@ -30,7 +30,7 @@ whiteFilename = getSetting('normFilename');
 
 %% Values for normalization
 %For 99% reflectance
-spectralData = loadH5Data(filename, configuration);
+spectralData = loadH5Data(filename);
 [~, ~, m] = size(spectralData);
 wavelengths = getWavelengths(m);
 dispImage = getDisplayImage(spectralData, 'rgb');
@@ -80,7 +80,7 @@ setSetting('datadir', indir);
 filename = getFilename(strcat('noLight', hasFilterSuffix), 'capOn', integrationTime);
 
 %For 99% reflectance
-spectralData = loadH5Data(filename, configuration);
+spectralData = loadH5Data(filename);
 dispImage = getDisplayImage(spectralData, 'rgb');
 figure(5); imshow(dispImage);
 setSetting('plotName', mkNewDir(getSetting('savedir'), getSetting('saveFolder'), 'blackImage'));

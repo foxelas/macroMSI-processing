@@ -4,18 +4,16 @@
 startRun;
 
 %% Read 
-dataDate = '20210317';
-integrationTime = 1360;
 configuration = 'singleLightClose';
 normalization = 'byPixel';
-
+experiment = 'exp_getImagePreviews';
 initialization;
 
 basedirParts = strsplit(getSetting('datadir'), '\');
 basedirParts = basedirParts(1:(end-2));
 basedir = fullfile(basedirParts{:});
 
-dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'testDB.xlsx'));
+dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), strcat(getSetting('database'),'DB.xlsx')));
 fig = figure(1);
 
 for i=9:height(dataTable)
@@ -25,7 +23,7 @@ for i=9:height(dataTable)
     imgName = fullfile(basedir, folder, 'h5', strcat(strrep(filename, '.', '_'), '_preview.jpg'));
     
     if ~exist(imgName, 'file')
-        [raw, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+        [raw, ~, ~] = loadH5Data(filename);
         z = size(raw, 3) ;
         if z < 401 
             baseImage = rescale(squeeze(raw(:,:,min(z,100)))); 
@@ -39,3 +37,4 @@ for i=9:height(dataTable)
         savePlot(fig);
     end 
 end 
+endRun;

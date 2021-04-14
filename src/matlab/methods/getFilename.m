@@ -1,4 +1,4 @@
-function [filename, integrationTime, outRow] = getFilename(configuration, content, integrationTime, target, dataDate, id)
+function [filename, tableId, outRow] = getFilename(configuration, content, integrationTime, target, dataDate, id)
 %% getFilename Gets the respective filename for configuration value
 %   arguments are received in the order of 
 %     'configuration' [light source]
@@ -9,8 +9,13 @@ function [filename, integrationTime, outRow] = getFilename(configuration, conten
 %     'id' [number value for id ]
 
 warning('off', 'MATLAB:table:ModifiedAndSavedVarnames');
-% dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'dataSetCharacteristics.csv'));
-dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), 'testDB.xlsx'));
+dataTable = readtable(fullfile(getSetting('datasetSettingsDir'), strcat(getSetting('database'), 'DB.xlsx')), 'Sheet','capturedData');
+
+if ~isempty(integrationTime)
+    initialIntegrationTime = integrationTime;
+else 
+    initialIntegrationTime = [];
+end 
 
 setId = ismember(dataTable.Configuration, configuration);
 if nargin >= 2 && ~isempty(content)
@@ -36,7 +41,11 @@ if sum(setId) > 1
 end 
 
 filename = outRow.Filename{1};
-integrationTime = outRow.IntegrationTime;
+tableId = outRow.ID;
+
+if outRow.IntegrationTime ~= initialIntegrationTime
+    setSetting('integrationTime', integrationTime);
+end 
 
 if nargin >= 3 && ~isempty(integrationTime) &&  integrationTime ~= outRow.IntegrationTime
     warning('Integration time in the settings and in the retrieved file differs.');

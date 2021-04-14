@@ -16,10 +16,9 @@ function [measured, curveNames] = getRepresentativePoints(input, xPoints, yPoint
 
 if iscell(input)
     fileConditions = input;
-    filename = getFilename(fileConditions{:});
-    [raw, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+    [~, tableId] = getFilename(fileConditions{:});
+    spectralData = normalizeHSI(num2str(tableId));
     targetName = fileConditions{4};
-    spectralData = normalizeHSI(raw, targetName);
 else 
     spectralData = input; 
     plotName = getSetting('plotName');

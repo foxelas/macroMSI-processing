@@ -59,3 +59,4 @@
 	pcHasGPU, 0, logical
 	normalization, byPixel, string
 	colorPatchOrder, , string
+	database, , string

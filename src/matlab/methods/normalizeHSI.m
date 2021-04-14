@@ -1,29 +1,27 @@
-function spectralData = normalizeHSI(raw, targetName, option)
+function spectralData = normalizeHSI(targetName, option)
 %GETHSIDATA returns spectral data from HSI image
 %
-%   spectralData = normalizeHSI(raw, 'sample2',) returns a
+%   spectralData = normalizeHSI('sample2',) returns a
 %   cropped HSI with 'byPixel' normalization
 %
-%   spectralData = normalizeHSI(raw, 'sample2', 'raw')
+%   spectralData = normalizeHSI('sample2', 'raw')
 %
 
-if nargin < 3 || isempty(option)
+if nargin < 2 || isempty(option)
     option = getSetting('normalization');
 end
 
-integrationTime = getSetting('integrationTime');
-configuration = getSetting('configuration');
-baseDir = fullfile(getSetting('matdir'), configuration, num2str(integrationTime));
+basedir = fullfile(getSetting('matdir'), strcat(getSetting('database'), 'Triplets'), targetName);
 
-spectralData = raw;
+targetFilename = strcat(basedir, '_target.mat'); 
+load(targetFilename, 'spectralData');
 [m, n, w] = size(spectralData);
-clear 'raw';
 
-whiteFilename = strcat(baseDir, '_', targetName, '_white.mat'); 
+whiteFilename = strcat(basedir, '_white.mat'); 
         
 useBlack = true;
 if useBlack && ~strcmp(option, 'raw')
-    blackFilename =strcat(baseDir, '_', targetName, '_black.mat'); 
+    blackFilename = strcat(basedir, '_black.mat'); 
     load(blackFilename, 'blackReflectance');
 end 
 

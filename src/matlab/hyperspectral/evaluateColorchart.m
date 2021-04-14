@@ -42,10 +42,10 @@ patchNames = patchNames(selectedPatches);
 option = getSetting('normalization');
 
 fileConditions = getFileConditions('colorchart', targetName);
-filename = getFilename(fileConditions{:});
-[raw, ~, wavelengths] = loadH5Data(filename, experiment);
-spectralData = normalizeHSI(raw, targetName);
+[filename, tableId] = getFilename(fileConditions{:});
+spectralData = normalizeHSI(num2str(tableId));
 dispImage = getDisplayImage(spectralData, 'rgb');
+wavelengths = getWavelengths(size(spectralData,3));
 
 [colorMasks, chartMask] = getColorchartMasks(dispImage, allowRoiSelection, filename);
 actualSpectralVals = getSpectrumCurves(spectralData, colorMasks, chartMask);

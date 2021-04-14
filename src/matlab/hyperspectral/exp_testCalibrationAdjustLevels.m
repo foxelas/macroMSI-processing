@@ -102,8 +102,8 @@ setSetting('saveFolder', experiment);
 setSetting('normalization', 'byPixel');
 setSetting('saveFolder', getSetting('experiment'));
 fileConditions = getFileConditions('whiteReflectance', target);
-targetName = fileConditions{4};
-spectralData = normalizeHSI(rawWhite, targetName);
+[~, tableId] = getFilename(fileConditions{:});
+spectralData = normalizeHSI(num2str(tableId));
 
 [m,n,w] = size(rawWhite);
 xPoints = [100, floor(m/2) + 100, (m - 100)];
@@ -122,7 +122,8 @@ setSetting('saveFolder', getSetting('experiment'));
 
 fileConditions = getFileConditions('tissue', target);
 targetName = fileConditions{4};
-spectralData = normalizeHSI(rawTissue, targetName);
+[~, tableId] = getFilename(fileConditions{:});
+spectralData = normalizeHSI(num2str(tableId));
 
 xPoints = [250, 320, 400];
 yPoints = [250, 350, 400];

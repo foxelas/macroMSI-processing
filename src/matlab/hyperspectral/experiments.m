@@ -68,7 +68,7 @@ switch experiment
             imgName = strcat(targetPosition, num2str(i));
 
             filename = getFilename(getSetting('configuration'), imgName, getSetting('integrationTime'));
-            [spectralData, ~, ~] = loadH5Data(filename, getSetting('experiment'));
+            [spectralData, ~, ~] = loadH5Data(filename);
             [m, n, ~] = size(spectralData);
 
             if hasWindow
@@ -575,7 +575,7 @@ switch experiment
             getRepresentativePoints(imgName, xPoints, yPoints);
             
             filename = getFilename(getSetting('configuration'), imgName, integrationTime);
-            [spectralData, ~, ~] = loadH5Data(filename, experiment);
+            [spectralData, ~, ~] = loadH5Data(filename);
             [colorMasks, chartMask] = getColorchartMasks(squeeze(spectralData(:, :, 100)), allowRoiSelection, experiment); %(imageXYZ, allowRoiSelection, experiment)
             actualSpectralVals{k} = readHSI(spectralData, {chartMask, colorMasks}, [], hasFilter);
             lineNames = arrayfun(@num2str, [1:30], 'UniformOutput', false);
@@ -601,7 +601,7 @@ switch experiment
             getRepresentativePoints(imgName, xPoints, yPoints);
             
             filename = getFilename(getSetting('configuration'), imgName, integrationTime);
-            [spectralData, ~, ~] = loadH5Data(filename, experiment);
+            [spectralData, ~, ~] = loadH5Data(filename);
             [colorMasks, chartMask] = getColorchartMasks(squeeze(spectralData(:, :, 100)), allowRoiSelection, experiment); %(imageXYZ, allowRoiSelection, experiment)
             actualSpectralVals{k} = readHSI(spectralData, {chartMask, colorMasks}, [], hasFilter);
             lineNames = arrayfun(@num2str, [1:30], 'UniformOutput', false);
