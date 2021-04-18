@@ -8,13 +8,13 @@ startRun;
 %% Colorchart with different normalizations and positions
 experiment = 'testCalibrationPositionsRelative';
 setSetting('experiment', experiment);
-dataDate = '20210317'; %'20210406';
-integrationTime = 1360; % 618;
+dataDate = '20210406'; %'20210317'; %'20210406';
+integrationTime = 618; %1360; % 618;
 configuration = 'singleLightClose';
 normalization = 'byPixel';
 initialization;
 
-setSetting('colorPatchOrder',  'bluishGreenRight'); %'redRight'
+setSetting('colorPatchOrder',  'redRight'); %'bluishGreenRight' %'redRight'
 setSetting('isRotated', false);
 allowRoiSelection = true;
 selectedPatchIndex = [2, 13, 14, 15]; %19
