@@ -21,6 +21,8 @@ switch option
             x = 380:780;
         elseif m == 36
             x = 380:10:730;
+        elseif m == 32
+            x = 420:10:730; % range [420,730];
         elseif m == 17
             x = 380:10:splitWavelength;
         elseif m == 19

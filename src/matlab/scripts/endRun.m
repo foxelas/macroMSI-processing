@@ -1,2 +1,2 @@
 diary off; 
-movefile('log.txt', fullfile(getSetting('savedir'), getSetting('experiment')));
+movefile('log.txt', fullfile(getSetting('savedir'), getSetting('experiment')), 'f');

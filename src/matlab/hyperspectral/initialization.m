@@ -20,11 +20,11 @@ if exist('indirFolder', 'var') && ~isempty(indirFolder)
     indir = fullfile(originDir, '2_saitamaHSI', strcat('saitama', dataDate, '_test'), indirFolder, 'h5');
 end
 
-if ~exist('database', 'var')
-    dataDate = 'calib';
+if ~exist('dataBase', 'var')
+    dataBase = 'calib';
     warning('Setting default database for calibration: calib.');
 end
-setSetting('database', database);
+setSetting('database', dataBase);
 
 setSetting('datadir', indir);
 matdir = fullfile(originDir, 'matfiles\hsi');
@@ -56,6 +56,10 @@ end
 if exist('normalization', 'var')
     setSetting('normalization', normalization);
 end
+
+if exist('colorPatchOrder', 'var')
+    setSetting('colorPatchOrder',  colorPatchOrder); 
+end 
 
 disp('Initialization finished');
 

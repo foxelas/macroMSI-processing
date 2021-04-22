@@ -31,7 +31,7 @@ for k = 1:m
 end 
 
 %% Colorchart middle with different normalizations
-experiment = 'testCalibration';
+experiment = 'testCalibration2';
 setSetting('experiment', experiment);
 setSetting('isRotated', false);
 target = strcat('colorchart', 'Middle');

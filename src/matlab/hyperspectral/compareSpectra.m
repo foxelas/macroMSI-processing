@@ -17,6 +17,10 @@ m = size(measured, 2);
 x = getWavelengths(m, 'babel');
 expected = expected(:, x);
 
+% Limit to Range [420,730]nm 
+measured = measured(:,5:end);
+expected = expected(:,5:end);
+
 difference = expected - measured;
 plots(6, @plotColorChartSpectra, difference, lineNames, 'difference');
 
@@ -25,7 +29,7 @@ nmses = applyRowFunc(@nmse, measured, expected);
 rmses = applyRowFunc(@rmse, measured, expected);
 
 %% Standard (expected) color patch spectra after adjustment
-[adjusted, alphaCoeff] = adjustSpectra(measured, lineNames);
+[adjusted, alphaCoeff] = adjustSpectra(measured, lineNames, 'toRatio');
 
 plots(7, @plotColorChartSpectra, adjusted, lineNames, 'measured-adjusted');
 

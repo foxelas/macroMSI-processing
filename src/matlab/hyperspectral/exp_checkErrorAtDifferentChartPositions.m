@@ -5,15 +5,26 @@
 startRun;
 
 %% Colorchart with different normalizations and positions
-experiment = 'testCalibrationPositions';
+
+% version = '2'; 
+version = '3';
+if strcmp(version, '2')
+    dataDate = '20210317';
+    integrationTime = 1360;
+    colorPatchOrder = 'bluishGreenRight';
+
+elseif strcmp(version, '3')
+    dataDate ='20210406';
+    integrationTime = 618;
+    colorPatchOrder = 'redRight';
+end
+
+experiment = strcat('testCalibrationPositions', version);
 setSetting('experiment', experiment);
-dataDate = '20210317'; %'20210406';
-integrationTime = 1360; % 618;
 configuration = 'singleLightClose';
 normalization = 'byPixel';
 initialization;
 
-setSetting('colorPatchOrder',  'bluishGreenRight'); %'redRight'
 setSetting('isRotated', false);
 allowRoiSelection = true;
 positions = {'BottomLeft', 'TopLeft', 'TopRight','BottomRight', 'Middle'};
@@ -24,8 +35,9 @@ for i = 1:n
     readHSIData('colorchart', target, experiment);
 end 
 
-warning('Running for patches: light skin, red, green, blue');
-selectedPatchIndex = [2, 13, 14, 15];
+% warning('Running for patches: light skin, red, green, blue');
+% selectedPatchIndex = [2, 13, 14, 15];
+selectedPatchIndex = 1:24;
 
 for i = 1:n
     target = strcat('colorchart', positions{i});

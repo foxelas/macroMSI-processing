@@ -111,12 +111,14 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
             if hasMultiple 
                 for k = 1:size(vals, 3)
                     spectrum = squeeze(vals(i,:,k));
+                    [spectrum, x] = CutRange(spectrum, x);
                     hold on;
                     plot(x, spectrum, 'Color', plotColors(i,:), 'LineWidth', 0.5);
                     hold off;
                 end 
                 if showsAverageLine
                     spectrum = squeeze(mean(vals(i,:,:), 3));
+                    [spectrum, x] = CutRange(spectrum, x);
                     hold on;
                     plot(x, spectrum, '--', 'Color', plotColors(i,:), 'LineWidth', 1.5);
                     hold off;
@@ -130,13 +132,14 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
         for i = 1:n
             spectrum = pads(vals(i,:), 'del');
             x = getWavelengths(length(spectrum));
+            [spectrum, x] = CutRange(spectrum, x);
             hold on
             h(i) = plot(x, spectrum, 'DisplayName', curveNames{i}, 'Color', plotColors(i,:), 'LineWidth', 1.5);
             hold off;
         end
     end
     
-    xlim([420, min(max(x), 780)]);
+    xlim([400, 750]);
     ylim(ylimits);
     
     if hasReflectanceRatio 
@@ -159,4 +162,10 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     
     setSetting('plotName', plotName);
     savePlot(fig);
+end 
+
+function [newSpectrum, newX] = CutRange(oldSpectrum, x)
+ids = x >= 420 & x <= 730;
+newX = x(ids);
+newSpectrum = oldSpectrum(ids);
 end 

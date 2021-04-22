@@ -17,6 +17,13 @@ if (sum(contains(lineNames, 'white 9.5 (.05 D)')) == 0)
     adjustmentMethod = 'noAdjustment';
 end 
 switch adjustmentMethod
+    case 'toRatio'
+        white95Idx = strcmp(lineNames, 'white 9.5 (.05 D)');
+        white95Val = 0.933;
+        alpha = white95Val / max(inSpectra(white95Idx, :));
+        fprintf('Values adjusted so that white 9.5 (.05 D) line is assinged to value 0.9 \nwith multiplication by alpha = %.3f \n', alpha);
+        outSpectra = inSpectra * alpha;
+
     case 'fixWhiteLevel'
         white95Idx = strcmp(lineNames, 'white 9.5 (.05 D)');
         white95Val = 0.9;
