@@ -9,8 +9,7 @@ database = getSetting('database');
 filename = strrep(filename, '.hsm', '.h5');
 saveFilename = mkNewDir(getSetting('matdir'), database, strcat(filename, '.mat'));
 
-if ~exist(saveFilename, 'file')
-    
+if ~exist(saveFilename, 'file')    
     currentFile = adjustFilename(filename);
     %h5disp(currentFile);
     %h5info(currentFile);

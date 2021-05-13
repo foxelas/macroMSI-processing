@@ -141,7 +141,10 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     
     xlim([400, 750]);
     ylim(ylimits);
-    
+    if strcmp(currentCase, 'raw')
+        yticks(0:0.001:0.005)
+    end 
+
     if hasReflectanceRatio 
         yline(1,'--','100%','LineWidth',3, 'DisplayName', 'Max Value');
     end
@@ -150,9 +153,13 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     ylabel(ylab, 'FontSize', 15);
     title(figTitle, 'FontSize', 15);
     if ~hideLegend 
-        legend(h, 'Location', 'EastOutside');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         legend(h, 'Location', 'EastOutside');
+        legend(h, 'Location', 'SouthEast');
     end 
-    set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
 
     %%To disable showing exponent power on the corner
     ax = gca;
@@ -162,10 +169,4 @@ function [] = plotColorChartSpectra(vals, curveNames, currentCase, ylimits, show
     
     setSetting('plotName', plotName);
     savePlot(fig);
-end 
-
-function [newSpectrum, newX] = CutRange(oldSpectrum, x)
-ids = x >= 420 & x <= 730;
-newX = x(ids);
-newSpectrum = oldSpectrum(ids);
-end 
+end
