@@ -1,12 +1,8 @@
-function [sRGB, Lab16] = createSRGB(I, method, id, options, adaptationModel, mask)
-%CREATESGB generates the sRGB based on the MSI reflectances
-%   Use: sRGB = createSRGB( g, 'out.jpg', [50, 465, 505, 525, 575, 605,
-%   630], 'd65');
-%   reflectance: the input matrix with size MxNx7, if it's 4D then converts
-%   to MxNx7 using 'adjusted'
-%   outName: if it exists, then the sRGB image is saved
-%   adaptationModel: creates the conversion matrixn from XYZ to sRGB based
-%   on an color adaptation model
+function [sRGB, Lab16] = createSRGB(I, method, id, adaptationModel, mask)
+%   CREATESGB generates the sRGB based on the MSI reflectances
+%
+%   Usage: sRGB = createSRGB( I, 'medium', id, 'vonKries', mask);
+
 
 wavelength = 380:5:780;
 [~, r, c, ~] = size(I);
@@ -23,17 +19,17 @@ CMF = [xFcn(wavelengthIdx); yFcn(wavelengthIdx); zFcn(wavelengthIdx)]';
 [~, wavelengthIdx, ~] = intersect(lambdaMatch, wavelength);
 d65 = d65full(wavelengthIdx);
 
-options.smoothingMatrixMethod = 'Cor_All';
-options.pixelValueSelectionMethod = 'extended';
-options.noiseType = 'spatiospectralolympus';
-options.rho = 0.6;
-options.windowDim = 3;
-options.noiseParam = 0.000001; % 0.0001;
+setSetting('smoothingMatrixMethod', 'Cor_All');
+setSetting('pixelValueSelectionMethod', 'extended');
+setSetting('noiseType', 'spatiospectralolympus');
+setSetting('rho', 0.6);
+setSetting('windowDim', 3);
+setSetting('noiseParam', 0.000001); % 0.0001;
 
-% options.noiseType = 'fromOlympus';
-% options.noiseParam = 0.001;
+% setSetting('noiseType', 'fromOlympus');
+% setSetting('noiseParam', 0.001);
 
-reflectance = estimateReflectance(I, [], [], id, options);
+reflectance = estimateReflectance(I, [], [], id);
 reflectance = permute(reflectance, [2, 3, 1]);
 
 XYZideal = bsxfun(@times, CMF, d65);
@@ -44,18 +40,18 @@ k = 1 / sum(XYZideal(:, 2));
 XYZobj_col = k * XYZobj;
 
 if strcmp(method, 'original')
-
+    
     sRGB_col = xyz2srgbCustom(XYZobj_col);
     sRGB = reshape(sRGB_col, r, c, 3);
-
+    
 elseif strcmp(method, 'medium')
     sourceXYZ = [0.2; 0.2; 0.15]; %[0.1876; 0.1928; 0.1756];
     targetXYZ = [1.09846607; 1.00000000; 0.35582280]; %d65 white
     Madapt = cbCAT(sourceXYZ, targetXYZ, adaptationModel);
-
+    
     sRGBadapt = (Madapt * XYZobj_col')';
     sRGB = reshape(sRGBadapt, r, c, 3);
-
+    
 else
     warning('Not implemented')
 end
@@ -105,36 +101,12 @@ title('sRGB from MSI data')
 % title('Intensity Histogram')
 % colorbar
 
-% outName = fullfile(options.saveOptions.savedir, outputFolderMap('sRGB'), strcat('sRgb_', num2str(id.Group)));
+% outName = fullfile(getSetting('savedir'), getSetting('sRGB'), strcat('sRgb_', num2str(id.Group)));
 %
 % if ~(isempty(outName))
 %     saveas(v, strcat(outName, '_binnedspectrum.jpg'));
 % end
 %}
-end
-
-% ================================================
-% *** FUNCTION xyz2srgb
-% ***
-% *** function [RGB] = xyz2srgb(XYZ)
-% *** computes 8-bit sRGB from XYZ
-% *** XYZ is n by 3 and in the range 0–1
-% *** see also srgb2xyz
-function [RGB] = xyz2srgbCustom(XYZ)
-if (size(XYZ, 2) ~= 3)
-    disp('XYZ must be n by 3');
-    return;
-end
-M = [3.2404542, -1.5371385, -0.4985314; ...
-    -0.9692660, 1.8760108, 0.0415560; ...
-    0.0556434, -0.2040259, 1.0572252];
-RGB = (M * XYZ')';
-RGB(RGB < 0) = 0;
-RGB(RGB > 1) = 1;
-index = (RGB <= 0.00304);
-RGB = RGB + (index) .* (12.92 * RGB);
-RGB = RGB + (1 - index) .* (1.055 * RGB.^(1 / 2.4) - 0.055);
-
 end
 
 

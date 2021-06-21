@@ -2,12 +2,12 @@
 %% LOAD DATA & INITIALIZE
 
 disp('Initialization.')
-load(fullfile(options.systemdir, 'system.mat')); % camera system parameters
-load(fullfile(options.systemdir, 'data.mat')); % image data
-load(fullfile(options.systemdir, 'ID.mat')); % image data id and info struct
-%load(fullfile(options.systemdir, 'precomputedParams.mat')); %pre-set parameters
+load(fullfile(getSetting('systemdir'), 'system.mat')); % camera system parameters
+load(fullfile(getSetting('systemdir'), 'data.mat')); % image data
+load(fullfile(getSetting('systemdir'), 'ID.mat')); % image data id and info struct
+%load(fullfile(getSetting('systemdir'), 'precomputedParams.mat')); %pre-set parameters
 
-if (contains(dataset, 'bright'))
+if (contains(getSetting('dataset'), 'bright'))
     ID = IDbrights;
 else
     ID = IDdarks;
@@ -16,18 +16,18 @@ end
 wavelengthN = size(sensitivity, 1);
 wavelength = linspace(380, 780, wavelengthN);
 originalChannels = 7;
-outputFolderMap = getOutputDirectoryMap();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 msiN = length(ID);
-if (options.tryReadData)
+if getSetting('tryReadData')
     %w = warning('off', 'all');
-    if ~isfile(generateName('matfilein', options))
+    matfilein = getSetting('matfilein');
+    if ~isfile(matfilein)
         dateCreated = datetime();
-        save(generateName('matfilein', options), 'dateCreated');
+        save(matfilein, 'dateCreated');
     end
 
     %% Read raw spectra
-    [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN, options);
+    [Spectra, CompleteSpectra, SpectraNames] = bulkReadSpectra(ID, data, wavelengthN);
 
     %% Read MSI
     fprintf('Reading MSI data according to ID file.\n');
@@ -48,16 +48,16 @@ if (options.tryReadData)
             coordinates = [gMembers.Originx; gMembers.Originy];
             files = {data([data.MsiID] == idd.MsiID).File};
             [raw, whiteReference, darkReference] = readMSI(files);
-            specimenMask = removeBackground(whiteReference, idd, options);
+            specimenMask = removeBackground(whiteReference, idd);
 
-            infile = mkNewDir(fullfile(options.systemdir, 'infiles', strcat('group_', num2str(idd.Group), '.mat')));
+            infile = mkNewDir(fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(idd.Group), '.mat')));
             save(infile, 'raw', 'whiteReference', 'darkReference', 'specimenMask');
         end
 
         segmentMask = segment(raw, idd, whiteReference, ...
-            specimenMask, options, []);
+            specimenMask, []);
         segmentMasksForFeatureExtraction = segment(raw, idd, whiteReference, specimenMask, ...
-            options, 50);
+            50);
         poiName = strjoin({num2str(idd.Index), idd.Sample, idd.Type, idd.T, idd.Label}, '_');
 
         [r, c] = find(segmentMasksForFeatureExtraction);
@@ -69,7 +69,7 @@ if (options.tryReadData)
         roiSeeds = [ID(k).Originx - min(c) + 1, ID(k).Originy - min(r) + 1];
         measuredSpectrum = Spectra(k, :);
 
-        infile = mkNewDir(fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(idd.Index), '.mat')));
+        infile = mkNewDir(fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(idd.Index), '.mat')));
         save(infile, 'segmentMask', 'segmentMasksForFeatureExtraction', 'poiName', ...
             'poiRAW', 'poiSegmentMask', 'roiSeeds', 'measuredSpectrum', 'poiWhite');
 
@@ -83,13 +83,13 @@ if (options.tryReadData)
     [raw, whiteReference, darkReference] = readMSI(files);
     specimenMask = ones(size(raw, 2), size(raw, 3));
 
-    infile = mkNewDir(fullfile(options.systemdir, 'infiles', strcat('reference.mat')));
+    infile = mkNewDir(fullfile(getSetting('systemdir'), 'infiles', getSetting('whiteReference')));
     save(infile, 'raw', 'whiteReference', 'darkReference', 'specimenMask', '-v7.3');
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     %% Precompute correlation smoothing Matrices
-    computeSmoothingMatrices(Spectra, SpectraNames, wavelengthN, ID, options);
+    computeSmoothingMatrices(Spectra, SpectraNames, wavelengthN, ID);
     load(precomputedFile);
 
     %% IlluminationXSensitivity
@@ -101,11 +101,11 @@ if (options.tryReadData)
     save(precomputedFile, 'Hgreen', 'Hadjusted', 'Hrms', 'Hextended', '-append');
 
     %% Create coefficient table
-    createCoefficientTable(ID, CompleteSpectra, options);
+    createCoefficientTable(ID, CompleteSpectra);
     load(precomputedFile, 'Coefficients');
 
     %% Search for reference coefficients
-    ID = selectCoeffIndex(options);
+    ID = selectCoeffIndex();
 end
 
 fprintf('Finished initialization.\n\n')

@@ -1,24 +1,13 @@
-function [] = plotNMSE(x, y, xlab, ylab, figTitle, fig,saveOptions)
+function [] = plotNMSE(x, y, xlab, ylab, figTitle, fig)
 
-    if (nargin < 6)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
-    end
+warning('off');
 
-    if (nargin < 7)
-        saveOptions.SaveImage = false;
-    end 
+plot(log10(x), y, 'LineWidth', 5);
+xlabel(xlab, 'FontSize', 15, 'Interpreter', 'latex');
+ylabel(ylab, 'FontSize', 15, 'Interpreter', 'latex');
+%title(figTitle, 'FontSize', 15);
 
-    warning('off');
-    
-    plot(log10(x), y, 'LineWidth', 5);
-    xlabel(xlab, 'FontSize', 15, 'Interpreter','latex');
-    ylabel(ylab, 'FontSize', 15, 'Interpreter','latex');
-    %title(figTitle, 'FontSize', 15);
+savePlot(fig);
 
-    savePlot(fig, saveOptions);
-    
-    warning('on');
+warning('on');
 end

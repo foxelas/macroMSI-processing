@@ -1,5 +1,5 @@
 %Start of reflectance estimation comparison
-options.action = 'Refest';
+setSetting('action', 'Refest');
 
 w = warning('off', 'all');
 
@@ -12,7 +12,7 @@ gfcs = zeros(msiN, methodsN);
 for k = 1:msiN
     % Retrieve MSI data
 
-    infile = fullfile(options.systemdir, 'infiles', strcat('poi_', num2str(k), '.mat'));
+    infile = fullfile(getSetting('systemdir'), 'infiles', strcat('poi_', num2str(k), '.mat'));
     load(infile, 'poiName', 'poiRAW', 'poiSegmentMask', ...
         'roiSeeds', 'measuredSpectrum', 'poiWhite', 'sigma2');
 
@@ -20,9 +20,9 @@ for k = 1:msiN
     mask = poiSegmentMask;
     measured = measuredSpectrum;
     rgb = poiWhite;
-    %options.sigma2 = sigma2;
+    %sigma2 = sigma2;
 
-    [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions(msi, rgb, mask, measured, ID(k), options, methods);
+    [reconstructedArray, gfcArray, nmseArray] = getMultipleReflectanceReconstructions(msi, rgb, mask, measured, ID(k), methods);
     multipleReconstructions(k, :, :) = reconstructedArray;
     nmses(k, :) = nmseArray;
     gfcs(k, :) = gfcArray;
@@ -36,20 +36,20 @@ nmseTable = array2table(nmses, ...
 gfcTable = array2table(gfcs, ...
     'VariableNames', cellfun(@(x) strrep(x, '-', ''), methods, 'un', 0));
 errorInfo = GetErrorInfoStruct(nmses, gfcs);
-saveOptions = options.saveOptions;
-saveOptions.saveImages = true;
-saveOptions.showImages = true;
+setSetting('saveImages', true);
+setSetting('showImages', true);
 for i = 1:methodsN
-    nmseBars = getNmseForBarPlot(nmses(:, i), ID, methods{i}, saveOptions);
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('reflectanceEstimationPerformance'), strcat('hist_', methods{i}));
-    plotGFCHistogram(gfcs(:, i), 1, saveOptions);
+    nmseBars = getNmseForBarPlot(nmses(:, i), ID, methods{i});
+    setSetting('plotName', fullfile(getSetting('savedir'), ...
+        getSetting('reflectanceEstimationPerformance'), strcat('hist_', methods{i})));
+    plots(1, @plotGFCHistogram, gfcs(:, i));
 end
 
 msiId = find(strcmp(methods, 'MSI-Simple'));
 EstimatedSpectra = multipleReconstructions(:, :, msiId);
 rgbId = find(strcmp(methods, 'RGB-Simple'));
 EstimatedRGBSpectra = multipleReconstructions(:, :, rgbId);
-filename = mkNewDir(fullfile(saveOptions.savedir, outputFolderMap('features'), 'out.mat'));
+filename = mkNewDir(fullfile(getSetting('savedir'), getSetting('features'), 'out.mat'));
 if exist(filename, 'file')
     save(filename, 'EstimatedSpectra', 'EstimatedRGBSpectra', 'nmseTable', 'gfcTable', 'errorInfo', 'multipleReconstructions', 'methods', '-append');
 else
@@ -72,7 +72,7 @@ errorInfo = struct2table(errorInfo);
 end
 
 
-function nmseBars = getNmseForBarPlot(nmses, ID, method, saveOptions)
+function nmseBars = getNmseForBarPlot(nmses, ID, method)
 i = 0;
 nmseBars = zeros(6, 1);
 for state = {'unfixed', 'fixed', 'cut'}
@@ -85,8 +85,8 @@ for state = {'unfixed', 'fixed', 'cut'}
 end
 nmseBars = reshape(nmseBars, [2, 3]);
 
-saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('reflectanceEstimationPerformance'), method);
-plotReconstructionPerformanceBars(nmseBars, {'malignant', 'benign'}, '', 1, saveOptions);
+setSetting('plotName', fullfile(getSetting('savedir'), getSetting('reflectanceEstimationPerformance'), method));
+plots(1, @plotReconstructionPerformanceBars, nmseBars, {'malignant', 'benign'}, '');
 
 fprintf('NRMSE overall = %.4f\n', sum(nmseBars(:)));
 

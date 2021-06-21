@@ -1,28 +1,28 @@
-function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id, options)
-
-%% wienerEstimation Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
-%Input arguments
-%g = the input MSI struct (name, index, 4D-MSI, RegionMask), where 4D-MSI(filter band, x , y , image rgb values)
-%spectrum = the measured originalReflectance spectrum of the sample
-%id = the point id information
+function [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id)
+%     ESTIMATEREFLECTANCE Performs wiener estimation for reflectance from images and returns an sRGB reconstucted image
 %
-%Optional input arguments
-%'pixelValueSelectionMethod' = {'green', 'rms', 'adjusted', 'extended', 'unchanged'} for selecting a single value from the 3 RGB values
-%'smoothingMatrixMethod' = {'markovian 0.99', 'adaptive', 'KCor all data', 'KCor macbeth', 'KCor all specimen', ...
-%                'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'}; for selecting the smoothing matrix
-%'rho' =  parameter for markovian smoothing matrix , default: 0.99
-%'variance' =  parameter for noise covariance matrix , default: 1
-%'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'SNR', 'white gaussian', 'fromOlympus'}
-%'reference' = the reference white image values
-%'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
-%'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false
+%     Input arguments
+%     MSI = the input MSI struct (name, index, 4D-MSI, RegionMask), where 4D-MSI(filter band, x , y , image rgb values)
+%     mask = the mask of the ROI that needs to be estimated
+%     spectrum = the measured originalReflectance spectrum of the sample
+%     id = the point id information
 %
-%Output arguments
-%estimatedReflectance = the estimated reflectance for every pixel in the
-%sample area
-%meanEstimatedReflectance = the average normalized reflectance estimation of the sample area
-%rmse = root mean square error
-%nmse = normalized mean square error
+%     Optional configurations to be set behoredhand
+%     'pixelValueSelectionMethod' = {'green', 'rms', 'adjusted', 'extended', 'unchanged'} for selecting a single value from the 3 RGB values
+%     'smoothingMatrixMethod' = {'markovian 0.99', 'adaptive', 'KCor all data', 'KCor macbeth', 'KCor all specimen', ...
+%                    'KCor all same malignancy', 'KCor all same fixation' 'KCor same malignancy', 'KCor same malignancy, fixation'};
+%     'rho' =  parameter for markovian smoothing matrix , default: 0.99 'variance' =  parameter for noise covariance matrix , default: 1
+%     'noiseType' = to include noise component,{'none', 'sameForChannel', 'difForChannel', 'spatial', 'SNR', 'white gaussian', 'fromOlympus'}
+%     'reference' = the  reference white image values
+%     'windowDim' = the dimension of square pixel neighborhood (odd number), default: 3
+%     'SVDTol' = to use tolerance for SVD when computing an inverse matrix, default: false
+%
+%     Output arguments estimatedReflectance = the estimated reflectance for every pixel in the sample area
+%     gfc = measure of quality of estimation compared to the measured spectrum nmse = normalized mean square error
+%
+%     Usage:
+%     [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, mask, spectrum, id)
+%     [estimatedReflectance, gfc, nmse] = estimateReflectance(MSI, , spectrum, id)
 
 %% Argument parsing
 
@@ -34,44 +34,28 @@ if size(spectrum, 2) ~= 1
     spectrum = spectrum';
 end
 
-precomputedFile = fullfile(options.systemdir, 'precomputedParams.mat'); %pre-set parameters
-smoothingMatrixMethod = options.smoothingMatrixMethod;
-pixelValueSelectionMethod = options.pixelValueSelectionMethod;
-noiseType = options.noiseType;
-
-defaultRho = 0.99;
-if isfield(options, 'rho')
-    rho = options.rho;
-else
-    rho = defaultRho;
-end
+precomputedFile = fullfile(getSetting('systemdir'), 'precomputedParams.mat'); %pre-set parameters
+smoothingMatrixMethod = getSetting('smoothingMatrixMethod');
+pixelValueSelectionMethod = getSetting('pixelValueSelectionMethod');
+noiseType = getSetting('noiseType');
+rho = getSetting('rho'); %defaultRho = 0.99;
 
 if strcmp(smoothingMatrixMethod, 'adaptive')
-    defaultAlpha = 0.7;
-    if isfield(options, 'alpha')
-        alpha = options.alpha;
-    else
-        alpha = defaultAlpha;
-    end
-
-    defaultGamma = 1;
-    if isfield(options, 'gamma')
-        gamma = options.gamma;
-    else
-        gamma = defaultGamma;
-    end
+    alpha = getSetting('alpha'); %defaultAlpha = 0.7;
+    gamma = getSetting('gamma'); %defaultGamma = 1;
+    
 end
 
 signalCov = [0.0290584774952317; 0.0355809665018991; 0.0254338785693633; 0.0278002826809506; 0.00535859811159383; 0.0263030884980115; 0.0198921193827871];
 
-if strcmp(options.pixelValueSelectionMethod, 'rgb')
+if strcmp(pixelValueSelectionMethod, 'rgb')
     load(precomputedFile, 'Coefficients');
     coeff = squeeze(Coefficients(id.CoeffID, 3, 1:7))'; %id.CoeffID %id.Index
     coeff = [coeff(2), mean([coeff(4), coeff(5)]), mean([coeff(6), coeff(7)])];
 else
     load(precomputedFile, 'Coefficients');
     pixelValueSelectionMethods = {'green', 'rms', 'adjusted', 'extended', 'rgb'};
-    pvmIdx = min(find(strcmp(pixelValueSelectionMethods, options.pixelValueSelectionMethod)), 3);
+    pvmIdx = min(find(strcmp(pixelValueSelectionMethods, pixelValueSelectionMethod)), 3);
     coeff = squeeze(Coefficients(id.CoeffID, pvmIdx, 1:7))'; %id.CoeffID %id.Index
 end
 
@@ -85,15 +69,15 @@ if strcmp(pixelValueSelectionMethod, 'extended')
 elseif strcmp(pixelValueSelectionMethod, 'green')
     load(precomputedFile, 'Hgreen');
     H = Hgreen;
-
+    
 elseif strcmp(pixelValueSelectionMethod, 'rms')
     load(precomputedFile, 'Hrms');
     H = Hrms;
-
+    
 elseif strcmp(pixelValueSelectionMethod, 'adjusted')
     load(precomputedFile, 'Hadjusted');
     H = Hadjusted;
-
+    
 elseif strcmp(pixelValueSelectionMethod, 'rgb')
     load(precomputedFile, 'Hrgb');
     H = Hrgb;
@@ -104,9 +88,10 @@ end
 coeff = coeff * 5; % to adapt coefficients from bandwidth 1nm to bandwidth 5nm (Source is 1x141, esimation is 1x81)
 H = diag(coeff) * H; % illumination x sensitivity
 
-if isfield(options, 'SVDTol')
+svdtol = getSetting('SVDTol');
+if ~isempty(svdtol)
     hasSVDTol = true;
-    tol = options.SVDTol;
+    tol = svdtol;
 else
     hasSVDTol = false;
     tol = 1;
@@ -115,13 +100,16 @@ end
 % Argument parsing ends
 
 %% Generate smoothing matrix for estimation
-
-G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
+if ndims(MSI) == 3
+    G = MSI;
+else
+    G = raw2msi(MSI, pixelValueSelectionMethod); % convert from 4D MSI+rgb to 3D MSI+grey
+end
 [msibands, height, width] = size(G);
-%G = G ./ options.luminanceCorrection;
+%G = G ./ getSetting('luminanceCorrection');
 
 % computed beforehand with prepareSmoothingMatrix
-isBenign = id.IsBenign;
+isBenign = id.Label;
 if (id.IsCut)
     fixing = 'Cut';
 elseif (id.IsFixed)
@@ -137,19 +125,19 @@ switch smoothingMatrixMethod
         end
         load(precomputedFile, 'Cor_Markovian');
         M = mean(signalCov) * Cor_Markovian;
-
+        
     case 'Cor_All' % average xcorr of all measured data
         load(precomputedFile, 'Cor_All');
         M = Cor_All;
-
+        
     case 'Cor_Macbeth' % average xcorr of all macbeth data
         load(precomputedFile, 'Cor_Macbeth');
         M = Cor_Macbeth;
-
+        
     case 'Cor_Sample' % average xcorr of all measured data for each sample
         load(precomputedFile, 'Cor_Sample');
         M = squeeze(Cor_Sample(id.SampleID, :, :));
-
+        
     case 'Cor_Malignancy'
         if isBenign
             load(precomputedFile, 'Cor_Benign');
@@ -158,7 +146,7 @@ switch smoothingMatrixMethod
             load(precomputedFile, 'Cor_Malignant');
             M = Cor_Malignant; %m.Mc;
         end
-
+        
     case 'Cor_Fixing'
         if strcmp(fixing, 'Cut')
             load(precomputedFile, 'Cor_Cut');
@@ -170,7 +158,7 @@ switch smoothingMatrixMethod
             load(precomputedFile, 'Cor_Unfixed');
             M = Cor_Unfixed;
         end
-
+        
     case 'Cor_SampleMalignancy' % average xcorr of all measured cancerous data for cancerous sample
         if isBenign
             load(precomputedFile, 'Cor_SampleBenign');
@@ -179,7 +167,7 @@ switch smoothingMatrixMethod
             load(precomputedFile, 'Cor_SampleMalignant');
             M = squeeze(Cor_SampleMalignant(id.SampleID, :, :));
         end
-
+        
     case 'Cor_SampleMalignancyFixing' % average xcorr of all fixed cancer measured data for fixed cancer sample
         if isBenign && strcmp(fixing, 'Cut')
             load(precomputedFile, 'Cor_SampleBenignCut');
@@ -202,7 +190,7 @@ switch smoothingMatrixMethod
         else
             error('Unsupported type')
         end
-
+        
     case 'Cor_MalignancyFixing'
         if isBenign && strcmp(fixing, 'Cut')
             load(precomputedFile, 'Cor_BenignCut');
@@ -225,16 +213,17 @@ switch smoothingMatrixMethod
         else
             error('Unsupported type')
         end
-
+        
     case 'adaptive'
-
+        
         %% Based on "Reflectance reconstruction for multispectral imaging by adaptive Wiener estimation"[Shen2007]
-        adaptiveOptions = options;
-        adaptiveOptions.showImages = false;
-        adaptiveOptions.smoothingMatrixMethod = 'Cor_Sample';
-        rhat = estimateReflectance(MSI, mask, spectrum, id, adaptiveOptions);
-        M = adaptiveSmoothingMatrix(rhat, options.systemdir, gamma, alpha);
-
+        setSetting('showImages', false);
+        setSetting('smoothingMatrixMethod', 'Cor_Sample');
+        rhat = estimateReflectance(MSI, mask, spectrum, id);
+        M = adaptiveSmoothingMatrix(rhat, getSetting('systemdir'), gamma, alpha);
+        setSetting('showImages');
+        setSetting('smoothingMatrixMethod');
+        
     otherwise
         error('Unexpected smoothing matrix method. Abort execution.')
 end
@@ -246,39 +235,40 @@ HMH = H * M * H';
 
 %% Covariance matrix of the additive noise
 noiseParts = strsplit(noiseType, {' ', ','});
-if (numel(noiseParts) > 1);
-    options.noiseParam = cellfun(@str2double, noiseParts(2:end));
+if (numel(noiseParts) > 1)
+    setSetting('noiseParam', cellfun(@str2double, noiseParts(2:end)));
 end
-hasNoiseParam = isfield(options, 'noiseParam');
+noiseParam = getSetting('noiseParam');
+hasNoiseParam = ~isempty(noiseParam);
 
 if contains(noiseType, 'sameForChannel')
-    if (hasNoiseParam);
-        variance = options.noiseParam * ones(msibands, 1);
-    else;
+    if (hasNoiseParam)
+        variance = noiseParam * ones(msibands, 1);
+    else
         variance = 0.001 * ones(msibands, 1);
     end
-
+    
 elseif contains(noiseType, 'diffForChannel')
-    if (hasNoiseParam);
-        variance = options.noiseParam;
-    else;
+    if (hasNoiseParam)
+        variance = noiseParam;
+    else
         variance = [0.0031, 0.0033, 0.0030, 0.0031, 0.0032, 0.0029, 0.0024];
     end
-
+    
 elseif contains(noiseType, 'SNR')
-    if (hasNoiseParam);
-        variance = (trace(HMH) / (msibands * 10^(options.noiseParam / 10))) * ones(msibands, 1);
-    else;
+    if (hasNoiseParam)
+        variance = (trace(HMH) / (msibands * 10^(noiseParam / 10))) * ones(msibands, 1);
+    else
         variance = (trace(HMH) / (msibands * 10^(17 / 10))) * ones(msibands, 1);
     end
-
+    
 elseif contains(noiseType, 'white gaussian')
-    if (hasNoiseParam);
-        variance = (randn(1, msibands) .* options.noiseParam).^2;
-    else;
+    if (hasNoiseParam)
+        variance = (randn(1, msibands) .* noiseParam).^2;
+    else
         variance = (randn(1, msibands) .* 0.0001).^2;
     end
-
+    
 elseif contains(noiseType, 'fromOlympus')
     variance = [0.0000162215; ...
         0.0000157000; ...
@@ -287,21 +277,21 @@ elseif contains(noiseType, 'fromOlympus')
         0.0000083800; ...
         0.0001480000; ...
         0.0000148000]';
-    if (hasNoiseParam);
-        variance = variance .* options.noiseParam;
+    if (hasNoiseParam)
+        variance = variance .* noiseParam;
     end
-    if ~strcmp(options.pixelValueSelectionMethod, 'rgb');
+    if ~strcmp(pixelValueSelectionMethod, 'rgb')
         variance = variance .* 10^4;
-    else;
+    else
         variance = variance .* 10^2;
     end
 elseif strcmp(noiseType, 'none')
     variance = zeros(1, msibands);
-
+    
 elseif contains(noiseType, 'spatial') || contains(noiseType, 'spatiospectral')
-    if isfield(options, 'windowDim');
-        windowDim = options.windowDim;
-    else;
+    if ~iempty(getSetting('windowDim'))
+        windowDim = getSetting('windowDim');
+    else
         windowDim = 5;
     end
     [windowKernel, windowElements] = makeKernel(windowDim, height, width);
@@ -313,18 +303,18 @@ elseif contains(noiseType, 'spatial') || contains(noiseType, 'spatiospectral')
             0.0000083800; ...
             0.0001480000; ...
             0.0000148000]';
-        if (hasNoiseParam);
-            variance = variance .* options.noiseParam;
+        if (hasNoiseParam)
+            variance = variance .* noiseParam;
         end
-        if ~strcmp(options.pixelValueSelectionMethod, 'rgb');
+        if ~strcmp(pixelValueSelectionMethod, 'rgb')
             variance = variance .* 10^6;
         end
     else
         if (hasNoiseParam)
-            if length(options.noiseParam) == 2
-                variance = ones(msibands, 1) * (sqrt(0.5) * options.noiseParam(1) + options.noiseParam(2))^2;
+            if length(noiseParam) == 2
+                variance = ones(msibands, 1) * (sqrt(0.5) * noiseParam(1) + noiseParam(2))^2;
             else
-                variance = ones(msibands, 1) * (options.noiseParam)^2;
+                variance = ones(msibands, 1) * (noiseParam)^2;
             end
         else
             variance = ones(msibands, 1) * (sqrt(0.5) * 0.001 + 0.03)^2;
@@ -349,17 +339,17 @@ activeRegionIdx = sub2ind([height, width], find(mask));
 estimatedReflectances = zeros(wavelengths, length(activeRegionIdx));
 
 if contains(noiseType, 'spatiospectral')
-
+    
     markovian = getMarkovian(windowDim^2, rho);
     I = eye(windowDim^2);
     kronProd = kron(I, H);
     kronNoise = kron(I, Kn);
     %kronNoise = repmat(Kn, windowDim^2, windowDim^2);
     %sigma2 = var(G,0,'all')^2;
-    %sigma2 = options.sigma2;
+    %sigma2 = getSetting('sigma2');
     sigma2 = 0.001; %for brights
     %sigma2 = 0.0075; %for darks
-    %     loads = load(fullfile(options.systemdir, 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
+    %     loads = load(fullfile(getSetting('systemdir'), 'infiles', strcat('group_', num2str(id.Group), '.mat')), 'sigma');
     %     sigma2 = loads.sigma .^2;
     %     clear('loads');
     xx = sigma2 .* markovian;
@@ -379,12 +369,12 @@ if contains(noiseType, 'spatiospectral')
             estimatedReflectances(:, p) = C * gg;
         end
     end
-
+    
 elseif contains(noiseType, 'spatial')
-
+    
     %% Perform Spatially Adaptive Wiener estimation for all pixels in an image area
     %  Based on "A Spatially AdaptiveWiener Filter for Reflectance Estimation"[Urban2008]
-
+    
     meanG = zeros(msibands, height, width);
     centeredG = zeros(msibands, height, width);
     Kcov = zeros(msibands, height, width);
@@ -395,7 +385,7 @@ elseif contains(noiseType, 'spatial')
         sdGb = stdfilt(Gb, windowKernel);
         Kcov(b, :, :) = sdGb.^2;
     end
-
+    
     for p = 1:length(activeRegionIdx)
         [i, j] = ind2sub([height, width], activeRegionIdx(p));
         meanGij = meanG(:, i, j);
@@ -405,7 +395,7 @@ elseif contains(noiseType, 'spatial')
         What = multiplyToInverse(MH, HMH+Kij-W*Kij, hasSVDTol, tol);
         estimatedReflectances(:, p) = What * W * centeredGij + What * meanGij;
     end
-
+    
 else
     div = multiplyToInverse(MH, HMH+Kn, hasSVDTol, tol); % M 401x401, H' 401x7, inv() 7x7
     estimatedReflectances = div * Gres(:, activeRegionIdx); % 401 x 100
@@ -435,10 +425,13 @@ end
 if (height > 200 || width > 200) %in this case the mask is ones(height, width)
     estimatedReflectances = max(estimatedReflectances, 0);
     estimatedReflectances = min(estimatedReflectances, 1);
-
-    estimatedReflectance = reshape(estimatedReflectances, size(H, 2), height, width);
+    if sum(mask(:) == 0) > 1 % Reflectances were calculated excluding bg pixels
+        estimatedReflectance = zeros(size(H, 2), height*width);
+        estimatedReflectance(:, activeRegionIdx) = estimatedReflectances;
+    end
+    estimatedReflectance = reshape(estimatedReflectance, size(H, 2), height, width);
 else
-
+    
     idx = ~(any(estimatedReflectances < 0) | any(estimatedReflectances > 1));
     if sum(idx) > 1
         estimatedReflectances = estimatedReflectances(:, idx);

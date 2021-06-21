@@ -1,23 +1,22 @@
-function [] = plotMontage(left,right,fig,saveOptions)
+function [] = plotMontage(left, right, figTitle, fig)
 
-    if (nargin < 3)
-        fig = figure;
-    else 
-        figure(fig);
-        clf(fig);
+hasTitle = true;
+if nargin < 4
+    hasTitle = isnumeric(figTitle);
+    if ~hasTitle
+        fig = figTitle;
+        figTitle = '';
     end
-
-    if (nargin < 4)
-        saveOptions.SaveImage = false;
-    end 
-
-    warning('off');
-    
-    imshowpair(left,right,'montage');
-    saveOptions.cropBorders = true;
-    pause(0.1)
-    savePlot(fig, saveOptions);
-    
-    warning('on');
 end
 
+warning('off');
+
+imshowpair(left, right, 'montage');
+if hasTitle
+    title(figTitle);
+end
+pause(0.1)
+savePlot(fig);
+
+warning('on');
+end

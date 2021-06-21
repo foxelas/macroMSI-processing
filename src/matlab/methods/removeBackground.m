@@ -1,8 +1,12 @@
-function specimenMask = removeBackground(whiteReference, idd, options, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+function specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans, attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+%     REMOVEBACKGROUND removes the background from the specimen image
+%
+%     Usage:
+%     specimenMask = removeBackground(whiteReference, idd)
+%     specimenMask = removeBackground(whiteReference, idd, colorLevelsForKMeans,
+%         attemptsForKMeans, bigHoleCoefficient, closingCoefficient, openingCoefficient)
+%     See also https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
 
-%load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\ID.mat'));
-%load( fullfile('..','..','..', 'input\saitama_v7_min_region_e\data.mat'));
-%dataset = 'saitama_v7_min_region_e';
 
 if (nargin < 4)
     colorLevelsForKMeans = 6;
@@ -23,12 +27,8 @@ if (nargin < 9)
     openingCoefficient = 5;
 end
 
-saveOptions = options.saveOptions;
-saveOptions.saveImages = true;
-
 [m, n, ~] = size(whiteReference);
 
-%https://www.mathworks.com/help/images/color-based-segmentation-using-k-means-clustering.html
 lab_he = rgb2lab(whiteReference);
 %     figure(1);
 %     imshow(lab_he);
@@ -66,9 +66,8 @@ specimenMask = bwareaopen(specimenMask, ceil(m*n/500), 8);
 
 cluster1 = whiteReference .* double(specimenMask);
 name = strjoin({'bgRemoved', num2str(idd.Group), idd.Sample, idd.Type}, '_');
-outputFolderMap = getOutputDirectoryMap();
-saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('backgroundRemoval'), name);
-plotMontage(whiteReference, cluster1, 1, saveOptions);
+setSetting('plotName', fullfile(getSetting('savedir'), getSetting('backgroundRemoval'), name));
+plots(1, @plotMontage, whiteReference, cluster1);
 
 end
 

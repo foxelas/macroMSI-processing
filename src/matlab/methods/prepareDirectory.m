@@ -1,5 +1,5 @@
 function [data, ID] = prepareDirectory(directory)
-%PREPAREDIRECTORY Checks the data before reading, that everything is ok
+%   PREPAREDIRECTORY Checks the data before reading, that everything is ok
 %   if no argument, it runs in the current directory
 %   else it runs in the designated directory
 %
@@ -129,7 +129,7 @@ end
 
 
 samples = unique([ID.Sample]);
-for i = 1 : length(samples)
+for i = 1:length(samples)
     for j = 1:length(ID)
         if strcmp(samples(i), ID(j).Sample)
             ID(j).SampleID = i;

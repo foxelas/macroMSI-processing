@@ -1,10 +1,13 @@
-function [] = visualizeLBP(raw, whiteReference, specimenMask, g, saveOptions)
+function [] = visualizeLBP(raw, whiteReference, specimenMask, g)
+%     VISUALIZELBP visualizes the lbp features
+%
+%     Usage:
+%     visualizeLBP(raw, whiteReference, specimenMask, g)
 
 msi = raw2msi(raw, 'extended');
 [B, M, N] = size(msi);
 neighbors = 8;
 mapping = getmapping(neighbors, 'riu2');
-outputFolderMap = getOutputDirectoryMap();
 
 figure(1);
 figure(2);
@@ -23,27 +26,27 @@ for scale = 1:3
         lbps = im2double(lbps./10);
         catLBPImage = [catLBPImage; lbps];
     end
-
-
+    
+    
     mmLBPImage = im2double(lbp(msi, scale, neighbors, mapping, 'e')./40);
     LBPImage = im2double(lbp(rgb2gray(whiteReference).*specimenMask, scale, neighbors, mapping, 'e'));
-
+    
     type = 'SumLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(sumLBPImage, type, 1, saveOptions);
-
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plots(1, @plotLBP, sumLBPImage, type);
+    
     type = 'CatLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(catLBPImage.*100, type, 2, saveOptions);
-
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plots(2, @plotLBP, catLBPImage.*100, type);
+    
     type = 'MMLBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(mmLBPImage.*100, type, 3, saveOptions);
-
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plots(3, @plotLBP, mmLBPImage.*100, type);
+    
     type = 'LBP';
-    saveOptions.plotName = fullfile(saveOptions.savedir, outputFolderMap('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale)));
-    plotLBP(LBPImage, type, 4, saveOptions);
-
-
+    setSetting('plotName', fullfile(getSetting('savedir'), getSetting('lbpVisualization'), strcat('lbp_', num2str(g), '_', type, '_', num2str(scale))));
+    plots(4, @plotLBP, LBPImage, type);
+    
+    
 end
 end

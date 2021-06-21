@@ -1,4 +1,4 @@
-outfile = matfile(fullfile(options.saveOptions.savedir, outputFolderMap('features'), 'out.mat'));
+outfile = matfile(fullfile(getSetting('savedir'), getSetting('features'), 'out.mat'));
 color = outfile.EstimatedSpectra';
 mmlbp = outfile.MMLbpFeatures;
 texture = [mmlbp{1}, mmlbp{2}]';
@@ -7,7 +7,7 @@ texture = [mmlbp{1}, mmlbp{2}]';
 inputs = color;
 dimension1 = 5;
 dimension2 = 5;
-[~, outputs] = getSom(inputs, dimension1, dimension2, options.saveOptions, 'spect');
+[~, outputs] = getSom(inputs, dimension1, dimension2, 'spect');
 plotAssignToNeurons(outputs, {ID.Label});
 
 %% color and texture
@@ -16,7 +16,7 @@ inputs = [color; texture];
 % Create a Self-Organizing Map
 dimension1 = 10;
 dimension2 = 10;
-[~, outputs] = getSom(inputs, dimension1, dimension2, options.saveOptions, 'spect+mmlbp');
+[~, outputs] = getSom(inputs, dimension1, dimension2, 'spect+mmlbp');
 plotAssignToNeurons(outputs, {ID.Label});
 
 
